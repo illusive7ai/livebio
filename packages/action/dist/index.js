@@ -2374,9 +2374,9 @@ var require_stringifyNumber = __commonJS({
     function stringifyNumber({ format, minFractionDigits, tag, value }) {
       if (typeof value === "bigint")
         return String(value);
-      const num5 = typeof value === "number" ? value : Number(value);
-      if (!isFinite(num5))
-        return isNaN(num5) ? ".nan" : num5 < 0 ? "-.inf" : ".inf";
+      const num6 = typeof value === "number" ? value : Number(value);
+      if (!isFinite(num6))
+        return isNaN(num6) ? ".nan" : num6 < 0 ? "-.inf" : ".inf";
       let n = Object.is(value, -0) ? "-0" : JSON.stringify(value);
       if (!format && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n) && !n.includes("e")) {
         let i = n.indexOf(".");
@@ -2416,8 +2416,8 @@ var require_float = __commonJS({
       test: /^[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)[eE][-+]?[0-9]+$/,
       resolve: (str) => parseFloat(str),
       stringify(node) {
-        const num5 = Number(node.value);
-        return isFinite(num5) ? num5.toExponential() : stringifyNumber.stringifyNumber(node);
+        const num6 = Number(node.value);
+        return isFinite(num6) ? num6.toExponential() : stringifyNumber.stringifyNumber(node);
       }
     };
     var float = {
@@ -2856,8 +2856,8 @@ var require_float2 = __commonJS({
       test: /^[-+]?(?:[0-9][0-9_]*)?(?:\.[0-9_]*)?[eE][-+]?[0-9]+$/,
       resolve: (str) => parseFloat(str.replace(/_/g, "")),
       stringify(node) {
-        const num5 = Number(node.value);
-        return isFinite(num5) ? num5.toExponential() : stringifyNumber.stringifyNumber(node);
+        const num6 = Number(node.value);
+        return isFinite(num6) ? num6.toExponential() : stringifyNumber.stringifyNumber(node);
       }
     };
     var float = {
@@ -3059,23 +3059,23 @@ var require_timestamp = __commonJS({
     function parseSexagesimal(str, asBigInt) {
       const sign = str[0];
       const parts = sign === "-" || sign === "+" ? str.substring(1) : str;
-      const num5 = (n) => asBigInt ? BigInt(n) : Number(n);
-      const res = parts.replace(/_/g, "").split(":").reduce((res2, p) => res2 * num5(60) + num5(p), num5(0));
-      return sign === "-" ? num5(-1) * res : res;
+      const num6 = (n) => asBigInt ? BigInt(n) : Number(n);
+      const res = parts.replace(/_/g, "").split(":").reduce((res2, p) => res2 * num6(60) + num6(p), num6(0));
+      return sign === "-" ? num6(-1) * res : res;
     }
     function stringifySexagesimal(node) {
       let { value } = node;
-      let num5 = (n) => n;
+      let num6 = (n) => n;
       if (typeof value === "bigint")
-        num5 = (n) => BigInt(n);
+        num6 = (n) => BigInt(n);
       else if (isNaN(value) || !isFinite(value))
         return stringifyNumber.stringifyNumber(node);
       let sign = "";
       if (value < 0) {
         sign = "-";
-        value *= num5(-1);
+        value *= num6(-1);
       }
-      const _60 = num5(60);
+      const _60 = num6(60);
       const parts = [value % _60];
       if (value < 60) {
         parts.unshift(0);
@@ -13002,9 +13002,200 @@ var launchpad = {
   }
 };
 
-// ../core/src/templates/maintainer.ts
+// ../core/src/templates/learning.ts
 var WIDTH5 = 900;
-var PAD5 = 36;
+var PAD5 = 48;
+var HABIT_WEEKS = 12;
+var DOT = 7;
+var DOT_STEP = 22;
+var MONTHS2 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function habitGrid(days, weeks) {
+  if (days.length === 0 || weeks <= 0) return [];
+  const first = (/* @__PURE__ */ new Date(`${days[0]?.date}T00:00:00Z`)).getUTCDay();
+  const cols = Math.ceil((first + days.length) / 7);
+  const grid = Array.from({ length: cols }, () => Array(7).fill(null));
+  days.forEach((day, index) => {
+    const slot = first + index;
+    grid[Math.floor(slot / 7)][slot % 7] = { date: day.date, count: day.count };
+  });
+  return grid.slice(-weeks);
+}
+function blocksFor(percent) {
+  if (percent <= 0) return 0;
+  return Math.min(10, Math.max(1, Math.round(percent / 10)));
+}
+function formatDate(iso) {
+  const time = iso ? Date.parse(iso) : NaN;
+  if (!Number.isFinite(time)) return null;
+  const date = new Date(time);
+  return `${MONTHS2[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
+}
+var num4 = (value) => String(Math.round(value * 10) / 10 || 0);
+function lookFor4(variant, hue) {
+  const dark = variant === "dark";
+  return {
+    paper: dark ? "#1c2a29" : "#fffdf5",
+    grid: dark ? "#cfe3dc" : "#6b8cc7",
+    gridOpacity: dark ? 0.07 : 0.16,
+    margin: dark ? "#e8a09a" : "#e0645c",
+    ink: dark ? "#f2efe4" : "#27304d",
+    muted: dark ? "#a9bdb6" : "#6a7191",
+    marker: hslToHex(hue, 0.75, dark ? 0.66 : 0.45),
+    highlight: dark ? "#f2d96b" : "#ffe45e",
+    highlightOpacity: dark ? 0.32 : 0.7,
+    ring: dark ? "#7f9b93" : "#9aa3c4"
+  };
+}
+function renderSvg5(profile, config, variant) {
+  const look = lookFor4(variant, hueOf(profile.avatar?.grid.tint) ?? 215);
+  const motion = config.motion;
+  const blocks = new Set(config.blocks);
+  const parts = [];
+  let step = 0;
+  const next = () => step++ * 0.1;
+  const left = PAD5 + 36;
+  const heading = (text, x, y) => {
+    const width = text.length * 9.2 + 16;
+    return `<rect x="${x - 6}" y="${y - 14}" width="${num4(width)}" height="19" rx="3" fill="${look.highlight}" fill-opacity="${look.highlightOpacity}"/><text class="mono" x="${x}" y="${y}" font-size="13" font-weight="700" letter-spacing="1.8" fill="${look.ink}">${xmlEscape(text)}</text>`;
+  };
+  const updated = formatDate(profile.fetchedAt);
+  let title = `<text class="serif" x="${left}" y="${PAD5 + 38}" font-size="40" font-weight="700" font-style="italic" fill="${look.ink}">${xmlEscape(truncate(profile.name ?? profile.login, 28))}</text>`;
+  const sub = ["learning log", `@${profile.login}`, updated ? `updated ${updated}` : null].filter(Boolean).join("  \xB7  ");
+  title += `<text class="mono" x="${left}" y="${PAD5 + 64}" font-size="12.5" fill="${look.muted}">${xmlEscape(sub)}</text>`;
+  if (config.text.headline) {
+    title += `<text x="${left}" y="${PAD5 + 92}" font-size="17" fill="${look.ink}">${xmlEscape(truncate(config.text.headline, 80))}</text>`;
+  }
+  parts.push(rise(title, motion, next()));
+  let cursor = PAD5 + (config.text.headline ? 128 : 100);
+  if (blocks.has("stats")) {
+    const year = new Date(profile.createdAt).getUTCFullYear();
+    const facts = [
+      `${formatNumber(profile.publicRepos)} repositories`,
+      `${formatNumber(profile.totalStars)} stars`,
+      Number.isFinite(year) ? `on GitHub since ${year}` : null
+    ].filter((v) => Boolean(v));
+    let x = left;
+    const notes = facts.map((fact, index) => {
+      const width = Math.ceil(fact.length * 7.6) + 28;
+      const tilt = index % 2 === 0 ? -1.2 : 1;
+      const markup = `<g transform="rotate(${tilt} ${num4(x + width / 2)} ${cursor + 16})"><rect x="${num4(x)}" y="${cursor}" width="${width}" height="32" rx="3" fill="${look.highlight}" fill-opacity="${look.highlightOpacity * 0.85}"/><text x="${num4(x + 14)}" y="${cursor + 21}" font-size="14" font-weight="600" fill="${look.ink}">${xmlEscape(fact)}</text></g>`;
+      x += width + 14;
+      return markup;
+    }).join("");
+    parts.push(rise(notes, motion, next()));
+    cursor += 32 + 40;
+  }
+  const colTop = cursor;
+  let bottom = cursor;
+  const rightX = left + 440;
+  if (blocks.has("languages") && profile.languages.length > 0) {
+    let y = colTop;
+    let markup = heading("LANGUAGES I WRITE IN", left, y);
+    y += 32;
+    profile.languages.slice(0, 5).forEach((language, row) => {
+      const filled = blocksFor(language.percent);
+      const cells = Array.from({ length: 10 }, (_v, i) => {
+        const on = i < filled;
+        const delay = motion ? ` style="animation-delay:${(0.3 + row * 0.12 + i * 0.03).toFixed(2)}s"` : "";
+        return `<rect class="${on ? "blk" : ""}" x="${left + 150 + i * 17}" y="${y - 12}" width="13" height="16" rx="2" fill="${on ? look.marker : "none"}" ${on ? "" : `stroke="${look.ring}" stroke-opacity="0.6"`}${on ? delay : ""}/>`;
+      }).join("");
+      markup += `<text x="${left}" y="${y}" font-size="15" font-weight="600" fill="${look.ink}">${xmlEscape(truncate(language.name, 14))}</text>` + cells + `<text class="mono" x="${left + 150 + 10 * 17 + 6}" y="${y}" font-size="12.5" fill="${look.muted}">${language.percent}%</text>`;
+      y += 30;
+    });
+    markup += `<text class="mono" x="${left}" y="${y + 4}" font-size="11.5" fill="${look.muted}">${xmlEscape(`${plural(profile.languages.length, "language")} across my repositories, by number of repositories`)}</text>`;
+    parts.push(rise(markup, motion, next()));
+    bottom = Math.max(bottom, y + 4);
+  }
+  const activity = profile.contributions;
+  if (blocks.has("activity") && activity) {
+    const grid = habitGrid(activity.days, HABIT_WEEKS);
+    const gx = rightX + 8;
+    const gy = colTop + 40;
+    let markup = heading("HABIT TRACKER", rightX, colTop);
+    let real = 0;
+    let busy = 0;
+    grid.forEach((week, col) => {
+      week.forEach((day, row) => {
+        if (!day) return;
+        real++;
+        const x = gx + col * DOT_STEP;
+        const y = gy + row * DOT_STEP;
+        const delay = motion ? ` style="animation-delay:${(0.3 + col * 0.05 + row * 0.01).toFixed(2)}s"` : "";
+        if (day.count > 0) {
+          busy++;
+          markup += `<circle class="dot" cx="${x}" cy="${y}" r="${DOT}" fill="${look.marker}"${delay}/>`;
+        } else {
+          markup += `<circle cx="${x}" cy="${y}" r="${DOT - 1.5}" fill="none" stroke="${look.ring}" stroke-opacity="0.7" stroke-width="1.5"/>`;
+        }
+      });
+    });
+    const captionY = gy + 7 * DOT_STEP + 10;
+    markup += `<text class="mono" x="${rightX}" y="${captionY}" font-size="12.5" fill="${look.ink}">${busy} of the last ${real} days had activity</text><text class="mono" x="${rightX}" y="${captionY + 20}" font-size="12.5" fill="${look.muted}">current streak ${xmlEscape(plural(activity.currentStreak, "day"))}</text>`;
+    parts.push(rise(markup, motion, next()));
+    bottom = Math.max(bottom, captionY + 20);
+  }
+  cursor = bottom + 44;
+  const recent = (profile.recentRepos ?? []).slice(0, 3);
+  if (blocks.has("projects") && recent.length > 0) {
+    let y = cursor;
+    let markup = heading("RECENTLY WORKED ON", left, y);
+    y += 34;
+    for (const repo of recent) {
+      const ago = repo.pushedAt && profile.fetchedAt ? timeAgo(repo.pushedAt, profile.fetchedAt) : null;
+      markup += `<rect x="${left}" y="${y - 15}" width="18" height="18" rx="3" fill="none" stroke="${look.ink}" stroke-width="1.6"/><path d="M${left + 4} ${y - 6} l4 4 l7 -10" fill="none" stroke="${look.marker}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><text x="${left + 32}" y="${y}" font-size="16" font-weight="700" fill="${look.ink}">${xmlEscape(truncate(repo.name, 34))}</text>`;
+      const detail = [ago ? `updated ${ago}` : null, repo.language].filter(Boolean).join("  \xB7  ");
+      if (detail) markup += `<text class="mono" x="${WIDTH5 - PAD5}" y="${y}" text-anchor="end" font-size="12" fill="${look.muted}">${xmlEscape(detail)}</text>`;
+      if (repo.description) {
+        const [line] = wrap(repo.description, 96, 1);
+        markup += `<text x="${left + 32}" y="${y + 20}" font-size="13" fill="${look.muted}">${xmlEscape(line ?? "")}</text>`;
+        y += 52;
+      } else {
+        y += 34;
+      }
+    }
+    parts.push(rise(markup, motion, next()));
+    cursor = y;
+  }
+  const height = Math.ceil(cursor + PAD5 - 12);
+  const title2 = `${profile.name ?? profile.login} (@${profile.login}) on GitHub`;
+  const css = motion ? `.rise{animation:rise .6s ease both}@keyframes rise{from{opacity:0}}.dot,.blk{transform-box:fill-box;transform-origin:center;animation:pop .4s cubic-bezier(.3,1.6,.5,1) both}@keyframes pop{from{transform:scale(0)}}@media (prefers-reduced-motion:reduce){.rise,.dot,.blk{animation:none}}` : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH5}" height="${height}" viewBox="0 0 ${WIDTH5} ${height}" role="img" aria-labelledby="t">
+<title id="t">${xmlEscape(title2)}</title>
+<defs>
+<pattern id="paper" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="${look.grid}" stroke-opacity="${look.gridOpacity}"/></pattern>
+</defs>
+<style>
+text{font-family:${FONT_SANS}}
+.mono{font-family:${FONT}}
+.serif{font-family:${FONT_SERIF}}
+${css}
+</style>
+<rect width="${WIDTH5}" height="${height}" rx="16" fill="${look.paper}"/>
+<rect width="${WIDTH5}" height="${height}" rx="16" fill="url(#paper)"/>
+<rect x="${PAD5 + 18}" y="0" width="2" height="${height}" fill="${look.margin}" fill-opacity="0.55"/>
+${parts.filter(Boolean).join("\n")}
+</svg>
+`;
+}
+var learning = {
+  id: "learning",
+  name: "Learning log",
+  description: "A notebook page: the languages you write in, a habit tracker of the last twelve weeks, and what you worked on lately.",
+  tags: ["notebook", "chalkboard", "habits", "animated"],
+  needsAvatar: false,
+  render(profile, config) {
+    const assets = variantsFor(config.theme).map((variant) => ({
+      path: assetPath("learning", variant),
+      content: renderSvg5(profile, config, variant)
+    }));
+    const extra = config.blocks.includes("activity") && profile.contributions ? "with a twelve-week habit tracker" : void 0;
+    return { readme: imageReadme(profile, config, "learning", WIDTH5, describeProfile(profile, config, extra)), assets };
+  }
+};
+
+// ../core/src/templates/maintainer.ts
+var WIDTH6 = 900;
+var PAD6 = 36;
 var AVATAR = 76;
 var TILE_GAP = 16;
 var TILE_HEIGHT = 140;
@@ -13017,7 +13208,7 @@ var PALETTE = {
 };
 var mono = (text, x, y, fill, extra = "") => `<text class="mono" x="${x}" y="${y}" fill="${fill}" ${extra}>${xmlEscape(text)}</text>`;
 function sectionLabel(text, y, color) {
-  return mono(text, PAD5, y, color, 'font-size="12" font-weight="700" letter-spacing="2"');
+  return mono(text, PAD6, y, color, 'font-size="12" font-weight="700" letter-spacing="2"');
 }
 function repoTile(repo, x, y, width, profile, t, accent2) {
   const parts = [
@@ -13051,7 +13242,7 @@ function repoTile(repo, x, y, width, profile, t, accent2) {
   }
   return parts.join("");
 }
-function renderSvg5(profile, config, variant) {
+function renderSvg6(profile, config, variant) {
   const t = PALETTE[variant];
   const tint = profile.avatar?.grid.tint;
   const palette = tint ? accentColors(tint, variant) : FALLBACK_ACCENTS[variant];
@@ -13064,19 +13255,19 @@ function renderSvg5(profile, config, variant) {
   const next = () => step++ * 0.09;
   const uri = profile.avatar?.dataUri;
   const hasPhoto = Boolean(uri && SAFE_DATA_URI.test(uri));
-  const cx = PAD5 + AVATAR / 2;
-  const cy = PAD5 + AVATAR / 2;
+  const cx = PAD6 + AVATAR / 2;
+  const cy = PAD6 + AVATAR / 2;
   const initial = [...profile.name ?? profile.login][0]?.toUpperCase() ?? "?";
-  const portrait = hasPhoto && uri ? `<clipPath id="portrait"><circle cx="${cx}" cy="${cy}" r="${AVATAR / 2}"/></clipPath><image href="${uri}" x="${PAD5}" y="${PAD5}" width="${AVATAR}" height="${AVATAR}" preserveAspectRatio="xMidYMid slice" clip-path="url(#portrait)"/><circle cx="${cx}" cy="${cy}" r="${AVATAR / 2 + 4}" fill="none" stroke="${accent2}" stroke-width="2"/>` : `<circle cx="${cx}" cy="${cy}" r="${AVATAR / 2}" fill="${accent2}"/><text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="34" font-weight="800" fill="${t.bg}">${xmlEscape(initial)}</text>`;
-  const textX = PAD5 + AVATAR + 24;
+  const portrait = hasPhoto && uri ? `<clipPath id="portrait"><circle cx="${cx}" cy="${cy}" r="${AVATAR / 2}"/></clipPath><image href="${uri}" x="${PAD6}" y="${PAD6}" width="${AVATAR}" height="${AVATAR}" preserveAspectRatio="xMidYMid slice" clip-path="url(#portrait)"/><circle cx="${cx}" cy="${cy}" r="${AVATAR / 2 + 4}" fill="none" stroke="${accent2}" stroke-width="2"/>` : `<circle cx="${cx}" cy="${cy}" r="${AVATAR / 2}" fill="${accent2}"/><text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="34" font-weight="800" fill="${t.bg}">${xmlEscape(initial)}</text>`;
+  const textX = PAD6 + AVATAR + 24;
   const bio = config.text.bio ?? profile.bio;
   const subline = [
     profile.name ? `<tspan fill="${t.muted}">@${xmlEscape(profile.login)}</tspan>` : "",
     config.text.headline ? `<tspan fill="${accent2}" font-weight="600">${xmlEscape(truncate(config.text.headline, 50))}</tspan>` : ""
   ].filter(Boolean);
-  const header = portrait + `<text x="${textX}" y="${PAD5 + 30}" font-size="30" font-weight="800" fill="${t.fg}">${xmlEscape(truncate(profile.name ?? profile.login, 30))}</text>` + (subline.length > 0 ? `<text x="${textX}" y="${PAD5 + 54}" font-size="14.5" xml:space="preserve">${subline.join('<tspan fill="' + t.muted + '">  \xB7  </tspan>')}</text>` : "") + (bio ? `<text x="${textX}" y="${PAD5 + 76}" font-size="13.5" fill="${t.fg}" fill-opacity="0.8">${xmlEscape(truncate(bio, 88))}</text>` : "") + mono(`github.com/${profile.login}`, WIDTH5 - PAD5, PAD5 + 22, t.muted, 'font-size="12.5" text-anchor="end"');
+  const header = portrait + `<text x="${textX}" y="${PAD6 + 30}" font-size="30" font-weight="800" fill="${t.fg}">${xmlEscape(truncate(profile.name ?? profile.login, 30))}</text>` + (subline.length > 0 ? `<text x="${textX}" y="${PAD6 + 54}" font-size="14.5" xml:space="preserve">${subline.join('<tspan fill="' + t.muted + '">  \xB7  </tspan>')}</text>` : "") + (bio ? `<text x="${textX}" y="${PAD6 + 76}" font-size="13.5" fill="${t.fg}" fill-opacity="0.8">${xmlEscape(truncate(bio, 88))}</text>` : "") + mono(`github.com/${profile.login}`, WIDTH6 - PAD6, PAD6 + 22, t.muted, 'font-size="12.5" text-anchor="end"');
   parts.push(rise(header, motion, next()));
-  let cursor = PAD5 + AVATAR + 32;
+  let cursor = PAD6 + AVATAR + 32;
   if (blocks.has("stats")) {
     const cells = [[formatNumber(profile.totalStars), "STARS EARNED"]];
     if (profile.totalForks !== void 0) cells.push([formatNumber(profile.totalForks), "FORKS"]);
@@ -13084,10 +13275,10 @@ function renderSvg5(profile, config, variant) {
     if (profile.activeRepos !== void 0) cells.push([formatNumber(profile.activeRepos), `ACTIVE, LAST ${ACTIVE_WINDOW_DAYS} DAYS`]);
     if (cells.length < 4) cells.push([formatNumber(profile.followers), "FOLLOWERS"]);
     const shown = cells.slice(0, 4);
-    const cellWidth = (WIDTH5 - PAD5 * 2) / shown.length;
-    const markup = `<rect x="${PAD5}" y="${cursor}" width="${WIDTH5 - PAD5 * 2}" height="88" rx="16" fill="${t.panel}" stroke="${t.border}"/><rect x="${PAD5 + 20}" y="${cursor}" width="44" height="3" rx="1.5" fill="${accent2}"/>` + shown.map(([value, caption], index) => {
-      const x = PAD5 + index * cellWidth + 24;
-      const divider = index > 0 ? `<rect x="${(PAD5 + index * cellWidth).toFixed(1)}" y="${cursor + 18}" width="1" height="52" fill="${t.border}"/>` : "";
+    const cellWidth = (WIDTH6 - PAD6 * 2) / shown.length;
+    const markup = `<rect x="${PAD6}" y="${cursor}" width="${WIDTH6 - PAD6 * 2}" height="88" rx="16" fill="${t.panel}" stroke="${t.border}"/><rect x="${PAD6 + 20}" y="${cursor}" width="44" height="3" rx="1.5" fill="${accent2}"/>` + shown.map(([value, caption], index) => {
+      const x = PAD6 + index * cellWidth + 24;
+      const divider = index > 0 ? `<rect x="${(PAD6 + index * cellWidth).toFixed(1)}" y="${cursor + 18}" width="1" height="52" fill="${t.border}"/>` : "";
       return divider + `<text x="${x.toFixed(1)}" y="${cursor + 47}" font-size="30" font-weight="800" fill="${t.fg}">${xmlEscape(value)}</text>` + mono(caption, Number(x.toFixed(1)), cursor + 68, t.muted, 'font-size="10.5" letter-spacing="1"');
     }).join("");
     parts.push(rise(markup, motion, next()));
@@ -13095,12 +13286,12 @@ function renderSvg5(profile, config, variant) {
   }
   if (blocks.has("projects") && profile.topRepos.length > 0) {
     const repos = profile.topRepos.slice(0, 4);
-    const half = Math.floor((WIDTH5 - PAD5 * 2 - TILE_GAP) / 2);
+    const half = Math.floor((WIDTH6 - PAD6 * 2 - TILE_GAP) / 2);
     const top = cursor + 24;
     const tiles = repos.map((repo, index) => {
       const alone = index === repos.length - 1 && repos.length % 2 === 1;
-      const width = alone ? WIDTH5 - PAD5 * 2 : half;
-      const x = PAD5 + index % 2 * (half + TILE_GAP);
+      const width = alone ? WIDTH6 - PAD6 * 2 : half;
+      const x = PAD6 + index % 2 * (half + TILE_GAP);
       const y = top + Math.floor(index / 2) * (TILE_HEIGHT + TILE_GAP);
       return repoTile(repo, x, y, width, profile, t, accent2);
     }).join("");
@@ -13113,12 +13304,12 @@ function renderSvg5(profile, config, variant) {
     const weeks = weeklyTotals(activity.days);
     const peak = Math.max(...weeks, 1);
     const peakIndex = weeks.indexOf(Math.max(...weeks));
-    const width = WIDTH5 - PAD5 * 2;
+    const width = WIDTH6 - PAD6 * 2;
     const barWidth = (width - BAR_GAP * (weeks.length - 1)) / weeks.length;
     const top = cursor + 24;
     const bars = weeks.map((total, index) => {
       const height2 = Math.max(2, total / peak * CHART_HEIGHT);
-      const x = PAD5 + index * (barWidth + BAR_GAP);
+      const x = PAD6 + index * (barWidth + BAR_GAP);
       const fill = total === 0 ? t.track : index === peakIndex ? accent22 : accent2;
       const delay = motion ? ` style="animation-delay:${(0.25 + index * 0.012).toFixed(3)}s"` : "";
       return `<rect class="bar" x="${x.toFixed(2)}" y="${(top + CHART_HEIGHT - height2).toFixed(2)}" width="${barWidth.toFixed(2)}" height="${height2.toFixed(2)}" rx="1.5" fill="${fill}"${total === 0 ? "" : ' fill-opacity="0.9"'}${delay}/>`;
@@ -13130,17 +13321,17 @@ function renderSvg5(profile, config, variant) {
       `longest streak ${plural(activity.longestStreak, "day")}`,
       month ? `busiest month ${month.name} (${formatNumber(month.total)})` : null
     ].filter((v) => Boolean(v)).join("  \xB7  ");
-    const markup = sectionLabel("PULSE, PAST YEAR", cursor + 10, accent2) + `<rect x="${PAD5}" y="${top + CHART_HEIGHT + 1}" width="${width}" height="1" fill="${t.border}"/>` + bars + mono(truncate(caption, 120), PAD5, top + CHART_HEIGHT + 26, t.muted, 'font-size="12"');
+    const markup = sectionLabel("PULSE, PAST YEAR", cursor + 10, accent2) + `<rect x="${PAD6}" y="${top + CHART_HEIGHT + 1}" width="${width}" height="1" fill="${t.border}"/>` + bars + mono(truncate(caption, 120), PAD6, top + CHART_HEIGHT + 26, t.muted, 'font-size="12"');
     parts.push(rise(markup, motion, next()));
     cursor = top + CHART_HEIGHT + 26 + 8 + SECTION_GAP;
   }
   if (blocks.has("languages") && profile.languages.length > 0) {
-    let x = PAD5 + 112;
+    let x = PAD6 + 112;
     const items = [];
     profile.languages.forEach((language, index) => {
       const label2 = `${truncate(language.name, 14)} ${language.percent}%`;
       const width = 16 + Math.ceil(label2.length * 7) + 22;
-      if (x + width > WIDTH5 - PAD5) return;
+      if (x + width > WIDTH6 - PAD6) return;
       const shade = (tint ? palette : [accent2, accent22])[index % (tint ? palette.length : 2)] ?? accent2;
       items.push(
         `<circle cx="${x + 4}" cy="${cursor - 4}" r="4" fill="${shade}"/><text x="${x + 16}" y="${cursor}" font-size="13" fill="${t.fg}" fill-opacity="0.85">${xmlEscape(label2)}</text>`
@@ -13150,14 +13341,14 @@ function renderSvg5(profile, config, variant) {
     parts.push(rise(sectionLabel("WRITTEN IN", cursor, accent2) + items.join(""), motion, next()));
     cursor += 10 + SECTION_GAP;
   }
-  const height = cursor - SECTION_GAP + PAD5;
+  const height = cursor - SECTION_GAP + PAD6;
   const title = `${profile.name ?? profile.login} (@${profile.login}) on GitHub`;
   const css = motion ? `.rise{animation:rise .6s ease both}
 @keyframes rise{from{opacity:0;transform:translateY(6px)}}
 .bar{transform-box:fill-box;transform-origin:50% 100%;animation:grow .7s cubic-bezier(.2,.7,.2,1) both}
 @keyframes grow{from{transform:scaleY(0)}}
 @media (prefers-reduced-motion:reduce){.rise,.bar{animation:none}}` : "";
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH5}" height="${height}" viewBox="0 0 ${WIDTH5} ${height}" role="img" aria-labelledby="t">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH6}" height="${height}" viewBox="0 0 ${WIDTH6} ${height}" role="img" aria-labelledby="t">
 <title id="t">${xmlEscape(title)}</title>
 <defs>
 <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="${t.grid}" stroke-opacity="${variant === "dark" ? 0.09 : 0.08}"/></pattern>
@@ -13168,10 +13359,10 @@ text{font-family:${FONT_SANS}}
 .mono{font-family:${FONT}}
 ${css}
 </style>
-<rect width="${WIDTH5}" height="${height}" rx="18" fill="${t.bg}"/>
-<rect width="${WIDTH5}" height="${height}" rx="18" fill="url(#grid)"/>
-<rect width="${WIDTH5}" height="${height}" rx="18" fill="url(#glow)"/>
-<rect x="0.5" y="0.5" width="${WIDTH5 - 1}" height="${height - 1}" rx="18" fill="none" stroke="${t.border}"/>
+<rect width="${WIDTH6}" height="${height}" rx="18" fill="${t.bg}"/>
+<rect width="${WIDTH6}" height="${height}" rx="18" fill="url(#grid)"/>
+<rect width="${WIDTH6}" height="${height}" rx="18" fill="url(#glow)"/>
+<rect x="0.5" y="0.5" width="${WIDTH6 - 1}" height="${height - 1}" rx="18" fill="none" stroke="${t.border}"/>
 ${parts.filter(Boolean).join("\n")}
 </svg>
 `;
@@ -13185,11 +13376,11 @@ var maintainer = {
   render(profile, config) {
     const assets = variantsFor(config.theme).map((variant) => ({
       path: assetPath("maintainer", variant),
-      content: renderSvg5(profile, config, variant)
+      content: renderSvg6(profile, config, variant)
     }));
     const projects = config.blocks.includes("projects") && profile.topRepos.length > 0 ? `top projects ${profile.topRepos.slice(0, 4).map((r) => r.name).join(", ")}` : void 0;
     const alt = describeProfile(profile, config, projects, { activity: true });
-    return { readme: imageReadme(profile, config, "maintainer", WIDTH5, alt), assets };
+    return { readme: imageReadme(profile, config, "maintainer", WIDTH6, alt), assets };
   }
 };
 
@@ -13344,8 +13535,8 @@ function asciiPortrait(grid, cols, tone) {
 }
 
 // ../core/src/templates/neofetch.ts
-var WIDTH6 = 900;
-var PAD6 = 28;
+var WIDTH7 = 900;
+var PAD7 = 28;
 var TOP = 70;
 var ART_COLS = 56;
 var ART_SIZE = 10;
@@ -13359,7 +13550,7 @@ var VALUE_MAX = 44;
 var CHAR_WIDTH = 7.9;
 var ART_STEP = 0.025;
 var INFO_STEP = 0.11;
-var MONTHS2 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+var MONTHS3 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 var SWATCHES = {
   dark: ["#f85149", "#e3b341", "#3fb950", "#58a6ff", "#bc8cff", "#39c5cf", "#e6edf3", "#9198a1"],
   light: ["#cf222e", "#9a6700", "#1a7f37", "#0969da", "#8250df", "#1b7c83", "#1f2328", "#59636e"]
@@ -13367,7 +13558,7 @@ var SWATCHES = {
 function joined(createdAt) {
   const date = new Date(createdAt);
   if (Number.isNaN(date.getTime())) return null;
-  return `${MONTHS2[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+  return `${MONTHS3[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
 }
 function infoLines(profile, config) {
   const lines = [{ kind: "title" }, { kind: "blank" }];
@@ -13427,19 +13618,19 @@ function renderInfo(line, y, x, p, login) {
       return `<text ${base} fill="${p.accent2}" font-weight="700">${xmlEscape(line.label.padEnd(LABEL_WIDTH))}<tspan fill="${p.fg}" font-weight="400">${xmlEscape(line.value)}</tspan></text>`;
   }
 }
-function renderSvg6(profile, config, variant) {
+function renderSvg7(profile, config, variant) {
   const p = palettes[variant];
   const art = profile.avatar ? asciiPortrait(profile.avatar.grid, ART_COLS, variant) : [];
   const info = infoLines(profile, config);
-  const infoX = art.length > 0 ? PAD6 + ART_WIDTH + GAP3 : PAD6;
+  const infoX = art.length > 0 ? PAD7 + ART_WIDTH + GAP3 : PAD7;
   const infoHeight = info.length * INFO_LINE;
   const swatchY = TOP + infoHeight + 14;
   const contentHeight = Math.max(art.length * ART_LINE, infoHeight + 14 + 16);
-  const height = TOP + contentHeight + PAD6;
+  const height = TOP + contentHeight + PAD7;
   const label2 = `${profile.name ?? profile.login} (@${profile.login}) on GitHub`;
   const motion = config.motion;
   const prompt = stagger(
-    `<text x="${PAD6}" y="42" xml:space="preserve" fill="${p.fg}"><tspan fill="${p.accent}">${xmlEscape(profile.login)}@github</tspan><tspan fill="${p.muted}">:~$</tspan> neofetch</text>`,
+    `<text x="${PAD7}" y="42" xml:space="preserve" fill="${p.fg}"><tspan fill="${p.accent}">${xmlEscape(profile.login)}@github</tspan><tspan fill="${p.muted}">:~$</tspan> neofetch</text>`,
     motion,
     0
   );
@@ -13447,7 +13638,7 @@ function renderSvg6(profile, config, variant) {
     if (!row) return "";
     const y = TOP + (index + 1) * ART_LINE - 2;
     return stagger(
-      `<text class="art" x="${PAD6}" y="${y}" xml:space="preserve" fill="url(#art)">${xmlEscape(row)}</text>`,
+      `<text class="art" x="${PAD7}" y="${y}" xml:space="preserve" fill="url(#art)">${xmlEscape(row)}</text>`,
       motion,
       0.3 + index * ART_STEP
     );
@@ -13458,7 +13649,7 @@ function renderSvg6(profile, config, variant) {
   }).filter(Boolean).join("\n");
   const swatches = SWATCHES[variant].map((color, index) => `<rect x="${infoX + index * 28}" y="${swatchY}" width="24" height="14" rx="3" fill="${color}"/>`).join("");
   const swatchRow = stagger(swatches, motion, 0.3 + info.length * INFO_STEP);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH6}" height="${height}" viewBox="0 0 ${WIDTH6} ${height}" role="img" aria-labelledby="t">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH7}" height="${height}" viewBox="0 0 ${WIDTH7} ${height}" role="img" aria-labelledby="t">
 <title id="t">${xmlEscape(label2)}</title>
 <defs>
 <linearGradient id="art" x1="0" y1="0" x2="0.35" y2="1"><stop offset="0" stop-color="${p.accent2}"/><stop offset="1" stop-color="${p.accent}"/></linearGradient>
@@ -13470,9 +13661,9 @@ text{font-family:${FONT};font-size:${INFO_SIZE}px}
 .art{font-size:${ART_SIZE}px;font-weight:700}
 ${motionCss(motion)}
 </style>
-<rect x="0.5" y="0.5" width="${WIDTH6 - 1}" height="${height - 1}" rx="14" fill="${p.bg}" stroke="${p.border}"/>
-<rect x="0.5" y="0.5" width="${WIDTH6 - 1}" height="${height - 1}" rx="14" fill="url(#glow)"/>
-<rect x="14" y="1" width="${WIDTH6 - 28}" height="2" rx="1" fill="url(#edge)"/>
+<rect x="0.5" y="0.5" width="${WIDTH7 - 1}" height="${height - 1}" rx="14" fill="${p.bg}" stroke="${p.border}"/>
+<rect x="0.5" y="0.5" width="${WIDTH7 - 1}" height="${height - 1}" rx="14" fill="url(#glow)"/>
+<rect x="14" y="1" width="${WIDTH7 - 28}" height="2" rx="1" fill="url(#edge)"/>
 ${prompt}
 ${portrait}
 ${details}
@@ -13489,30 +13680,30 @@ var neofetch = {
   render(profile, config) {
     const assets = variantsFor(config.theme).map((variant) => ({
       path: assetPath("neofetch", variant),
-      content: renderSvg6(profile, config, variant)
+      content: renderSvg7(profile, config, variant)
     }));
     const extra = profile.avatar ? "with an ASCII portrait of the profile picture" : void 0;
     const alt = describeProfile(profile, config, extra, { activity: true });
-    return { readme: imageReadme(profile, config, "neofetch", WIDTH6, alt), assets };
+    return { readme: imageReadme(profile, config, "neofetch", WIDTH7, alt), assets };
   }
 };
 
 // ../core/src/templates/showcase.ts
-var WIDTH7 = 900;
-var PAD7 = 36;
+var WIDTH8 = 900;
+var PAD8 = 36;
 var AVATAR2 = 128;
 var AVATAR_GAP = 36;
-var TEXT_X = PAD7 + 8 + AVATAR2 + AVATAR_GAP;
+var TEXT_X = PAD8 + 8 + AVATAR2 + AVATAR_GAP;
 var SECTION_GAP2 = 30;
 var TILE_GAP2 = 14;
 var HEAT_CELL = 12;
 var HEAT_STEP = 15;
 var HEAT_OPACITY = [0, 0.3, 0.55, 0.78, 1];
-var MONTHS3 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+var MONTHS4 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function joined2(createdAt) {
   const date = new Date(createdAt);
   if (Number.isNaN(date.getTime())) return null;
-  return `Joined ${MONTHS3[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+  return `Joined ${MONTHS4[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
 }
 function chips2(profile) {
   const website = safeUrl(profile.website)?.replace(/^https?:\/\//, "").replace(/\/$/, "");
@@ -13529,16 +13720,16 @@ function avatarMarkup(profile, c, cx, cy) {
   const initial = [...profile.name ?? profile.login][0]?.toUpperCase() ?? "?";
   return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#ring)"/><text x="${cx}" y="${cy + 20}" text-anchor="middle" font-size="56" font-weight="800" fill="#ffffff">${xmlEscape(initial)}</text>${ring}`;
 }
-function renderSvg7(profile, config, variant) {
+function renderSvg8(profile, config, variant) {
   const p = palettes[variant];
   const c = { p, accents: accentColors(profile.avatar?.grid.tint, variant), motion: config.motion };
   const motion = config.motion;
   const body = [];
   let step = 0;
   const next = () => 0.1 + step++ * 0.12;
-  const avatarCy = PAD7 + 14 + AVATAR2 / 2;
-  body.push(rise(avatarMarkup(profile, c, PAD7 + 8 + AVATAR2 / 2, avatarCy), motion, 0));
-  let y = PAD7 + 46;
+  const avatarCy = PAD8 + 14 + AVATAR2 / 2;
+  body.push(rise(avatarMarkup(profile, c, PAD8 + 8 + AVATAR2 / 2, avatarCy), motion, 0));
+  let y = PAD8 + 46;
   const text = [];
   text.push(
     `<text x="${TEXT_X}" y="${y}" font-size="40" font-weight="800" fill="${p.fg}">${xmlEscape(truncate(profile.name ?? profile.login, 26))}</text>`
@@ -13566,7 +13757,7 @@ function renderSvg7(profile, config, variant) {
   const chipMarkup = [];
   for (const label3 of chips2(profile)) {
     const width = Math.ceil(label3.length * 7.2) + 28;
-    if (chipX + width > WIDTH7 - PAD7) {
+    if (chipX + width > WIDTH8 - PAD8) {
       chipX = TEXT_X;
       chipY += 36;
     }
@@ -13575,7 +13766,7 @@ function renderSvg7(profile, config, variant) {
     );
     chipX += width + 8;
   }
-  const heroBottom = Math.max(PAD7 + 14 + AVATAR2 + 12, chipMarkup.length > 0 ? chipY + 28 : y);
+  const heroBottom = Math.max(PAD8 + 14 + AVATAR2 + 12, chipMarkup.length > 0 ? chipY + 28 : y);
   body.push(rise(chipMarkup.join(""), motion, next()));
   let cursor = heroBottom + SECTION_GAP2;
   for (const block of config.blocks) {
@@ -13586,9 +13777,9 @@ function renderSvg7(profile, config, variant) {
         ["Followers", profile.followers],
         ["Following", profile.following]
       ];
-      const width = Math.floor((WIDTH7 - PAD7 * 2 - TILE_GAP2 * 3) / 4);
+      const width = Math.floor((WIDTH8 - PAD8 * 2 - TILE_GAP2 * 3) / 4);
       const markup = tiles.map(([label3, value], index) => {
-        const x = PAD7 + index * (width + TILE_GAP2);
+        const x = PAD8 + index * (width + TILE_GAP2);
         return `<rect x="${x}" y="${cursor}" width="${width}" height="84" rx="16" fill="${p.fg}" fill-opacity="0.06" stroke="${p.border}"/><rect x="${x + 18}" y="${cursor}" width="34" height="3" rx="1.5" fill="${accent(c, index)}"/><text x="${x + 18}" y="${cursor + 46}" font-size="30" font-weight="800" fill="${p.fg}">${xmlEscape(formatNumber(value))}</text><text x="${x + 18}" y="${cursor + 68}" font-size="12" letter-spacing="0.6" fill="${p.muted}">${xmlEscape(label3.toUpperCase())}</text>`;
       }).join("");
       body.push(rise(markup, motion, next()));
@@ -13599,42 +13790,42 @@ function renderSvg7(profile, config, variant) {
       const top = cursor + 24;
       const cells = activity.days.map((day, index) => {
         const slot = first + index;
-        const x = PAD7 + Math.floor(slot / 7) * HEAT_STEP;
+        const x = PAD8 + Math.floor(slot / 7) * HEAT_STEP;
         const y2 = top + slot % 7 * HEAT_STEP;
         const fill = day.level === 0 ? `fill="${p.track}"` : `fill="${accent(c, 0)}" fill-opacity="${HEAT_OPACITY[day.level]}"`;
         return `<rect x="${x}" y="${y2}" width="${HEAT_CELL}" height="${HEAT_CELL}" rx="2.5" ${fill}/>`;
       }).join("");
       const summaryY = top + 7 * HEAT_STEP + 20;
       const strong = (text2) => `<tspan fill="${p.fg}" font-weight="700">${xmlEscape(text2)}</tspan>`;
-      const summary = `<text x="${PAD7}" y="${summaryY}" font-size="13" fill="${p.muted}" xml:space="preserve">${strong(formatNumber(activity.total))} contributions in the past year    \xB7    current streak ${strong(plural(activity.currentStreak, "day"))}    \xB7    longest streak ${strong(plural(activity.longestStreak, "day"))}</text>`;
-      const markup = `<text x="${PAD7}" y="${cursor + 10}" font-size="12" letter-spacing="1" fill="${p.muted}">ACTIVITY</text>` + cells + summary;
+      const summary = `<text x="${PAD8}" y="${summaryY}" font-size="13" fill="${p.muted}" xml:space="preserve">${strong(formatNumber(activity.total))} contributions in the past year    \xB7    current streak ${strong(plural(activity.currentStreak, "day"))}    \xB7    longest streak ${strong(plural(activity.longestStreak, "day"))}</text>`;
+      const markup = `<text x="${PAD8}" y="${cursor + 10}" font-size="12" letter-spacing="1" fill="${p.muted}">ACTIVITY</text>` + cells + summary;
       body.push(rise(markup, motion, next()));
       cursor += summaryY - cursor + 6 + SECTION_GAP2;
     } else if (block === "languages" && profile.languages.length > 0) {
-      const barWidth = WIDTH7 - PAD7 * 2;
+      const barWidth = WIDTH8 - PAD8 * 2;
       const total = profile.languages.reduce((sum, l) => sum + l.percent, 0) || 1;
-      let x = PAD7;
+      let x = PAD8;
       const segments = profile.languages.map((language, index) => {
         const width = language.percent / total * barWidth;
         const rect = `<rect x="${x.toFixed(1)}" y="${cursor + 22}" width="${Math.max(width, 3).toFixed(1)}" height="10" fill="${accent(c, index)}"/>`;
         x += width;
         return rect;
       }).join("");
-      let legendX = PAD7;
+      let legendX = PAD8;
       const legend = profile.languages.map((language, index) => {
         const label3 = `${truncate(language.name, 16)} ${language.percent}%`;
         const item = `<circle cx="${legendX + 5}" cy="${cursor + 56}" r="5" fill="${accent(c, index)}"/><text x="${legendX + 16}" y="${cursor + 61}" font-size="13" fill="${p.fg}" fill-opacity="0.85">${xmlEscape(label3)}</text>`;
         legendX += 16 + Math.ceil(label3.length * 7) + 22;
         return item;
       }).join("");
-      const markup = `<text x="${PAD7}" y="${cursor + 10}" font-size="12" letter-spacing="1" fill="${p.muted}">LANGUAGES, BY NUMBER OF REPOSITORIES</text><clipPath id="bar"><rect x="${PAD7}" y="${cursor + 22}" width="${barWidth}" height="10" rx="5"/></clipPath><rect x="${PAD7}" y="${cursor + 22}" width="${barWidth}" height="10" rx="5" fill="${p.track}"/><g clip-path="url(#bar)">${segments}</g>${legend}`;
+      const markup = `<text x="${PAD8}" y="${cursor + 10}" font-size="12" letter-spacing="1" fill="${p.muted}">LANGUAGES, BY NUMBER OF REPOSITORIES</text><clipPath id="bar"><rect x="${PAD8}" y="${cursor + 22}" width="${barWidth}" height="10" rx="5"/></clipPath><rect x="${PAD8}" y="${cursor + 22}" width="${barWidth}" height="10" rx="5" fill="${p.track}"/><g clip-path="url(#bar)">${segments}</g>${legend}`;
       body.push(rise(markup, motion, next()));
       cursor += 70 + SECTION_GAP2;
     } else if (block === "projects" && profile.topRepos.length > 0) {
       const repos = profile.topRepos.slice(0, 3);
-      const width = Math.floor((WIDTH7 - PAD7 * 2 - TILE_GAP2 * (repos.length - 1)) / repos.length);
+      const width = Math.floor((WIDTH8 - PAD8 * 2 - TILE_GAP2 * (repos.length - 1)) / repos.length);
       const cards = repos.map((repo, index) => {
-        const x = PAD7 + index * (width + TILE_GAP2);
+        const x = PAD8 + index * (width + TILE_GAP2);
         const top = cursor + 22;
         const description = repo.description ? wrap(repo.description, Math.max(18, Math.floor((width - 36) / 6.6)), 2).map(
           (line, i) => `<text x="${x + 18}" y="${top + 52 + i * 17}" font-size="12.5" fill="${p.muted}">${xmlEscape(line)}</text>`
@@ -13642,12 +13833,12 @@ function renderSvg7(profile, config, variant) {
         const meta = [`\u2605 ${formatNumber(repo.stars)}`, repo.language].filter(Boolean).join("  \xB7  ");
         return `<rect x="${x}" y="${top}" width="${width}" height="104" rx="16" fill="${p.fg}" fill-opacity="0.06" stroke="${p.border}"/><text x="${x + 18}" y="${top + 30}" font-size="15" font-weight="700" fill="${p.fg}">${xmlEscape(truncate(repo.name, Math.floor((width - 36) / 8.4)))}</text>` + description + `<text x="${x + 18}" y="${top + 92}" font-size="12.5" font-weight="600" fill="${accent(c, index + 1)}">${xmlEscape(meta)}</text>`;
       }).join("");
-      const markup = `<text x="${PAD7}" y="${cursor + 10}" font-size="12" letter-spacing="1" fill="${p.muted}">TOP PROJECTS</text>${cards}`;
+      const markup = `<text x="${PAD8}" y="${cursor + 10}" font-size="12" letter-spacing="1" fill="${p.muted}">TOP PROJECTS</text>${cards}`;
       body.push(rise(markup, motion, next()));
       cursor += 22 + 104 + SECTION_GAP2;
     }
   }
-  const height = Math.max(cursor - SECTION_GAP2 + PAD7, heroBottom + PAD7);
+  const height = Math.max(cursor - SECTION_GAP2 + PAD8, heroBottom + PAD8);
   const label2 = `${profile.name ?? profile.login} (@${profile.login}) on GitHub`;
   const glow = variant === "dark" ? 0.5 : 0.3;
   const css = motion ? `.drift{animation:drift 16s ease-in-out infinite alternate}
@@ -13659,10 +13850,10 @@ function renderSvg7(profile, config, variant) {
 .ring{animation:pulse 4s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.5}}
 @media (prefers-reduced-motion:reduce){.drift,.rise,.ring{animation:none}}` : "";
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH7}" height="${height}" viewBox="0 0 ${WIDTH7} ${height}" role="img" aria-labelledby="t">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH8}" height="${height}" viewBox="0 0 ${WIDTH8} ${height}" role="img" aria-labelledby="t">
 <title id="t">${xmlEscape(label2)}</title>
 <defs>
-<clipPath id="card"><rect width="${WIDTH7}" height="${height}" rx="22"/></clipPath>
+<clipPath id="card"><rect width="${WIDTH8}" height="${height}" rx="22"/></clipPath>
 <filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="64"/></filter>
 <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${accent(c, 0)}"/><stop offset="1" stop-color="${accent(c, 1)}"/></linearGradient>
 </defs>
@@ -13670,16 +13861,16 @@ function renderSvg7(profile, config, variant) {
 text{font-family:${FONT_SANS}}
 ${css}
 </style>
-<rect width="${WIDTH7}" height="${height}" rx="22" fill="${p.bg}"/>
+<rect width="${WIDTH8}" height="${height}" rx="22" fill="${p.bg}"/>
 <g clip-path="url(#card)">
 <g filter="url(#blur)">
 <circle class="drift" cx="150" cy="40" r="190" fill="${accent(c, 0)}" fill-opacity="${glow}"/>
 <circle class="drift d2" cx="780" cy="110" r="210" fill="${accent(c, 1)}" fill-opacity="${glow * 0.85}"/>
 <circle class="drift d3" cx="470" cy="${height}" r="230" fill="${accent(c, 2)}" fill-opacity="${glow * 0.7}"/>
 </g>
-<rect width="${WIDTH7}" height="${height}" fill="${p.bg}" fill-opacity="0.38"/>
+<rect width="${WIDTH8}" height="${height}" fill="${p.bg}" fill-opacity="0.38"/>
 </g>
-<rect x="0.5" y="0.5" width="${WIDTH7 - 1}" height="${height - 1}" rx="22" fill="none" stroke="${p.border}"/>
+<rect x="0.5" y="0.5" width="${WIDTH8 - 1}" height="${height - 1}" rx="22" fill="none" stroke="${p.border}"/>
 ${body.filter(Boolean).join("\n")}
 </svg>
 `;
@@ -13693,16 +13884,16 @@ var showcase = {
   render(profile, config) {
     const assets = variantsFor(config.theme).map((variant) => ({
       path: assetPath("showcase", variant),
-      content: renderSvg7(profile, config, variant)
+      content: renderSvg8(profile, config, variant)
     }));
     const alt = describeProfile(profile, config, void 0, { activity: true });
-    return { readme: imageReadme(profile, config, "showcase", WIDTH7, alt), assets };
+    return { readme: imageReadme(profile, config, "showcase", WIDTH8, alt), assets };
   }
 };
 
 // ../core/src/templates/snake.ts
-var WIDTH8 = 900;
-var PAD8 = 36;
+var WIDTH9 = 900;
+var PAD9 = 36;
 var ROWS2 = 7;
 var CELL = 11;
 var STEP = 14;
@@ -13730,8 +13921,8 @@ function planSnake(days) {
   });
   return { cols, path, cells };
 }
-var num4 = (value) => String(Math.round(value * 100) / 100 || 0);
-function lookFor4(variant, hue) {
+var num5 = (value) => String(Math.round(value * 100) / 100 || 0);
+function lookFor5(variant, hue) {
   const dark = variant === "dark";
   return {
     bgTop: dark ? hslToHex(hue, 0.35, 0.07) : hslToHex(hue, 0.4, 0.96),
@@ -13744,17 +13935,17 @@ function lookFor4(variant, hue) {
     head: hslToHex((hue + 55) % 360, 0.9, dark ? 0.72 : 0.34)
   };
 }
-function renderSvg8(profile, config, variant) {
-  const look = lookFor4(variant, hueOf(profile.avatar?.grid.tint) ?? 130);
+function renderSvg9(profile, config, variant) {
+  const look = lookFor5(variant, hueOf(profile.avatar?.grid.tint) ?? 130);
   const motion = config.motion;
   const blocks = new Set(config.blocks);
   const parts = [];
   let step = 0;
   const next = () => step++ * 0.1;
   const subline = [profile.name ? `@${profile.login}` : "", config.text.headline ? truncate(config.text.headline, 46) : ""].filter(Boolean);
-  let header = `<text x="${PAD8}" y="${PAD8 + 24}" font-size="28" font-weight="800" fill="${look.fg}">${xmlEscape(truncate(profile.name ?? profile.login, 28))}</text>`;
+  let header = `<text x="${PAD9}" y="${PAD9 + 24}" font-size="28" font-weight="800" fill="${look.fg}">${xmlEscape(truncate(profile.name ?? profile.login, 28))}</text>`;
   if (subline.length > 0) {
-    header += `<text x="${PAD8}" y="${PAD8 + 46}" font-size="14" fill="${look.muted}">${xmlEscape(subline.join("  \xB7  "))}</text>`;
+    header += `<text x="${PAD9}" y="${PAD9 + 46}" font-size="14" fill="${look.muted}">${xmlEscape(subline.join("  \xB7  "))}</text>`;
   }
   if (blocks.has("stats")) {
     const stats = [
@@ -13763,19 +13954,19 @@ function renderSvg8(profile, config, variant) {
       [formatNumber(profile.followers), "FOLLOWERS"]
     ];
     stats.forEach(([value, caption], index) => {
-      const x = WIDTH8 - PAD8 - (stats.length - 1 - index) * 104;
-      header += `<text x="${x}" y="${PAD8 + 22}" text-anchor="end" font-size="22" font-weight="800" fill="${look.fg}">${xmlEscape(value)}</text><text class="mono" x="${x}" y="${PAD8 + 40}" text-anchor="end" font-size="10" letter-spacing="1.2" fill="${look.muted}">${caption}</text>`;
+      const x = WIDTH9 - PAD9 - (stats.length - 1 - index) * 104;
+      header += `<text x="${x}" y="${PAD9 + 22}" text-anchor="end" font-size="22" font-weight="800" fill="${look.fg}">${xmlEscape(value)}</text><text class="mono" x="${x}" y="${PAD9 + 40}" text-anchor="end" font-size="10" letter-spacing="1.2" fill="${look.muted}">${caption}</text>`;
     });
   }
   parts.push(rise(header, motion, next()));
-  let cursor = PAD8 + 64;
+  let cursor = PAD9 + 64;
   const wantsGrid = blocks.has("activity");
   const activity = profile.contributions;
   const plan = planSnake(activity?.days ?? []);
   let css = "";
   if (wantsGrid && activity && plan.cols > 0) {
     const gridWidth = plan.cols * STEP - (STEP - CELL);
-    const x0 = Math.round((WIDTH8 - gridWidth) / 2);
+    const x0 = Math.round((WIDTH9 - gridWidth) / 2);
     const y0 = cursor + STEP + 6;
     const at = (col, row) => [x0 + col * STEP, y0 + row * STEP];
     const length = plan.path.length;
@@ -13801,21 +13992,21 @@ function renderSvg8(profile, config, variant) {
       const [px, py] = poseAt(BODY - i);
       const fill = i === 0 ? look.head : look.body;
       const opacity = i === 0 ? 1 : Math.max(0.35, 1 - i * 0.13);
-      const delay = motion ? ` style="animation-delay:-${num4((length - i) * STEP_SECONDS)}s"` : "";
-      return `<rect class="s" x="${num4(inset)}" y="${num4(inset)}" width="${num4(size)}" height="${num4(size)}" rx="${i === 0 ? 4 : 3}" fill="${fill}" fill-opacity="${num4(opacity)}" transform="translate(${px} ${py})"${delay}/>`;
+      const delay = motion ? ` style="animation-delay:-${num5((length - i) * STEP_SECONDS)}s"` : "";
+      return `<rect class="s" x="${num5(inset)}" y="${num5(inset)}" width="${num5(size)}" height="${num5(size)}" rx="${i === 0 ? 4 : 3}" fill="${fill}" fill-opacity="${num5(opacity)}" transform="translate(${px} ${py})"${delay}/>`;
     });
     const snake2 = segments.reverse().join("");
     parts.push(rise(cells + snake2, false, 0));
     if (motion) {
       const slither = Array.from({ length: length + 1 }, (_v, index) => {
         const [px, py] = poseAt(index);
-        return `${num4(index / length * 100)}%{transform:translate(${px}px,${py}px)}`;
+        return `${num5(index / length * 100)}%{transform:translate(${px}px,${py}px)}`;
       }).join("");
       const eaten = [...buckets].sort((a, b) => a - b).map((bucket) => {
         const vanish = ((bucket + 1) * BUCKET - 1) / length * 100;
-        return `@keyframes e${bucket}{0%,${num4(vanish)}%{opacity:1}${num4(vanish + 0.01)}%,100%{opacity:0}}.e${bucket}{animation-name:e${bucket}}`;
+        return `@keyframes e${bucket}{0%,${num5(vanish)}%{opacity:1}${num5(vanish + 0.01)}%,100%{opacity:0}}.e${bucket}{animation-name:e${bucket}}`;
       }).join("");
-      css = `.s{animation:slither ${num4(period)}s linear infinite}@keyframes slither{${slither}}.c{animation-duration:${num4(period)}s;animation-iteration-count:infinite;animation-timing-function:linear}` + eaten + `@media (prefers-reduced-motion:reduce){.s,.c{animation:none}}`;
+      css = `.s{animation:slither ${num5(period)}s linear infinite}@keyframes slither{${slither}}.c{animation-duration:${num5(period)}s;animation-iteration-count:infinite;animation-timing-function:linear}` + eaten + `@media (prefers-reduced-motion:reduce){.s,.c{animation:none}}`;
     }
     cursor = y0 + ROWS2 * STEP + 18;
     const captions = [
@@ -13824,7 +14015,7 @@ function renderSvg8(profile, config, variant) {
     ].map((items) => items.join("  \xB7  "));
     parts.push(
       rise(
-        captions.map((line, index) => `<text class="mono" x="${WIDTH8 / 2}" y="${num4(cursor + index * 20)}" text-anchor="middle" font-size="12.5" fill="${look.muted}">${xmlEscape(line)}</text>`).join(""),
+        captions.map((line, index) => `<text class="mono" x="${WIDTH9 / 2}" y="${num5(cursor + index * 20)}" text-anchor="middle" font-size="12.5" fill="${look.muted}">${xmlEscape(line)}</text>`).join(""),
         motion,
         next()
       )
@@ -13834,7 +14025,7 @@ function renderSvg8(profile, config, variant) {
     const top = cursor + 16;
     parts.push(
       rise(
-        `<text x="${WIDTH8 / 2}" y="${top + 54}" text-anchor="middle" font-size="16" font-weight="700" fill="${look.fg}">Your snake appears here</text><text x="${WIDTH8 / 2}" y="${top + 80}" text-anchor="middle" font-size="13" fill="${look.muted}">It crosses your contribution graph, which is added at your first automatic update.</text>`,
+        `<text x="${WIDTH9 / 2}" y="${top + 54}" text-anchor="middle" font-size="16" font-weight="700" fill="${look.fg}">Your snake appears here</text><text x="${WIDTH9 / 2}" y="${top + 80}" text-anchor="middle" font-size="13" fill="${look.muted}">It crosses your contribution graph, which is added at your first automatic update.</text>`,
         motion,
         next()
       )
@@ -13845,17 +14036,17 @@ function renderSvg8(profile, config, variant) {
     const text = profile.languages.slice(0, 4).map((l) => `${truncate(l.name, 14)} ${l.percent}%`).join("   ");
     parts.push(
       rise(
-        `<text class="mono" x="${PAD8}" y="${num4(cursor)}" font-size="12.5" fill="${look.muted}">written in  <tspan fill="${look.fg}">${xmlEscape(text)}</tspan></text>`,
+        `<text class="mono" x="${PAD9}" y="${num5(cursor)}" font-size="12.5" fill="${look.muted}">written in  <tspan fill="${look.fg}">${xmlEscape(text)}</tspan></text>`,
         motion,
         next()
       )
     );
     cursor += 24;
   }
-  const height = Math.ceil(cursor + PAD8 - 18);
+  const height = Math.ceil(cursor + PAD9 - 18);
   const title = `${profile.name ?? profile.login} (@${profile.login}) on GitHub`;
   const entrance = motion ? `.rise{animation:rise .6s ease both}@keyframes rise{from{opacity:0}}@media (prefers-reduced-motion:reduce){.rise{animation:none}}` : "";
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH8}" height="${height}" viewBox="0 0 ${WIDTH8} ${height}" role="img" aria-labelledby="t">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH9}" height="${height}" viewBox="0 0 ${WIDTH9} ${height}" role="img" aria-labelledby="t">
 <title id="t">${xmlEscape(title)}</title>
 <defs>
 <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${look.bgTop}"/><stop offset="1" stop-color="${look.bgBottom}"/></linearGradient>
@@ -13866,7 +14057,7 @@ text{font-family:${FONT_SANS}}
 ${entrance}
 ${css}
 </style>
-<rect width="${WIDTH8}" height="${height}" rx="20" fill="url(#bg)"/>
+<rect width="${WIDTH9}" height="${height}" rx="20" fill="url(#bg)"/>
 ${parts.filter(Boolean).join("\n")}
 </svg>
 `;
@@ -13880,17 +14071,17 @@ var snake = {
   render(profile, config) {
     const assets = variantsFor(config.theme).map((variant) => ({
       path: assetPath("snake", variant),
-      content: renderSvg8(profile, config, variant)
+      content: renderSvg9(profile, config, variant)
     }));
     const drawn = config.blocks.includes("activity") && profile.contributions && profile.contributions.days.length > 0;
     const extra = drawn ? "an animated snake crossing the contribution graph and eating the active days" : void 0;
-    return { readme: imageReadme(profile, config, "snake", WIDTH8, describeProfile(profile, config, extra, { activity: true })), assets };
+    return { readme: imageReadme(profile, config, "snake", WIDTH9, describeProfile(profile, config, extra, { activity: true })), assets };
   }
 };
 
 // ../core/src/templates/terminal.ts
-var WIDTH9 = 800;
-var PAD9 = 24;
+var WIDTH10 = 800;
+var PAD10 = 24;
 var TITLE_BAR = 40;
 var LINE_HEIGHT = 24;
 var FONT_SIZE = 14;
@@ -13941,7 +14132,7 @@ function buildLines(profile, config) {
   return lines;
 }
 function renderLine(line, y, p, login) {
-  const base = `x="${PAD9}" y="${y}" xml:space="preserve"`;
+  const base = `x="${PAD10}" y="${y}" xml:space="preserve"`;
   switch (line.kind) {
     case "blank":
       return "";
@@ -13972,17 +14163,17 @@ function renderLine(line, y, p, login) {
     }
   }
 }
-function renderSvg9(profile, config, variant) {
+function renderSvg10(profile, config, variant) {
   const p = palettes[variant];
   const lines = buildLines(profile, config);
-  const height = TITLE_BAR + PAD9 * 2 + lines.length * LINE_HEIGHT;
+  const height = TITLE_BAR + PAD10 * 2 + lines.length * LINE_HEIGHT;
   const label2 = `${profile.name ?? profile.login} (@${profile.login}) on GitHub`;
   const css = motionCss(config.motion);
   const body = lines.map((line, index) => {
-    const y = TITLE_BAR + PAD9 + (index + 1) * LINE_HEIGHT - 7;
+    const y = TITLE_BAR + PAD10 + (index + 1) * LINE_HEIGHT - 7;
     return stagger(renderLine(line, y, p, profile.login), config.motion, index * STEP_SECONDS2);
   }).filter(Boolean).join("\n");
-  const w = WIDTH9;
+  const w = WIDTH10;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${height}" viewBox="0 0 ${w} ${height}" role="img" aria-labelledby="t">
 <title id="t">${xmlEscape(label2)}</title>
 <style>
@@ -14006,15 +14197,15 @@ var terminal = {
   render(profile, config) {
     const assets = variantsFor(config.theme).map((variant) => ({
       path: assetPath("terminal", variant),
-      content: renderSvg9(profile, config, variant)
+      content: renderSvg10(profile, config, variant)
     }));
     const alt = describeProfile(profile, config, void 0, { activity: true });
-    return { readme: imageReadme(profile, config, "terminal", WIDTH9, alt), assets };
+    return { readme: imageReadme(profile, config, "terminal", WIDTH10, alt), assets };
   }
 };
 
 // ../core/src/templates/index.ts
-var templates = [showcase, launchpad, city, galaxy, snake, maintainer, brief, terminal, neofetch, minimal];
+var templates = [showcase, launchpad, city, galaxy, snake, learning, maintainer, brief, terminal, neofetch, minimal];
 function getTemplate(id) {
   return templates.find((template) => template.id === id);
 }

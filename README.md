@@ -113,7 +113,9 @@ After changing `packages/core` or `packages/action`, run `npm run build -w @live
 - [x] Contribution city: every day of the past year as a building in an isometric city, taller on busier days
 - [x] Repo galaxy: your projects as planets orbiting your profile picture, sized by stars, with a moon for each fork milestone
 - [x] Snake trail: an animated snake that crosses your contribution graph and eats every active day, then starts over
-- [ ] More templates: styles for makers, students and people shipping products, each with its own look
+- [x] Launchpad: a bold, hero-first page for people shipping products, with one featured project and recent momentum
+- [x] Learning log: a notebook page with a language list, a twelve-week habit tracker and recent work
+- [ ] Build log: a timeline of what was updated most recently
 - [x] Contribution graph and streaks, from the Action and from an optional edge function for the preview
 - [ ] Activity in more templates, and a template built around the isometric contribution city
 - [ ] Import and improve an existing README
