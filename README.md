@@ -8,7 +8,7 @@ A GitHub profile README that keeps itself up to date. Open source, no sign-in, n
 
 Type your GitHub username, pick a design, make it yours, and export. A small GitHub Action in your own profile repository then refreshes your stats every day, so your profile never goes stale and never depends on someone else's server.
 
-> **Status: early.** The builder, the Action and seven templates work, including a 3D contribution city. More templates are the next thing on the list. See the [roadmap](#roadmap).
+> **Status: early.** The builder, the Action and eight templates work, including a 3D contribution city and an orbiting repo galaxy. More templates are the next thing on the list. See the [roadmap](#roadmap).
 
 ## How it works
 
@@ -32,7 +32,7 @@ In your profile repository (named the same as your username), add `livebio.yml`:
 
 ```yaml
 username: your-username
-template: showcase   # showcase, city, maintainer, brief, terminal, neofetch or minimal
+template: showcase   # showcase, city, galaxy, maintainer, brief, terminal, neofetch or minimal
 theme: auto
 motion: true
 credit: true
@@ -111,7 +111,8 @@ After changing `packages/core` or `packages/action`, run `npm run build -w @live
 - [x] Open-source maintainer: a project board with impact numbers, repository tiles (licence, freshness) and a weekly activity pulse
 - [x] Neofetch: your profile picture as ASCII art beside a system-info summary
 - [x] Contribution city: every day of the past year as a building in an isometric city, taller on busier days
-- [ ] More templates: animated repo galaxy, snake trail and more, each with its own look
+- [x] Repo galaxy: your projects as planets orbiting your profile picture, sized by stars, with a moon for each fork milestone
+- [ ] More templates: snake trail and styles for makers, students and people shipping products, each with its own look
 - [x] Contribution graph and streaks, from the Action and from an optional edge function for the preview
 - [ ] Activity in more templates, and a template built around the isometric contribution city
 - [ ] Import and improve an existing README

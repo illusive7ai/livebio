@@ -61,7 +61,7 @@ function buildLines(profile: Profile, config: Config): Line[] {
       }
     } else if (block === 'projects' && profile.topRepos.length > 0) {
       lines.push({ kind: 'blank' }, { kind: 'prompt', command: 'projects --top' });
-      for (const repo of profile.topRepos) {
+      for (const repo of profile.topRepos.slice(0, 4)) {
         lines.push({ kind: 'repo', stars: repo.stars, name: repo.name, description: repo.description });
       }
     }

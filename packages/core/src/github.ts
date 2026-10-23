@@ -31,6 +31,9 @@ export interface FetchOptions {
   now?: () => Date;
 }
 
+/** How many of a user's most-starred repositories are kept. Templates show as many as suit them. */
+export const TOP_REPOS = 6;
+
 /** A repository counts as recently active if it was pushed to within this many days. */
 export const ACTIVE_WINDOW_DAYS = 90;
 
@@ -163,7 +166,7 @@ export async function fetchProfile(username: string, opts: FetchOptions = {}): P
   const topRepos = own
     .filter((repo) => !repo.archived)
     .sort((a, b) => b.stargazers_count - a.stargazers_count)
-    .slice(0, 4)
+    .slice(0, TOP_REPOS)
     .map(summarise);
 
   return {

@@ -36,7 +36,7 @@ export const minimal: Template = {
         const items = profile.languages.map((l) => `${escapeMarkdown(l.name)} ${l.percent}%`);
         sections.push(`**Languages:** ${items.join(' · ')}`);
       } else if (block === 'projects' && profile.topRepos.length > 0) {
-        const items = profile.topRepos.map((repo) => {
+        const items = profile.topRepos.slice(0, 4).map((repo) => {
           const description = repo.description ? ` — ${escapeMarkdown(repo.description)}` : '';
           return `- [${escapeMarkdown(repo.name)}](<${repo.url}>) (★ ${formatNumber(repo.stars)})${description}`;
         });

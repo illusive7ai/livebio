@@ -34,6 +34,17 @@ export function stagger(markup: string, motion: boolean, delay: number): string 
   return `<g class="ln" style="animation-delay:${delay.toFixed(2)}s">${markup}</g>`;
 }
 
+/** A small repeatable number generator, so a user's sky is their own but never changes between runs. */
+export function seeded(text: string): () => number {
+  let state = 2166136261;
+  for (const char of text) state = Math.imul(state ^ char.charCodeAt(0), 16777619) >>> 0;
+  return () => {
+    state = Math.imul(state ^ (state >>> 15), 2246822507) >>> 0;
+    state = Math.imul(state ^ (state >>> 13), 3266489909) >>> 0;
+    return ((state ^= state >>> 16) >>> 0) / 4294967296;
+  };
+}
+
 /** "1 day" or "7 days". */
 export function plural(count: number, noun: string): string {
   return `${formatNumber(count)} ${noun}${count === 1 ? '' : 's'}`;

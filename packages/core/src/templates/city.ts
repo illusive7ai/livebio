@@ -4,7 +4,7 @@ import { assetPath } from '../readme';
 import { variantsFor, type Variant } from '../themes';
 import type { Config, ContributionDay, Output, Profile, Template } from '../types';
 import { formatNumber, truncate, xmlEscape } from '../util';
-import { FONT, FONT_SANS, SAFE_DATA_URI, describeProfile, imageReadme, plural, rise } from './shared';
+import { FONT, FONT_SANS, SAFE_DATA_URI, describeProfile, imageReadme, plural, rise, seeded } from './shared';
 
 const WIDTH = 900;
 const PAD = 36;
@@ -65,17 +65,6 @@ export function layoutCity(days: ReadonlyArray<ContributionDay>): { cols: number
 }
 
 const num = (value: number): string => String(Math.round(value * 10) / 10 || 0);
-
-/** A small repeatable number generator, so every user's sky is their own but never changes between runs. */
-function seeded(text: string): () => number {
-  let state = 2166136261;
-  for (const char of text) state = Math.imul(state ^ char.charCodeAt(0), 16777619) >>> 0;
-  return () => {
-    state = Math.imul(state ^ (state >>> 15), 2246822507) >>> 0;
-    state = Math.imul(state ^ (state >>> 13), 3266489909) >>> 0;
-    return ((state ^= state >>> 16) >>> 0) / 4294967296;
-  };
-}
 
 function shortDate(date: string): string {
   const [, month, day] = date.split('-');
