@@ -26,6 +26,10 @@ export function PreviewPane({ output, config, profile, sample = false }: Props) 
     return DOMPurify.sanitize(rendered);
   }, [output, mode]);
 
+  // Every file the profile repository needs. The README alone is not enough: its pictures are separate files.
+  const files = useMemo(() => Object.keys(buildFiles(output, config)), [output, config]);
+  const images = files.filter((path) => path.endsWith('.svg')).length;
+
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(output.readme);
@@ -75,28 +79,55 @@ export function PreviewPane({ output, config, profile, sample = false }: Props) 
       </div>
 
       {!sample && (
-      <div className="export">
-        <div className="export-actions">
-          <button type="button" onClick={copy}>
-            {copied ? 'Copied' : 'Copy README'}
-          </button>
-          <button type="button" onClick={() => downloadReadme(output.readme)}>
-            Download README.md
-          </button>
-          <button type="button" className="primary" onClick={() => downloadZip(buildFiles(output, config), profile.login)}>
-            Download everything (.zip)
-          </button>
+        <div className="export">
+          <div className="callout" role="note">
+            <strong>The pictures are separate files.</strong> Your README shows {images}{' '}
+            {images === 1 ? 'picture' : 'pictures'}, and each one is saved as a file in a folder called{' '}
+            <code>livebio/</code>. Copying only the README text leaves them behind, and GitHub then shows broken
+            images. Use the zip and upload <em>everything</em> in it.
+          </div>
+          <div className="export-actions">
+            <button type="button" className="primary" onClick={() => downloadZip(buildFiles(output, config), profile.login)}>
+              Download everything (.zip)
+            </button>
+            <button type="button" onClick={copy}>
+              {copied ? 'Copied the text' : 'Copy README text only'}
+            </button>
+            <button type="button" onClick={() => downloadReadme(output.readme)}>
+              Download README.md only
+            </button>
+          </div>
+          {copied && (
+            <p className="hint" role="status">
+              Copied the text. Remember to upload the <code>livebio/</code> folder from the zip too, or the images
+              will not show.
+            </p>
+          )}
+          <ol className="steps">
+            <li>
+              Create a public repository named <code>{profile.login}</code> (the same as your username).
+            </li>
+            <li>
+              Unzip the download, then upload <strong>everything inside it</strong> to that repository, including the{' '}
+              <code>livebio</code> and <code>.github</code> folders. On GitHub: <em>Add file</em>, then{' '}
+              <em>Upload files</em>, then drag the unzipped files in. (On a Mac, press Cmd+Shift+. in the folder to
+              show <code>.github</code>, which is hidden.)
+            </li>
+            <li>
+              Open the <strong>Actions</strong> tab and enable workflows. Your profile then refreshes itself every day.
+            </li>
+          </ol>
+          <details className="files">
+            <summary>The {files.length} files that should end up in your repository</summary>
+            <ul>
+              {files.map((path) => (
+                <li key={path}>
+                  <code>{path}</code>
+                </li>
+              ))}
+            </ul>
+          </details>
         </div>
-        <ol className="steps">
-          <li>
-            Create a public repository named <code>{profile.login}</code> (the same as your username).
-          </li>
-          <li>Unzip the download and upload all of its files to that repository.</li>
-          <li>
-            Open the <strong>Actions</strong> tab and enable workflows. Your profile then refreshes itself every day.
-          </li>
-        </ol>
-      </div>
       )}
     </section>
   );
