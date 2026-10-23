@@ -7,6 +7,14 @@ All notable changes to livebio. The version numbers are the tags of the GitHub A
 ### Added
 
 - **Share and star on the home page.** Under the username box the site shows how many stars the project has (read through the livebio service, shared for ten minutes, and left out rather than guessed when unavailable), a link to star it, and WhatsApp, Telegram and copy-link buttons that send the website to a friend. Nothing is sent or tracked from the site.
+- **Twenty-five more designs, 75 in all**, in five more groups of look:
+  - Paper: **Wanted poster**, **Recipe card**, **Nutrition label**, **Postcard** and **Ransom note**.
+  - Devices: **Departures board**, **Handheld console**, **Neon sign** (lit in the dark theme, unlit in the light one), **Laptop stickers** and **Pixel pet** (its mood follows how long ago you were last active).
+  - Activity as a picture: **Garden**, **Ridgeline**, **Pulse monitor**, **Drum machine** and **Weather forecast**. They need the contribution calendar, and say what they are waiting for without it.
+  - Worlds: **Activity rings**, **Language tree**, **Aquarium**, **Island map** and **Circuit board** (an LED lights only for a repository pushed to in the last 90 days).
+  - Data art: **Sonar**, **Word cloud**, **Timeline**, **Sunburst** and **Brick mosaic** (built from your real profile photo).
+  
+  Sizes always follow real numbers, on a logarithmic scale where that is the fair way to show them, and each caption says which. Nothing is invented: a missing date, description or photo leaves its part out or says it is waiting.
 - **Fifteen more designs, 50 in all**, in four new groups of look:
   - Documents: **Passport** (a stamp for each language), **Receipt** (repositories as items, with a real subtotal), **Character sheet** and **Wall calendar** (every day coloured by its real contributions).
   - Interfaces: **Now playing** (a music player with your weeks as an equaliser), **Inbox** (a repository is unread when it was really pushed to lately), **Retro desktop** and **Cockpit** (dials on a labelled logarithmic scale).
