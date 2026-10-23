@@ -56,9 +56,9 @@ export const profile: Profile = {
 };
 
 /** The picture a design draws, in dark mode with no motion, for the profile given. */
-export function svgOf(id: string, p: Profile = profile, blocks?: BlockId[]): string {
-  const config = { ...defaultConfig('octo', id), motion: false, theme: 'dark' as const, ...(blocks ? { blocks } : {}) };
-  return renderProfile(p, config).assets.find((a) => a.path.endsWith(`${id}-dark.svg`))!.content;
+export function svgOf(id: string, p: Profile = profile, blocks?: BlockId[], variant: 'dark' | 'light' = 'dark'): string {
+  const config = { ...defaultConfig('octo', id), motion: false, theme: variant, ...(blocks ? { blocks } : {}) };
+  return renderProfile(p, config).assets.find((a) => a.path.endsWith(`${id}-${variant}.svg`))!.content;
 }
 
 export const wellFormed = (svg: string): string[] => {
