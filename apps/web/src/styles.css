@@ -1066,3 +1066,402 @@ legend {
     margin-left: -12px;
   }
 }
+
+/* ==========================================================================================
+   Responsive layer: phones, tablets, laptops, desktops, ultrawide screens and TVs.
+   Written last so it refines everything above. Nothing here changes the design, only how
+   it fits the screen and how easy it is to use by touch, mouse or remote.
+   ========================================================================================== */
+
+:root {
+  --max: 1180px;
+  /* Never let content sit under a notch or rounded corner. */
+  --gutter: max(16px, env(safe-area-inset-left), env(safe-area-inset-right));
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-wrap: break-word;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+img,
+svg,
+video {
+  max-width: 100%;
+}
+
+.top,
+main,
+.bottom {
+  width: min(var(--max), 100% - var(--gutter) * 2);
+}
+
+/* Grid and flex children are allowed to shrink below their content, so a wide image or a row of buttons
+   can never push the whole page sideways. */
+.workspace > *,
+.preview,
+.window,
+.controls,
+.controls > *,
+.panel,
+.reviews,
+.page {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.readme,
+.code {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.export-actions {
+  flex-wrap: wrap;
+}
+
+button,
+a,
+select,
+summary,
+label {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Comfortable to hit with a thumb or a finger on any screen. */
+.top nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+}
+
+.top-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+}
+
+.fold summary {
+  padding-block: 8px;
+}
+
+.window-bar button {
+  min-height: 34px;
+}
+
+.stack input.hue {
+  height: 16px;
+  margin-block: 4px;
+}
+
+.mini-name {
+  font-size: 0.72rem;
+  /* Break a long name at a syllable, never in the middle of a word. */
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
+}
+
+@media (pointer: coarse) {
+  button,
+  select,
+  summary,
+  .filters button,
+  .row button,
+  .button,
+  .window-bar button,
+  .segmented label {
+    min-height: 44px;
+  }
+
+  .stack input,
+  .stack select,
+  .stack textarea {
+    min-height: 44px;
+    font-size: 16px; /* anything smaller makes iOS zoom into the field */
+  }
+
+  .check {
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .check input {
+    width: 22px;
+    height: 22px;
+  }
+
+  .mini-name {
+    font-size: 0.78rem;
+  }
+
+  .dots-nav button {
+    width: 14px;
+    height: 14px;
+  }
+
+  .reviews-nav > button {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Hover effects only where there is a pointer that can hover. */
+@media (hover: none) {
+  .design:hover {
+    border-color: var(--border);
+  }
+
+  .design.selected:hover {
+    border-color: var(--accent);
+  }
+}
+
+/* ---- Tablets and below ---- */
+@media (max-width: 880px) {
+  /* The workspace stacks. This must come after the two-column rule above it, or that rule wins. */
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .preview {
+    position: static;
+  }
+
+  .readme {
+    max-height: none;
+  }
+
+  .window-bar {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .window-path {
+    flex: 1 1 100%;
+    order: -1;
+  }
+
+  .tabs {
+    margin-right: auto;
+  }
+
+  .strip {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .strip-stats {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* ---- Phones ---- */
+@media (max-width: 600px) {
+  .top {
+    padding: 12px 0 4px;
+  }
+
+  .top nav {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin-left: 0;
+    gap: 4px;
+  }
+
+  .top nav a {
+    justify-content: center;
+  }
+
+  .hero {
+    padding: 20px 0 18px;
+  }
+
+  .hero p {
+    font-size: 1rem;
+  }
+
+  .field {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+  }
+
+  .field input {
+    flex: 1 1 60%;
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  .field button,
+  .field button[type='submit'] {
+    flex: 1 1 100%;
+    min-height: 46px;
+  }
+
+  .panel {
+    padding: 14px;
+  }
+
+  /* All designs stay in view as a compact strip per group, scrolled sideways inside the panel. */
+  .picker-grid {
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 96px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+  }
+
+  .picker-grid li {
+    scroll-snap-align: start;
+  }
+
+  .mini-thumb {
+    height: 52px;
+  }
+
+  .export-actions {
+    flex-direction: column;
+  }
+
+  .export-actions button {
+    width: 100%;
+    min-height: 46px;
+  }
+
+  .steps {
+    padding-left: 20px;
+  }
+
+  .reviews-empty {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .reviews-empty .button {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .reviews-head {
+    flex-direction: column;
+  }
+
+  /* Templates page: two across, a little more compact. */
+  .design-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .design {
+    border-radius: 14px;
+  }
+
+  .design-main {
+    padding: 8px 8px 12px;
+  }
+
+  .design-thumb {
+    height: 92px;
+  }
+
+  .design-name {
+    font-size: 0.95rem;
+  }
+
+  .design-desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 0.8rem;
+  }
+
+  .filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    scrollbar-width: none;
+  }
+
+  .filters button {
+    flex: 0 0 auto;
+  }
+
+  .page-head {
+    padding: 14px 0 12px;
+  }
+}
+
+/* Very narrow phones: one column of cards reads better than cramped pairs. */
+@media (max-width: 340px) {
+  .design-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Phones held sideways: the screen is short, so give vertical space back. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .hero {
+    padding: 12px 0 10px;
+  }
+
+  .hero h1 {
+    font-size: 1.7rem;
+  }
+
+  .preview {
+    position: static;
+  }
+
+  .readme {
+    max-height: none;
+  }
+}
+
+/* ---- Large screens: use the room, then scale for distance ---- */
+@media (min-width: 1600px) {
+  :root {
+    --max: 1380px;
+  }
+
+  .design-grid {
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  }
+}
+
+/* Big monitors and televisions are read from further away, so the whole interface is scaled up. */
+@media (min-width: 2200px) {
+  html {
+    zoom: 1.35;
+  }
+}
+
+@media (min-width: 3000px) {
+  html {
+    zoom: 1.9;
+  }
+}
+
+/* Television remotes and keyboards: the focus ring must be easy to see from a sofa. */
+@media (min-width: 1600px) {
+  :focus-visible {
+    outline-width: 3px;
+    outline-offset: 3px;
+  }
+}

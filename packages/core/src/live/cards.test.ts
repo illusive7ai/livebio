@@ -82,14 +82,13 @@ describe('the contribution city card', () => {
     expect(renderCityCard(opts())).toContain('prefers-reduced-motion');
   });
 
-  it('is well-formed in every preset and variant, and stays within the card', () => {
+  it('is well-formed, with no broken numbers, in every preset and variant', () => {
     for (const preset of ['aurora', 'sunrise', 'night', 'space', 'arcade', 'chalk', 'editor', 'blueprint', 'paper', 'terminal', 'glow', 'plain'] as Preset[]) {
       for (const variant of ['dark', 'light'] as const) {
         const svg = renderCityCard({ ...opts(), style: style(preset, variant) });
-        const doc = parse(svg);
-        for (const p of Array.from(doc.getElementsByTagName('path'))) {
-          for (const n of (p.getAttribute('d') ?? '').match(/-?\d+(\.\d+)?/g) ?? []) expect(Number.isFinite(Number(n))).toBe(true);
-        }
+        parse(svg);
+        // A bad calculation shows up as one of these words inside a coordinate.
+        expect(svg, `${preset} ${variant}`).not.toMatch(/NaN|Infinity|undefined/);
       }
     }
   });
