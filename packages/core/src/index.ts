@@ -28,3 +28,5 @@ export {
 } from './readme';
 export { isValidUsername } from './util';
 export { asciiPortrait, gridFromRgba } from './avatar';
+export { PRESETS } from './live/style';
+export type { Preset } from './live/style';

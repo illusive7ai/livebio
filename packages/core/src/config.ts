@@ -1,5 +1,6 @@
 import { parse, stringify } from 'yaml';
-import { BLOCK_IDS, THEME_MODES, type BlockId, type Config, type ThemeMode } from './types';
+import { PRESETS } from './live/style';
+import { BLOCK_IDS, COMPANIONS, THEME_MODES, type BlockId, type Companion, type Config, type CustomStyle, type ThemeMode } from './types';
 import { isValidUsername } from './util';
 
 export class ConfigError extends Error {
@@ -35,6 +36,30 @@ function optionalText(value: unknown, field: string): string | undefined {
   const trimmed = value.trim();
   if (trimmed.length > MAX_TEXT) throw new ConfigError(`"${field}" must be at most ${MAX_TEXT} characters.`);
   return trimmed || undefined;
+}
+
+function parseCustom(value: unknown): CustomStyle | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== 'object' || Array.isArray(value)) throw new ConfigError('"custom" must be a set of key: value settings.');
+  const raw = value as Record<string, unknown>;
+  const custom: CustomStyle = {};
+  if (raw.hue !== undefined) {
+    if (typeof raw.hue !== 'number' || !Number.isInteger(raw.hue) || raw.hue < 0 || raw.hue > 359) {
+      throw new ConfigError('"custom.hue" must be a whole number from 0 to 359.');
+    }
+    custom.hue = raw.hue;
+  }
+  if (raw.look !== undefined) {
+    if (!PRESETS.includes(raw.look as never)) throw new ConfigError(`"custom.look" must be one of: ${PRESETS.join(', ')}.`);
+    custom.look = raw.look as CustomStyle['look'];
+  }
+  if (raw.companion !== undefined) {
+    if (!COMPANIONS.includes(raw.companion as Companion)) {
+      throw new ConfigError(`"custom.companion" must be one of: ${COMPANIONS.join(', ')}.`);
+    }
+    custom.companion = raw.companion as Companion;
+  }
+  return Object.keys(custom).length > 0 ? custom : undefined;
 }
 
 /** Validates untrusted input (a parsed livebio.yml) and fills in defaults. */
@@ -77,6 +102,7 @@ export function parseConfig(input: unknown): Config {
   if (headline) text.headline = headline;
   if (bio) text.bio = bio;
 
+  const custom = parseCustom(raw.custom);
   return {
     username,
     template,
@@ -85,6 +111,7 @@ export function parseConfig(input: unknown): Config {
     credit: expectBoolean(raw.credit, 'credit', true),
     blocks,
     text,
+    ...(custom ? { custom } : {}),
   };
 }
 

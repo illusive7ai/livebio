@@ -16,6 +16,21 @@ export type Preset =
   | 'glow'
   | 'plain';
 
+export const PRESETS: readonly Preset[] = [
+  'aurora',
+  'sunrise',
+  'night',
+  'space',
+  'arcade',
+  'chalk',
+  'editor',
+  'blueprint',
+  'paper',
+  'terminal',
+  'glow',
+  'plain',
+];
+
 export type CellShape = 'square' | 'round' | 'diamond';
 export type BoardFrame = 'glass' | 'wood' | 'flat' | 'blueprint' | 'chalk' | 'terminal';
 export type PieceStyle = 'solid' | 'outline' | 'glow';

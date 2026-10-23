@@ -43,11 +43,14 @@ export function withLive(base: Template, spec: LiveSpec): Template {
     needsAvatar: true,
     render(profile, config) {
       const out = base.render(profile, config);
+      const preset = config.custom?.look ?? spec.preset;
+      const chosen = config.custom?.companion;
+      const companion = chosen === undefined ? spec.companion : chosen === 'none' ? null : chosen;
       const wantCity = spec.city && config.blocks.includes('city');
-      const wantGame = spec.companion !== null && config.blocks.includes('game');
+      const wantGame = companion !== null && config.blocks.includes('game');
       if (!wantCity && !wantGame) return out;
 
-      const hue = hueOf(profile.avatar?.grid.tint) ?? DEFAULT_HUE[spec.preset];
+      const hue = hueOf(profile.avatar?.grid.tint) ?? DEFAULT_HUE[preset];
       const nowIso = profile.fetchedAt ?? profile.createdAt;
       const login = profile.login;
       const assets: Asset[] = [];
@@ -65,7 +68,7 @@ export function withLive(base: Template, spec: LiveSpec): Template {
             : 'Contribution city, shown once contribution data is available',
         );
       }
-      if (wantGame && spec.companion === 'snake') {
+      if (wantGame && companion === 'snake') {
         picture(
           'snake',
           profile.contributions
@@ -73,26 +76,26 @@ export function withLive(base: Template, spec: LiveSpec): Template {
             : 'A contribution snake, shown once contribution data is available',
         );
       }
-      if (wantGame && spec.companion === 'chess') {
+      if (wantGame && companion === 'chess') {
         const { state, replay } = liveState(login, nowIso);
         picture('chess', `A live chess game: ${state.game.title}, ${state.game.white} against ${state.game.black}. ${statusText(state, replay)}`);
       }
 
       for (const variant of variantsFor(config.theme)) {
-        const style = styleFor(spec.preset, variant, hue);
+        const style = styleFor(preset, variant, hue);
         if (wantCity) {
           assets.push({
             path: assetPath(`${base.id}-city`, variant),
             content: renderCityCard({ login, contributions: profile.contributions, style, motion: config.motion }),
           });
         }
-        if (wantGame && spec.companion === 'snake') {
+        if (wantGame && companion === 'snake') {
           assets.push({
             path: assetPath(`${base.id}-snake`, variant),
             content: renderSnakeCard({ login, contributions: profile.contributions, style, motion: config.motion }),
           });
         }
-        if (wantGame && spec.companion === 'chess') {
+        if (wantGame && companion === 'chess') {
           assets.push({
             path: assetPath(`${base.id}-chess`, variant),
             content: renderChess({ login, nowIso, style, motion: config.motion }),

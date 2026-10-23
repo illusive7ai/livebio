@@ -29,3 +29,7 @@ export function downloadZip(files: Record<string, string>, username: string): vo
 export function downloadReadme(readme: string): void {
   download(new Blob([readme], { type: 'text/markdown' }), 'README.md');
 }
+
+export function downloadText(filename: string, text: string): void {
+  download(new Blob([text], { type: 'text/plain' }), filename);
+}

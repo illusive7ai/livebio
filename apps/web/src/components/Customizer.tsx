@@ -5,6 +5,8 @@ interface Props {
   onChange: (config: Config) => void;
   /** Whether contribution data was available for this preview. */
   hasActivity: boolean;
+  /** Leave out the panel frame and title, for use inside another panel. */
+  bare?: boolean;
 }
 
 const BLOCK_LABELS: Record<BlockId, string> = {
@@ -22,7 +24,7 @@ const THEME_LABELS: Record<ThemeMode, string> = {
   light: 'Always light',
 };
 
-export function Customizer({ config, onChange, hasActivity }: Props) {
+export function Customizer({ config, onChange, hasActivity, bare = false }: Props) {
   const setText = (key: 'headline' | 'bio', value: string) => {
     const text = { ...config.text };
     if (value.trim()) text[key] = value;
@@ -38,8 +40,8 @@ export function Customizer({ config, onChange, hasActivity }: Props) {
   };
 
   return (
-    <section className="panel">
-      <h2>Make it yours</h2>
+    <section className={bare ? "bare" : "panel"}>
+      {!bare && <h2>Make it yours</h2>}
 
       <label className="stack">
         <span>Headline</span>

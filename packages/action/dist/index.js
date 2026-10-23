@@ -15146,6 +15146,7 @@ var import_node_path = require("node:path");
 
 // ../core/src/types.ts
 var BLOCK_IDS = ["stats", "activity", "languages", "projects", "city", "game"];
+var COMPANIONS = ["snake", "chess", "none"];
 var THEME_MODES = ["auto", "dark", "light"];
 
 // ../core/src/util.ts
@@ -15531,88 +15532,6 @@ async function fetchContributions(username, opts = {}) {
 
 // ../core/src/config.ts
 var import_yaml = __toESM(require_dist(), 1);
-var ConfigError = class extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "ConfigError";
-  }
-};
-var MAX_TEXT = 200;
-function defaultConfig(username, template = "showcase") {
-  return {
-    username,
-    template,
-    theme: "auto",
-    motion: true,
-    credit: true,
-    blocks: [...BLOCK_IDS],
-    text: {}
-  };
-}
-function expectBoolean(value, field, fallback) {
-  if (value === void 0) return fallback;
-  if (typeof value !== "boolean") throw new ConfigError(`"${field}" must be true or false.`);
-  return value;
-}
-function optionalText(value, field) {
-  if (value === void 0 || value === null) return void 0;
-  if (typeof value !== "string") throw new ConfigError(`"${field}" must be text.`);
-  const trimmed = value.trim();
-  if (trimmed.length > MAX_TEXT) throw new ConfigError(`"${field}" must be at most ${MAX_TEXT} characters.`);
-  return trimmed || void 0;
-}
-function parseConfig(input2) {
-  if (typeof input2 !== "object" || input2 === null || Array.isArray(input2)) {
-    throw new ConfigError("The config must be a set of key: value settings.");
-  }
-  const raw = input2;
-  const username = raw.username;
-  if (typeof username !== "string" || !isValidUsername(username)) {
-    throw new ConfigError('"username" must be a valid GitHub username.');
-  }
-  const template = raw.template ?? "showcase";
-  if (typeof template !== "string" || !template) throw new ConfigError('"template" must be a template id.');
-  const theme = raw.theme ?? "auto";
-  if (!THEME_MODES.includes(theme)) {
-    throw new ConfigError(`"theme" must be one of: ${THEME_MODES.join(", ")}.`);
-  }
-  let blocks = [...BLOCK_IDS];
-  if (raw.blocks !== void 0) {
-    if (!Array.isArray(raw.blocks)) throw new ConfigError('"blocks" must be a list.');
-    const unknown = raw.blocks.filter((b) => !BLOCK_IDS.includes(b));
-    if (unknown.length > 0) {
-      throw new ConfigError(`Unknown block: ${String(unknown[0])}. Choose from: ${BLOCK_IDS.join(", ")}.`);
-    }
-    blocks = [...new Set(raw.blocks)];
-  }
-  const textRaw = raw.text ?? {};
-  if (typeof textRaw !== "object" || textRaw === null || Array.isArray(textRaw)) {
-    throw new ConfigError('"text" must be a set of key: value settings.');
-  }
-  const text = {};
-  const headline = optionalText(textRaw.headline, "text.headline");
-  const bio = optionalText(textRaw.bio, "text.bio");
-  if (headline) text.headline = headline;
-  if (bio) text.bio = bio;
-  return {
-    username,
-    template,
-    theme,
-    motion: expectBoolean(raw.motion, "motion", true),
-    credit: expectBoolean(raw.credit, "credit", true),
-    blocks,
-    text
-  };
-}
-function parseConfigYaml(source) {
-  let data;
-  try {
-    data = (0, import_yaml.parse)(source);
-  } catch (error) {
-    throw new ConfigError(`The config is not valid YAML: ${error.message}`);
-  }
-  return parseConfig(data);
-}
 
 // ../core/src/color.ts
 function rgbToHsl(r, g, b) {
@@ -15659,6 +15578,218 @@ function accentColors(tint, variant) {
   const [hue] = rgbToHsl(tint[0], tint[1], tint[2]);
   const lightness = variant === "dark" ? 0.62 : 0.42;
   return [0, 38, -38, 90, -90].map((offset) => hslToHex((hue + offset + 360) % 360, 0.72, lightness));
+}
+function tintForHue(hue) {
+  const hex = hslToHex(hue, 0.72, 0.5);
+  return [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16));
+}
+
+// ../core/src/live/style.ts
+var PRESETS = [
+  "aurora",
+  "sunrise",
+  "night",
+  "space",
+  "arcade",
+  "chalk",
+  "editor",
+  "blueprint",
+  "paper",
+  "terminal",
+  "glow",
+  "plain"
+];
+var c = (hue, s, l) => hslToHex((hue % 360 + 360) % 360, s, l);
+var RECIPES = {
+  aurora: { font: "sans", radius: 22, texture: "none", cell: "round", gap: 3, glow: true, frame: "glass", pieces: "glow", hueShift: 0, bg: { dark: [0.07, 0.14], light: [0.96, 0.9], drift: 30, sat: 0.5 }, ink: { dark: ["#eaf6f3", "#8fb5ae"], light: ["#10302c", "#4b6f69"] } },
+  sunrise: { font: "sans", radius: 24, texture: "none", cell: "round", gap: 3, glow: false, frame: "flat", pieces: "solid", hueShift: 0, fixedHue: void 0, bg: { dark: [0.09, 0.2], light: [0.96, 0.88], drift: 38, sat: 0.6 }, ink: { dark: ["#fff7ee", "#d6bfb0"], light: ["#2a1b14", "#7a5a4a"] } },
+  night: { font: "sans", radius: 20, texture: "stars", cell: "square", gap: 3, glow: false, frame: "glass", pieces: "solid", hueShift: 0, bg: { dark: [0.07, 0.17], light: [0.95, 0.86], drift: 22, sat: 0.5 }, ink: { dark: ["#eef0ff", "#9aa0c8"], light: ["#1d2140", "#5b6190"] } },
+  space: { font: "sans", radius: 20, texture: "stars", cell: "round", gap: 4, glow: true, frame: "glass", pieces: "glow", hueShift: 25, bg: { dark: [0.05, 0.13], light: [0.96, 0.88], drift: 25, sat: 0.5 }, ink: { dark: ["#eef0ff", "#9aa0c8"], light: ["#1d2140", "#5b6190"] } },
+  arcade: { font: "mono", radius: 14, texture: "grid", cell: "square", gap: 2, glow: true, frame: "terminal", pieces: "glow", hueShift: 0, fixedHue: 135, bg: { dark: [0.05, 0.09], light: [0.95, 0.9], drift: 10, sat: 0.4 }, ink: { dark: ["#d9ffe6", "#79b78f"], light: ["#0d3a1f", "#3f7a58"] } },
+  chalk: { font: "serif", radius: 16, texture: "lines", cell: "round", gap: 3, glow: false, frame: "chalk", pieces: "outline", hueShift: 0, bg: { dark: [0.14, 0.16], light: [0.98, 0.96], drift: 0, sat: 0.2 }, ink: { dark: ["#f2efe4", "#a9bdb6"], light: ["#27304d", "#6a7191"] } },
+  editor: { font: "mono", radius: 14, texture: "none", cell: "square", gap: 3, glow: false, frame: "flat", pieces: "solid", hueShift: 0, fixedHue: 142, bg: { dark: [0.07, 0.09], light: [1, 0.97], drift: 0, sat: 0.2 }, ink: { dark: ["#e6edf3", "#8b98a9"], light: ["#1b2430", "#5f6c7d"] } },
+  blueprint: { font: "mono", radius: 10, texture: "grid", cell: "diamond", gap: 3, glow: false, frame: "blueprint", pieces: "outline", hueShift: 0, fixedHue: 205, bg: { dark: [0.1, 0.14], light: [0.96, 0.92], drift: 8, sat: 0.55 }, ink: { dark: ["#dbeeff", "#86a9c9"], light: ["#0f2a45", "#4a6d8c"] } },
+  paper: { font: "serif", radius: 8, texture: "none", cell: "square", gap: 3, glow: false, frame: "wood", pieces: "solid", hueShift: 0, bg: { dark: [0.09, 0.11], light: [0.97, 0.94], drift: 0, sat: 0.12 }, ink: { dark: ["#ecebe6", "#9a978f"], light: ["#1c1b19", "#68655d"] } },
+  terminal: { font: "mono", radius: 12, texture: "lines", cell: "square", gap: 2, glow: true, frame: "terminal", pieces: "glow", hueShift: 0, fixedHue: 125, bg: { dark: [0.04, 0.07], light: [0.94, 0.9], drift: 6, sat: 0.35 }, ink: { dark: ["#b9ffc9", "#5fa874"], light: ["#0f3d1d", "#3d7a52"] } },
+  glow: { font: "mono", radius: 18, texture: "grid", cell: "round", gap: 3, glow: true, frame: "glass", pieces: "glow", hueShift: 150, bg: { dark: [0.06, 0.12], light: [0.96, 0.9], drift: 30, sat: 0.5 }, ink: { dark: ["#e6fff9", "#86b8ae"], light: ["#0d3b34", "#3f7a70"] } },
+  plain: { font: "sans", radius: 8, texture: "none", cell: "square", gap: 2, glow: false, frame: "flat", pieces: "solid", hueShift: 0, fixedHue: 220, bg: { dark: [0.1, 0.12], light: [1, 0.97], drift: 0, sat: 0.08 }, ink: { dark: ["#e7e9ee", "#8d93a1"], light: ["#1f232b", "#6b7280"] } }
+};
+function styleFor(preset, variant, pictureHue) {
+  const r = RECIPES[preset];
+  const dark = variant === "dark";
+  const hue = r.fixedHue ?? pictureHue + r.hueShift;
+  const [bgA, bgB] = dark ? r.bg.dark : r.bg.light;
+  const [fg, muted] = dark ? r.ink.dark : r.ink.light;
+  const accent2 = c(hue, 0.78, dark ? 0.6 : 0.4);
+  const accent22 = c(hue + 40, 0.82, dark ? 0.64 : 0.42);
+  const levels = [1, 2, 3, 4].map((level) => {
+    const t = level / 4;
+    const l = dark ? 0.3 + 0.34 * t : 0.72 - 0.34 * t;
+    return [c(hue, 0.74, l), c(hue, 0.7, l - 0.08), c(hue, 0.66, l - 0.17)];
+  });
+  const peakHue = hue + 42;
+  const peakL = dark ? 0.68 : 0.46;
+  const tint = (l, s = 0.4) => c(hue, s, l);
+  const chess = (() => {
+    const base = { highlight: c(hue + 20, 0.9, dark ? 0.55 : 0.55) };
+    switch (r.frame) {
+      case "wood":
+        return { ...base, frame: "wood", light: dark ? "#c9b280" : "#ecdcb4", dark: dark ? "#7a5535" : "#b08a5e", frameFill: dark ? "#3a2616" : "#7a5535", frameStroke: dark ? "#6d4a2c" : "#4e3420", coord: dark ? "#b9a074" : "#e8d8b0", pieces: "solid", white: { fill: "#fbf6e8", stroke: "#2b2118" }, black: { fill: "#2e2a26", stroke: "#e9dcc0" } };
+      case "flat":
+        return { ...base, frame: "flat", light: tint(dark ? 0.3 : 0.9, 0.15), dark: tint(dark ? 0.18 : 0.74, 0.2), frameFill: tint(dark ? 0.12 : 0.82, 0.18), frameStroke: tint(dark ? 0.3 : 0.65, 0.2), coord: muted, pieces: "solid", white: { fill: dark ? "#f5f5f5" : "#ffffff", stroke: dark ? "#12141a" : "#1a1d24" }, black: { fill: dark ? "#20232c" : "#2a2e38", stroke: dark ? "#e8e8ee" : "#ffffff" } };
+      case "blueprint":
+        return { ...base, frame: "blueprint", light: dark ? "rgba(120,190,255,0.10)" : "rgba(30,100,190,0.10)", dark: "rgba(0,0,0,0)", frameFill: "rgba(0,0,0,0)", frameStroke: accent2, coord: muted, pieces: "outline", white: { fill: "rgba(0,0,0,0)", stroke: dark ? "#bfe3ff" : "#0f3a66" }, black: { fill: dark ? "rgba(120,190,255,0.28)" : "rgba(30,100,190,0.3)", stroke: dark ? "#7fb8f0" : "#1c5a9e" } };
+      case "chalk":
+        return { ...base, frame: "chalk", light: dark ? "rgba(255,255,255,0.09)" : "rgba(90,110,170,0.12)", dark: "rgba(0,0,0,0)", frameFill: "rgba(0,0,0,0)", frameStroke: dark ? "#e9e5d6" : "#27304d", coord: muted, pieces: "outline", white: { fill: "rgba(0,0,0,0)", stroke: dark ? "#f4f0e2" : "#27304d" }, black: { fill: dark ? "rgba(244,240,226,0.5)" : "rgba(39,48,77,0.55)", stroke: dark ? "#f4f0e2" : "#27304d" } };
+      case "terminal":
+        return { ...base, frame: "terminal", light: tint(dark ? 0.14 : 0.82, 0.45), dark: tint(dark ? 0.07 : 0.7, 0.4), frameFill: tint(dark ? 0.05 : 0.88, 0.35), frameStroke: accent2, coord: muted, pieces: "glow", white: { fill: tint(dark ? 0.78 : 0.9, 0.8), stroke: tint(dark ? 0.9 : 0.3, 0.9) }, black: { fill: tint(dark ? 0.3 : 0.28, 0.7), stroke: tint(dark ? 0.6 : 0.15, 0.85) } };
+      default:
+        return { ...base, frame: "glass", light: tint(dark ? 0.24 : 0.84, 0.35), dark: tint(dark ? 0.14 : 0.7, 0.4), frameFill: tint(dark ? 0.08 : 0.9, 0.35), frameStroke: accent2, coord: muted, pieces: r.pieces, white: { fill: c(hue, 0.7, dark ? 0.84 : 0.97), stroke: c(hue, 0.7, dark ? 0.5 : 0.25) }, black: { fill: c(hue, 0.5, dark ? 0.32 : 0.28), stroke: c(hue, 0.6, dark ? 0.7 : 0.15) } };
+    }
+  })();
+  return {
+    preset,
+    variant,
+    font: r.font,
+    bgTop: c(hue, r.bg.sat, bgA),
+    bgBottom: c(hue + r.bg.drift, r.bg.sat + 0.05, bgB),
+    border: c(hue, 0.4, dark ? 0.26 : 0.78),
+    fg,
+    muted,
+    accent: accent2,
+    accent2: accent22,
+    radius: r.radius,
+    texture: r.texture,
+    snake: {
+      cell: r.cell,
+      gap: r.gap,
+      track: c(hue, 0.25, dark ? 0.16 : 0.86),
+      cellColor: c(hue, 0.78, dark ? 0.58 : 0.42),
+      body: c(hue + 55, 0.8, dark ? 0.6 : 0.42),
+      head: c(hue + 55, 0.9, dark ? 0.74 : 0.34),
+      glow: r.glow
+    },
+    city: {
+      top: levels[3][0],
+      left: levels[3][1],
+      right: levels[3][2],
+      slab: c(hue, 0.3, dark ? 0.15 : 0.93),
+      slabSide: c(hue, 0.3, dark ? 0.09 : 0.8),
+      line: c(hue, 0.4, dark ? 0.32 : 0.7),
+      levels,
+      peak: [c(peakHue, 0.85, peakL), c(peakHue, 0.8, peakL - 0.08), c(peakHue, 0.75, peakL - 0.17)]
+    },
+    chess
+  };
+}
+
+// ../core/src/config.ts
+var ConfigError = class extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "ConfigError";
+  }
+};
+var MAX_TEXT = 200;
+function defaultConfig(username, template = "showcase") {
+  return {
+    username,
+    template,
+    theme: "auto",
+    motion: true,
+    credit: true,
+    blocks: [...BLOCK_IDS],
+    text: {}
+  };
+}
+function expectBoolean(value, field, fallback) {
+  if (value === void 0) return fallback;
+  if (typeof value !== "boolean") throw new ConfigError(`"${field}" must be true or false.`);
+  return value;
+}
+function optionalText(value, field) {
+  if (value === void 0 || value === null) return void 0;
+  if (typeof value !== "string") throw new ConfigError(`"${field}" must be text.`);
+  const trimmed = value.trim();
+  if (trimmed.length > MAX_TEXT) throw new ConfigError(`"${field}" must be at most ${MAX_TEXT} characters.`);
+  return trimmed || void 0;
+}
+function parseCustom(value) {
+  if (value === void 0 || value === null) return void 0;
+  if (typeof value !== "object" || Array.isArray(value)) throw new ConfigError('"custom" must be a set of key: value settings.');
+  const raw = value;
+  const custom = {};
+  if (raw.hue !== void 0) {
+    if (typeof raw.hue !== "number" || !Number.isInteger(raw.hue) || raw.hue < 0 || raw.hue > 359) {
+      throw new ConfigError('"custom.hue" must be a whole number from 0 to 359.');
+    }
+    custom.hue = raw.hue;
+  }
+  if (raw.look !== void 0) {
+    if (!PRESETS.includes(raw.look)) throw new ConfigError(`"custom.look" must be one of: ${PRESETS.join(", ")}.`);
+    custom.look = raw.look;
+  }
+  if (raw.companion !== void 0) {
+    if (!COMPANIONS.includes(raw.companion)) {
+      throw new ConfigError(`"custom.companion" must be one of: ${COMPANIONS.join(", ")}.`);
+    }
+    custom.companion = raw.companion;
+  }
+  return Object.keys(custom).length > 0 ? custom : void 0;
+}
+function parseConfig(input2) {
+  if (typeof input2 !== "object" || input2 === null || Array.isArray(input2)) {
+    throw new ConfigError("The config must be a set of key: value settings.");
+  }
+  const raw = input2;
+  const username = raw.username;
+  if (typeof username !== "string" || !isValidUsername(username)) {
+    throw new ConfigError('"username" must be a valid GitHub username.');
+  }
+  const template = raw.template ?? "showcase";
+  if (typeof template !== "string" || !template) throw new ConfigError('"template" must be a template id.');
+  const theme = raw.theme ?? "auto";
+  if (!THEME_MODES.includes(theme)) {
+    throw new ConfigError(`"theme" must be one of: ${THEME_MODES.join(", ")}.`);
+  }
+  let blocks = [...BLOCK_IDS];
+  if (raw.blocks !== void 0) {
+    if (!Array.isArray(raw.blocks)) throw new ConfigError('"blocks" must be a list.');
+    const unknown = raw.blocks.filter((b) => !BLOCK_IDS.includes(b));
+    if (unknown.length > 0) {
+      throw new ConfigError(`Unknown block: ${String(unknown[0])}. Choose from: ${BLOCK_IDS.join(", ")}.`);
+    }
+    blocks = [...new Set(raw.blocks)];
+  }
+  const textRaw = raw.text ?? {};
+  if (typeof textRaw !== "object" || textRaw === null || Array.isArray(textRaw)) {
+    throw new ConfigError('"text" must be a set of key: value settings.');
+  }
+  const text = {};
+  const headline = optionalText(textRaw.headline, "text.headline");
+  const bio = optionalText(textRaw.bio, "text.bio");
+  if (headline) text.headline = headline;
+  if (bio) text.bio = bio;
+  const custom = parseCustom(raw.custom);
+  return {
+    username,
+    template,
+    theme,
+    motion: expectBoolean(raw.motion, "motion", true),
+    credit: expectBoolean(raw.credit, "credit", true),
+    blocks,
+    text,
+    ...custom ? { custom } : {}
+  };
+}
+function parseConfigYaml(source) {
+  let data;
+  try {
+    data = (0, import_yaml.parse)(source);
+  } catch (error) {
+    throw new ConfigError(`The config is not valid YAML: ${error.message}`);
+  }
+  return parseConfig(data);
 }
 
 // ../core/src/readme.ts
@@ -16812,91 +16943,6 @@ function renderSnakeCard(opts) {
   return svgDocument(style, height, title, defs, css, bg.markup + text + cells + snake2);
 }
 
-// ../core/src/live/style.ts
-var c = (hue, s, l) => hslToHex((hue % 360 + 360) % 360, s, l);
-var RECIPES = {
-  aurora: { font: "sans", radius: 22, texture: "none", cell: "round", gap: 3, glow: true, frame: "glass", pieces: "glow", hueShift: 0, bg: { dark: [0.07, 0.14], light: [0.96, 0.9], drift: 30, sat: 0.5 }, ink: { dark: ["#eaf6f3", "#8fb5ae"], light: ["#10302c", "#4b6f69"] } },
-  sunrise: { font: "sans", radius: 24, texture: "none", cell: "round", gap: 3, glow: false, frame: "flat", pieces: "solid", hueShift: 0, fixedHue: void 0, bg: { dark: [0.09, 0.2], light: [0.96, 0.88], drift: 38, sat: 0.6 }, ink: { dark: ["#fff7ee", "#d6bfb0"], light: ["#2a1b14", "#7a5a4a"] } },
-  night: { font: "sans", radius: 20, texture: "stars", cell: "square", gap: 3, glow: false, frame: "glass", pieces: "solid", hueShift: 0, bg: { dark: [0.07, 0.17], light: [0.95, 0.86], drift: 22, sat: 0.5 }, ink: { dark: ["#eef0ff", "#9aa0c8"], light: ["#1d2140", "#5b6190"] } },
-  space: { font: "sans", radius: 20, texture: "stars", cell: "round", gap: 4, glow: true, frame: "glass", pieces: "glow", hueShift: 25, bg: { dark: [0.05, 0.13], light: [0.96, 0.88], drift: 25, sat: 0.5 }, ink: { dark: ["#eef0ff", "#9aa0c8"], light: ["#1d2140", "#5b6190"] } },
-  arcade: { font: "mono", radius: 14, texture: "grid", cell: "square", gap: 2, glow: true, frame: "terminal", pieces: "glow", hueShift: 0, fixedHue: 135, bg: { dark: [0.05, 0.09], light: [0.95, 0.9], drift: 10, sat: 0.4 }, ink: { dark: ["#d9ffe6", "#79b78f"], light: ["#0d3a1f", "#3f7a58"] } },
-  chalk: { font: "serif", radius: 16, texture: "lines", cell: "round", gap: 3, glow: false, frame: "chalk", pieces: "outline", hueShift: 0, bg: { dark: [0.14, 0.16], light: [0.98, 0.96], drift: 0, sat: 0.2 }, ink: { dark: ["#f2efe4", "#a9bdb6"], light: ["#27304d", "#6a7191"] } },
-  editor: { font: "mono", radius: 14, texture: "none", cell: "square", gap: 3, glow: false, frame: "flat", pieces: "solid", hueShift: 0, fixedHue: 142, bg: { dark: [0.07, 0.09], light: [1, 0.97], drift: 0, sat: 0.2 }, ink: { dark: ["#e6edf3", "#8b98a9"], light: ["#1b2430", "#5f6c7d"] } },
-  blueprint: { font: "mono", radius: 10, texture: "grid", cell: "diamond", gap: 3, glow: false, frame: "blueprint", pieces: "outline", hueShift: 0, fixedHue: 205, bg: { dark: [0.1, 0.14], light: [0.96, 0.92], drift: 8, sat: 0.55 }, ink: { dark: ["#dbeeff", "#86a9c9"], light: ["#0f2a45", "#4a6d8c"] } },
-  paper: { font: "serif", radius: 8, texture: "none", cell: "square", gap: 3, glow: false, frame: "wood", pieces: "solid", hueShift: 0, bg: { dark: [0.09, 0.11], light: [0.97, 0.94], drift: 0, sat: 0.12 }, ink: { dark: ["#ecebe6", "#9a978f"], light: ["#1c1b19", "#68655d"] } },
-  terminal: { font: "mono", radius: 12, texture: "lines", cell: "square", gap: 2, glow: true, frame: "terminal", pieces: "glow", hueShift: 0, fixedHue: 125, bg: { dark: [0.04, 0.07], light: [0.94, 0.9], drift: 6, sat: 0.35 }, ink: { dark: ["#b9ffc9", "#5fa874"], light: ["#0f3d1d", "#3d7a52"] } },
-  glow: { font: "mono", radius: 18, texture: "grid", cell: "round", gap: 3, glow: true, frame: "glass", pieces: "glow", hueShift: 150, bg: { dark: [0.06, 0.12], light: [0.96, 0.9], drift: 30, sat: 0.5 }, ink: { dark: ["#e6fff9", "#86b8ae"], light: ["#0d3b34", "#3f7a70"] } },
-  plain: { font: "sans", radius: 8, texture: "none", cell: "square", gap: 2, glow: false, frame: "flat", pieces: "solid", hueShift: 0, fixedHue: 220, bg: { dark: [0.1, 0.12], light: [1, 0.97], drift: 0, sat: 0.08 }, ink: { dark: ["#e7e9ee", "#8d93a1"], light: ["#1f232b", "#6b7280"] } }
-};
-function styleFor(preset, variant, pictureHue) {
-  const r = RECIPES[preset];
-  const dark = variant === "dark";
-  const hue = r.fixedHue ?? pictureHue + r.hueShift;
-  const [bgA, bgB] = dark ? r.bg.dark : r.bg.light;
-  const [fg, muted] = dark ? r.ink.dark : r.ink.light;
-  const accent2 = c(hue, 0.78, dark ? 0.6 : 0.4);
-  const accent22 = c(hue + 40, 0.82, dark ? 0.64 : 0.42);
-  const levels = [1, 2, 3, 4].map((level) => {
-    const t = level / 4;
-    const l = dark ? 0.3 + 0.34 * t : 0.72 - 0.34 * t;
-    return [c(hue, 0.74, l), c(hue, 0.7, l - 0.08), c(hue, 0.66, l - 0.17)];
-  });
-  const peakHue = hue + 42;
-  const peakL = dark ? 0.68 : 0.46;
-  const tint = (l, s = 0.4) => c(hue, s, l);
-  const chess = (() => {
-    const base = { highlight: c(hue + 20, 0.9, dark ? 0.55 : 0.55) };
-    switch (r.frame) {
-      case "wood":
-        return { ...base, frame: "wood", light: dark ? "#c9b280" : "#ecdcb4", dark: dark ? "#7a5535" : "#b08a5e", frameFill: dark ? "#3a2616" : "#7a5535", frameStroke: dark ? "#6d4a2c" : "#4e3420", coord: dark ? "#b9a074" : "#e8d8b0", pieces: "solid", white: { fill: "#fbf6e8", stroke: "#2b2118" }, black: { fill: "#2e2a26", stroke: "#e9dcc0" } };
-      case "flat":
-        return { ...base, frame: "flat", light: tint(dark ? 0.3 : 0.9, 0.15), dark: tint(dark ? 0.18 : 0.74, 0.2), frameFill: tint(dark ? 0.12 : 0.82, 0.18), frameStroke: tint(dark ? 0.3 : 0.65, 0.2), coord: muted, pieces: "solid", white: { fill: dark ? "#f5f5f5" : "#ffffff", stroke: dark ? "#12141a" : "#1a1d24" }, black: { fill: dark ? "#20232c" : "#2a2e38", stroke: dark ? "#e8e8ee" : "#ffffff" } };
-      case "blueprint":
-        return { ...base, frame: "blueprint", light: dark ? "rgba(120,190,255,0.10)" : "rgba(30,100,190,0.10)", dark: "rgba(0,0,0,0)", frameFill: "rgba(0,0,0,0)", frameStroke: accent2, coord: muted, pieces: "outline", white: { fill: "rgba(0,0,0,0)", stroke: dark ? "#bfe3ff" : "#0f3a66" }, black: { fill: dark ? "rgba(120,190,255,0.28)" : "rgba(30,100,190,0.3)", stroke: dark ? "#7fb8f0" : "#1c5a9e" } };
-      case "chalk":
-        return { ...base, frame: "chalk", light: dark ? "rgba(255,255,255,0.09)" : "rgba(90,110,170,0.12)", dark: "rgba(0,0,0,0)", frameFill: "rgba(0,0,0,0)", frameStroke: dark ? "#e9e5d6" : "#27304d", coord: muted, pieces: "outline", white: { fill: "rgba(0,0,0,0)", stroke: dark ? "#f4f0e2" : "#27304d" }, black: { fill: dark ? "rgba(244,240,226,0.5)" : "rgba(39,48,77,0.55)", stroke: dark ? "#f4f0e2" : "#27304d" } };
-      case "terminal":
-        return { ...base, frame: "terminal", light: tint(dark ? 0.14 : 0.82, 0.45), dark: tint(dark ? 0.07 : 0.7, 0.4), frameFill: tint(dark ? 0.05 : 0.88, 0.35), frameStroke: accent2, coord: muted, pieces: "glow", white: { fill: tint(dark ? 0.78 : 0.9, 0.8), stroke: tint(dark ? 0.9 : 0.3, 0.9) }, black: { fill: tint(dark ? 0.3 : 0.28, 0.7), stroke: tint(dark ? 0.6 : 0.15, 0.85) } };
-      default:
-        return { ...base, frame: "glass", light: tint(dark ? 0.24 : 0.84, 0.35), dark: tint(dark ? 0.14 : 0.7, 0.4), frameFill: tint(dark ? 0.08 : 0.9, 0.35), frameStroke: accent2, coord: muted, pieces: r.pieces, white: { fill: c(hue, 0.7, dark ? 0.84 : 0.97), stroke: c(hue, 0.7, dark ? 0.5 : 0.25) }, black: { fill: c(hue, 0.5, dark ? 0.32 : 0.28), stroke: c(hue, 0.6, dark ? 0.7 : 0.15) } };
-    }
-  })();
-  return {
-    preset,
-    variant,
-    font: r.font,
-    bgTop: c(hue, r.bg.sat, bgA),
-    bgBottom: c(hue + r.bg.drift, r.bg.sat + 0.05, bgB),
-    border: c(hue, 0.4, dark ? 0.26 : 0.78),
-    fg,
-    muted,
-    accent: accent2,
-    accent2: accent22,
-    radius: r.radius,
-    texture: r.texture,
-    snake: {
-      cell: r.cell,
-      gap: r.gap,
-      track: c(hue, 0.25, dark ? 0.16 : 0.86),
-      cellColor: c(hue, 0.78, dark ? 0.58 : 0.42),
-      body: c(hue + 55, 0.8, dark ? 0.6 : 0.42),
-      head: c(hue + 55, 0.9, dark ? 0.74 : 0.34),
-      glow: r.glow
-    },
-    city: {
-      top: levels[3][0],
-      left: levels[3][1],
-      right: levels[3][2],
-      slab: c(hue, 0.3, dark ? 0.15 : 0.93),
-      slabSide: c(hue, 0.3, dark ? 0.09 : 0.8),
-      line: c(hue, 0.4, dark ? 0.32 : 0.7),
-      levels,
-      peak: [c(peakHue, 0.85, peakL), c(peakHue, 0.8, peakL - 0.08), c(peakHue, 0.75, peakL - 0.17)]
-    },
-    chess
-  };
-}
-
 // ../core/src/live/compose.ts
 var DEFAULT_HUE = {
   aurora: 170,
@@ -16918,10 +16964,13 @@ function withLive(base, spec) {
     needsAvatar: true,
     render(profile, config) {
       const out = base.render(profile, config);
+      const preset = config.custom?.look ?? spec.preset;
+      const chosen = config.custom?.companion;
+      const companion = chosen === void 0 ? spec.companion : chosen === "none" ? null : chosen;
       const wantCity = spec.city && config.blocks.includes("city");
-      const wantGame = spec.companion !== null && config.blocks.includes("game");
+      const wantGame = companion !== null && config.blocks.includes("game");
       if (!wantCity && !wantGame) return out;
-      const hue = hueOf(profile.avatar?.grid.tint) ?? DEFAULT_HUE[spec.preset];
+      const hue = hueOf(profile.avatar?.grid.tint) ?? DEFAULT_HUE[preset];
       const nowIso = profile.fetchedAt ?? profile.createdAt;
       const login = profile.login;
       const assets = [];
@@ -16937,31 +16986,31 @@ ${pictureTag(`${base.id}-${kind}`, config.theme, alt, CARD_WIDTH)}
           profile.contributions ? `Contribution city: ${profile.contributions.total} contributions in the past year across ${profile.contributions.activeDays} active days, busiest day ${peak}, one building for each day` : "Contribution city, shown once contribution data is available"
         );
       }
-      if (wantGame && spec.companion === "snake") {
+      if (wantGame && companion === "snake") {
         picture(
           "snake",
           profile.contributions ? `An animated snake crossing the contribution graph and eating the active days, among ${profile.contributions.total} contributions in the past year` : "A contribution snake, shown once contribution data is available"
         );
       }
-      if (wantGame && spec.companion === "chess") {
+      if (wantGame && companion === "chess") {
         const { state, replay } = liveState(login, nowIso);
         picture("chess", `A live chess game: ${state.game.title}, ${state.game.white} against ${state.game.black}. ${statusText(state, replay)}`);
       }
       for (const variant of variantsFor(config.theme)) {
-        const style = styleFor(spec.preset, variant, hue);
+        const style = styleFor(preset, variant, hue);
         if (wantCity) {
           assets.push({
             path: assetPath(`${base.id}-city`, variant),
             content: renderCityCard({ login, contributions: profile.contributions, style, motion: config.motion })
           });
         }
-        if (wantGame && spec.companion === "snake") {
+        if (wantGame && companion === "snake") {
           assets.push({
             path: assetPath(`${base.id}-snake`, variant),
             content: renderSnakeCard({ login, contributions: profile.contributions, style, motion: config.motion })
           });
         }
-        if (wantGame && spec.companion === "chess") {
+        if (wantGame && companion === "chess") {
           assets.push({
             path: assetPath(`${base.id}-chess`, variant),
             content: renderChess({ login, nowIso, style, motion: config.motion })
@@ -18707,7 +18756,12 @@ function renderProfile(profile, config) {
     const known = templates.map((t) => t.id).join(", ");
     throw new ConfigError(`Unknown template "${config.template}". Choose from: ${known}.`);
   }
-  return template.render(profile, config);
+  return template.render(withHue(profile, config), config);
+}
+function withHue(profile, config) {
+  const hue = config.custom?.hue;
+  if (hue === void 0 || !profile.avatar) return profile;
+  return { ...profile, avatar: { ...profile.avatar, grid: { ...profile.avatar.grid, tint: tintForHue(hue) } } };
 }
 
 // src/avatar.ts

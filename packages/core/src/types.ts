@@ -1,5 +1,10 @@
+import type { Preset } from './live/style';
+
 export const BLOCK_IDS = ['stats', 'activity', 'languages', 'projects', 'city', 'game'] as const;
 export type BlockId = (typeof BLOCK_IDS)[number];
+
+export const COMPANIONS = ['snake', 'chess', 'none'] as const;
+export type Companion = (typeof COMPANIONS)[number];
 
 export const THEME_MODES = ['auto', 'dark', 'light'] as const;
 export type ThemeMode = (typeof THEME_MODES)[number];
@@ -113,6 +118,18 @@ export interface Config {
     headline?: string;
     bio?: string;
   };
+  /** Changes a design makes to the template it is based on. Leave out to use the template as it is. */
+  custom?: CustomStyle;
+}
+
+/** What a user can change about an existing template without writing code. */
+export interface CustomStyle {
+  /** Accent hue, 0-359, replacing the colour taken from the profile picture. */
+  hue?: number;
+  /** The look of the live city and game panels. */
+  look?: Preset;
+  /** Which automated game sits under the card. */
+  companion?: Companion;
 }
 
 export interface Asset {

@@ -36,9 +36,13 @@ template: showcase   # showcase, launchpad, city, galaxy, snake, learning, build
 theme: auto
 motion: true
 credit: true
-blocks: [stats, activity, languages, projects]
+blocks: [stats, activity, languages, projects, city, game]
 text:
   headline: Security researcher
+custom:              # optional: make any design your own
+  hue: 200           # accent colour, 0-359 (default: taken from your profile picture)
+  look: blueprint    # look of the city and game panels: aurora, sunrise, night, space, arcade, chalk, editor, blueprint, paper, terminal, glow or plain
+  companion: chess   # which game plays under the card: snake, chess or none
 ```
 
 and `.github/workflows/livebio.yml`:
@@ -78,6 +82,14 @@ The `activity` section shows your contribution graph and streaks. GitHub only sh
 - **In the builder's preview**, a small [edge function](workers/contributions) supplies the same data. It is optional. Without it the preview just has no activity section, and your profile still gets one.
 
 Streaks are worked out from the calendar itself. A streak is current if it includes today, or yesterday when today has no activity yet. The longest streak is the longest within the past year of data.
+
+## Templates and the Studio
+
+The site has a **Templates** page with every design in one grid, and a **Studio** where you start from any design and change its accent colour, the look of its city and game panels, and which game plays. Designs you save stay in your browser only. **Export livebio.yml** from the Studio to use one on GitHub; the `custom` settings above are what it writes. The Studio changes and combines the existing designs. It does not edit their layouts.
+
+## Reviews on the website
+
+The home page shows reviews from real users, and says plainly when there are none yet. To add one, someone submits the **Share your experience** form (`.github/ISSUE_TEMPLATE/review.yml`) and agrees to have it shown. The maintainer then copies it into `apps/web/src/data/testimonials.ts`. Please never add a review there that was not submitted by the person it names.
 
 ## The credit line
 

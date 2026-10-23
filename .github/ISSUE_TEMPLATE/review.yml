@@ -1,0 +1,34 @@
+name: Share your experience
+description: Tell us how livebio worked for you. With your OK, it can appear on the website.
+title: "Review: "
+labels: ["review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for trying livebio. Your words may be shown on the website, next to your GitHub username, if you tick the box below.
+  - type: dropdown
+    id: rating
+    attributes:
+      label: How would you rate it?
+      options:
+        - "5 - Loved it"
+        - "4 - Good"
+        - "3 - Okay"
+        - "2 - Needs work"
+        - "1 - Did not work for me"
+    validations:
+      required: true
+  - type: textarea
+    id: experience
+    attributes:
+      label: What was it like?
+      description: One or two sentences is plenty. Please keep it to what you actually experienced.
+    validations:
+      required: true
+  - type: checkboxes
+    id: permission
+    attributes:
+      label: Showing it on the website
+      options:
+        - label: You may show this review, with my GitHub username, on the livebio website.

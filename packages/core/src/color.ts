@@ -61,3 +61,9 @@ export function accentColors(tint: [number, number, number] | undefined, variant
   const lightness = variant === 'dark' ? 0.62 : 0.42;
   return [0, 38, -38, 90, -90].map((offset) => hslToHex((hue + offset + 360) % 360, 0.72, lightness));
 }
+
+/** The [r, g, b] of a vivid colour with the given hue, used to recolour a design by hue alone. */
+export function tintForHue(hue: number): [number, number, number] {
+  const hex = hslToHex(hue, 0.72, 0.5);
+  return [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
+}

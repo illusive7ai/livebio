@@ -8,12 +8,14 @@ interface Props {
   output: Output;
   config: Config;
   profile: Profile;
+  /** True when the preview uses stand-in data, so there is nothing of the user's to export yet. */
+  sample?: boolean;
 }
 
 type Tab = 'preview' | 'code';
 type Mode = 'dark' | 'light';
 
-export function PreviewPane({ output, config, profile }: Props) {
+export function PreviewPane({ output, config, profile, sample = false }: Props) {
   const [tab, setTab] = useState<Tab>('preview');
   const [mode, setMode] = useState<Mode>('dark');
   const [copied, setCopied] = useState(false);
@@ -72,6 +74,7 @@ export function PreviewPane({ output, config, profile }: Props) {
         )}
       </div>
 
+      {!sample && (
       <div className="export">
         <div className="export-actions">
           <button type="button" onClick={copy}>
@@ -94,6 +97,7 @@ export function PreviewPane({ output, config, profile }: Props) {
           </li>
         </ol>
       </div>
+      )}
     </section>
   );
 }
