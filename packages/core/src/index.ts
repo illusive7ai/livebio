@@ -24,6 +24,7 @@ export {
   AUTHOR_URL,
   REPO_URL,
   applyToReadme,
+  staleAssets,
   creditFooter,
 } from './readme';
 export { CREDIT_TEXT, creditSvg } from './credit';

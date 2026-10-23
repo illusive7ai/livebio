@@ -76,3 +76,15 @@ export function pictureTag(base: string, theme: ThemeMode, alt: string, width: n
   }
   return `<img alt="${altText}" src="${assetPath(base, theme)}" width="${width}">`;
 }
+
+/**
+ * Image files left over from an earlier run: the .svg files directly inside the livebio folder that this run did
+ * not write. Changing design, theme or switches changes which files are needed, and without this the old ones
+ * would pile up in a person's repository. Nothing outside that folder, and nothing that is not an .svg, is ever
+ * named here, so a file someone put there for another reason is safe.
+ */
+export function staleAssets(existing: ReadonlyArray<string>, written: ReadonlyArray<string>): string[] {
+  const keep = new Set(written.map((path) => path.replace(/\\/g, '/')));
+  const inFolder = new RegExp(`^${ASSET_DIR}/[^/]+\\.svg$`);
+  return existing.map((path) => path.replace(/\\/g, '/')).filter((path) => inFolder.test(path) && !keep.has(path));
+}

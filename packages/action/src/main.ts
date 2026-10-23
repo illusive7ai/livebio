@@ -1,6 +1,7 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import {
+  ASSET_DIR,
   applyToReadme,
   defaultConfig,
   fetchContributions,
@@ -9,6 +10,7 @@ import {
   needsContributions,
   parseConfigYaml,
   renderProfile,
+  staleAssets,
   type Config,
 } from '@livebio/core';
 import { loadAvatar } from './avatar';
@@ -73,6 +75,17 @@ async function main(): Promise<void> {
     await mkdir(dirname(asset.path), { recursive: true });
     await writeFile(asset.path, asset.content);
   }
+
+  // Tidy up pictures from an earlier design or setting that this run no longer uses.
+  let present: string[] = [];
+  try {
+    present = (await readdir(ASSET_DIR)).map((name) => `${ASSET_DIR}/${name}`);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+  }
+  const stale = staleAssets(present, output.assets.map((asset) => asset.path));
+  for (const path of stale) await rm(path);
+  if (stale.length > 0) console.log(`Removed ${stale.length} image(s) from an earlier design: ${stale.join(', ')}`);
 
   const existing = await readIfExists(readmePath);
   await writeFile(readmePath, applyToReadme(existing, output.readme));

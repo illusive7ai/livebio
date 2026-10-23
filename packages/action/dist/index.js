@@ -15917,6 +15917,11 @@ function pictureTag(base, theme, alt, width) {
   }
   return `<img alt="${altText}" src="${assetPath(base, theme)}" width="${width}">`;
 }
+function staleAssets(existing, written) {
+  const keep = new Set(written.map((path) => path.replace(/\\/g, "/")));
+  const inFolder = new RegExp(`^${ASSET_DIR}/[^/]+\\.svg$`);
+  return existing.map((path) => path.replace(/\\/g, "/")).filter((path) => inFolder.test(path) && !keep.has(path));
+}
 
 // ../core/src/themes.ts
 var palettes = {
@@ -20329,6 +20334,15 @@ async function main() {
     await (0, import_promises.mkdir)((0, import_node_path.dirname)(asset.path), { recursive: true });
     await (0, import_promises.writeFile)(asset.path, asset.content);
   }
+  let present = [];
+  try {
+    present = (await (0, import_promises.readdir)(ASSET_DIR)).map((name) => `${ASSET_DIR}/${name}`);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  const stale = staleAssets(present, output.assets.map((asset) => asset.path));
+  for (const path of stale) await (0, import_promises.rm)(path);
+  if (stale.length > 0) console.log(`Removed ${stale.length} image(s) from an earlier design: ${stale.join(", ")}`);
   const existing = await readIfExists(readmePath);
   await (0, import_promises.writeFile)(readmePath, applyToReadme(existing, output.readme));
   console.log(
