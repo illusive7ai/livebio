@@ -230,7 +230,15 @@ export async function fetchContributions(username: string, opts: FetchOptions = 
   } catch {
     throw new GitHubError('Could not reach GitHub. Check your connection and try again.', 'network');
   }
-  if (!response.ok) throw statusError(response.status, response.headers);
+  if (!response.ok) {
+    const error = statusError(response.status, response.headers);
+    if (error.kind === 'unknown') {
+      // GitHub's own explanation of an unexpected status, kept short. It never contains the token.
+      const detail = (await response.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 200);
+      if (detail) error.message = `${error.message} ${detail}`;
+    }
+    throw error;
+  }
 
   let body: unknown;
   try {

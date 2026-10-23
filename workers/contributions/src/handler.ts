@@ -53,6 +53,8 @@ function withCors(response: Response, cors: Record<string, string>, cache: 'HIT'
 function failure(error: unknown, cors: Record<string, string>): Response {
   const noStore = { ...cors, 'Cache-Control': 'no-store' };
   if (error instanceof GitHubError) {
+    // For whoever runs the service: the kind and message only. Never the token, never the username.
+    console.error(`livebio: ${error.kind}: ${error.message}`);
     switch (error.kind) {
       case 'rate-limit': {
         const wait = error.resetAt ? Math.ceil((error.resetAt.getTime() - Date.now()) / 1000) : DEFAULT_RETRY;
