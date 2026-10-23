@@ -16,6 +16,7 @@ import { lensTemplates } from './lenses';
 import { maintainer } from './maintainer';
 import { minimal } from './minimal';
 import { neofetch } from './neofetch';
+import { paperTemplates } from './paper';
 import { scrapbookTemplates } from './scrapbook';
 import { captip, cinematic, signature, wow } from './showpieces';
 import { showcase } from './showcase';
@@ -77,9 +78,14 @@ const LIVE: Record<string, LiveSpec> = {
   card: { preset: 'glow', city: true, companion: 'chess', shift: 265 },
   polaroids: { preset: 'sunrise', city: true, companion: 'snake', shift: 30 },
   comic: { preset: 'arcade', city: true, companion: 'chess', shift: 12 },
+  wanted: { preset: 'sunrise', city: true, companion: 'chess', shift: 44 },
+  recipe: { preset: 'paper', city: true, companion: 'snake', shift: 12 },
+  nutrition: { preset: 'plain', city: true, companion: 'chess', shift: 140 },
+  postcard: { preset: 'aurora', city: true, companion: 'snake', shift: 205 },
+  ransom: { preset: 'arcade', city: true, companion: 'chess', shift: 350 },
 };
 
-const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates, cinematic, wow, signature, captip, frontpage, hub, creative, erased, ...documentTemplates, ...interfaceTemplates, ...dataArtTemplates, ...scrapbookTemplates];
+const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates, cinematic, wow, signature, captip, frontpage, hub, creative, erased, ...documentTemplates, ...interfaceTemplates, ...dataArtTemplates, ...scrapbookTemplates, ...paperTemplates];
 
 export const templates: Template[] = bases.map((template) => {
   const spec = LIVE[template.id];
