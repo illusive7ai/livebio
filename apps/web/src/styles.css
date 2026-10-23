@@ -287,20 +287,22 @@ button.primary {
   background: var(--accent-soft);
 }
 
+/* Thumbnails always show a card's full width. A card that is taller than the frame is cut off at the
+   bottom, and a short one simply shows in full, so nothing is ever cropped at the sides. */
 .thumb {
   display: grid;
-  place-items: center;
+  place-items: start center;
   overflow: hidden;
   border-radius: 8px;
   background: var(--bg);
-  aspect-ratio: 16 / 7;
+  min-height: 96px;
+  max-height: 200px;
 }
 
 .thumb img {
+  display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: top;
+  height: auto;
 }
 
 .paper {
