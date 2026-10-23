@@ -11,7 +11,56 @@ A GitHub profile README that keeps itself up to date. Open source, no sign-in, n
 
 Type your GitHub username, pick a design, make it yours, and export. A small GitHub Action in your own profile repository then refreshes your stats every day, so your profile never goes stale and never depends on someone else's server.
 
-> **Status: early.** The builder, a Templates gallery, a Studio for restyling designs and the Action all work, with 35 templates. Every one carries a live contribution city and an automated snake or chess game. See the [roadmap](#roadmap).
+> **Status: early.** The builder, a Templates gallery, a Studio for restyling designs and the Action all work, with 35 templates. Every one carries a live contribution city and an automated snake or chess game (the two designs that already are a city or a snake carry the other half). See the [roadmap](#roadmap).
+
+## What it looks like
+
+<p align="center">
+  <img src="assets/screenshot-builder.png" width="900" alt="The livebio builder with a GitHub profile loaded: a grouped picker of designs on the left and a live preview of the README on the right">
+</p>
+
+Type a username, pick one of 35 designs, and see your own profile in it. Every design comes with a live contribution city and a chess game or snake that moves on its own (the Contribution city and Snake trail designs already are those, so they carry the other half). The pictures below are real output for the author's own profile, saved on 23 October 2026. They are animated SVGs, so they move here too.
+
+<table>
+<tr>
+<td align="center" width="50%"><img src="assets/gallery/showcase.svg" width="440" alt="The Showcase design: a banner coloured by the profile picture, stat tiles, an activity calendar, languages and top projects"><br><sub><b>Showcase</b></sub></td>
+<td align="center" width="50%"><img src="assets/gallery/contribution-city.svg" width="440" alt="A contribution city: every day of the past year as a building, taller on busier days"><br><sub><b>Contribution city, on every design</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="50%"><img src="assets/gallery/chess.svg" width="440" alt="A live chess game that plays two moves a day, with the latest moves listed beside the board"><br><sub><b>A chess game that plays itself, on every design</b></sub></td>
+<td align="center" width="50%"><img src="assets/gallery/snake-trail.svg" width="440" alt="The Snake trail design: a snake crosses the contribution graph and eats the active days"><br><sub><b>Snake trail</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="50%"><img src="assets/gallery/space-shooter.svg" width="440" alt="The Space Shooter design: a ship zaps each column of active days on the contribution graph"><br><sub><b>Space Shooter</b></sub></td>
+<td align="center" width="50%"><img src="assets/gallery/front-page.svg" width="440" alt="The Front Page design: a newspaper with a masthead, a lead story, a table of numbers and the year in brief"><br><sub><b>Front Page</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="50%"><img src="assets/gallery/cinematic.svg" width="440" alt="The Cinematic design: a letterboxed title card with rings that fill and a line that draws itself"><br><sub><b>Cinematic</b></sub></td>
+<td align="center" width="50%"><img src="assets/gallery/terminal.svg" width="440" alt="The Terminal design: a terminal window that types out the profile line by line"><br><sub><b>Terminal</b></sub></td>
+</tr>
+</table>
+
+### Publish with one paste
+
+<table>
+<tr>
+<td valign="top"><img src="assets/screenshot-export.png" width="500" alt="The publish panel: Copy and paste is selected, with a Copy README button and three short steps"></td>
+<td valign="top"><img src="assets/screenshot-phone.png" width="200" alt="The builder on a phone: the picker is a row of designs per group that scrolls sideways"></td>
+</tr>
+<tr>
+<td><sub>Copy the README, paste it into your profile repository, done. The pictures are drawn live and stay current.</sub></td>
+<td><sub>It works on a phone too.</sub></td>
+</tr>
+</table>
+
+### More of the site
+
+<table>
+<tr>
+<td width="50%"><img src="assets/screenshot-templates.png" width="440" alt="The Templates page: every design in a grid, grouped as Professional, Creative, Developer and Minimal"><br><sub>Every design in one grid</sub></td>
+<td width="50%"><img src="assets/screenshot-studio.png" width="440" alt="The Studio: start from any design and change its accent colour, the look of its panels and its game"><br><sub>The Studio: recolour any design, swap its game</sub></td>
+</tr>
+</table>
 
 ## How it works
 

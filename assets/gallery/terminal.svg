@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="808" viewBox="0 0 800 808" role="img" aria-labelledby="t">
+<title id="t">Illusivehacks (@illusive7ai) on GitHub</title>
+<style>
+text{font-family:ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;font-size:14px}
+.ln{animation:in .01s steps(1) both}
+@keyframes in{from{opacity:0}to{opacity:1}}
+.cursor{animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.ln,.cursor{animation:none}}
+</style>
+<rect x="0.5" y="0.5" width="799" height="807" rx="10" fill="#0d1117" stroke="#30363d"/>
+<path d="M1 40V11a10 10 0 0 1 10-10h778a10 10 0 0 1 10 10v29z" fill="#161b22"/>
+<line x1="1" y1="40" x2="799" y2="40" stroke="#30363d"/>
+<circle cx="24" cy="20" r="6" fill="#ff5f56"/><circle cx="44" cy="20" r="6" fill="#ffbd2e"/><circle cx="64" cy="20" r="6" fill="#27c93f"/>
+<text x="400" y="25" text-anchor="middle" fill="#9198a1">illusive7ai@github: ~</text>
+<g class="ln" style="animation-delay:0.00s"><text x="24" y="81" xml:space="preserve" fill="#e6edf3"><tspan fill="#3fb950">illusive7ai@github</tspan><tspan fill="#9198a1">:~$</tspan> whoami</text></g>
+<g class="ln" style="animation-delay:0.15s"><text x="24" y="105" xml:space="preserve" fill="#e6edf3" font-weight="700">Illusivehacks</text></g>
+<g class="ln" style="animation-delay:0.30s"><text x="24" y="129" xml:space="preserve" fill="#9198a1">Security researcher. Building offensive &amp; defensive tools for education. Wi-Fi audi…</text></g>
+<g class="ln" style="animation-delay:0.45s"><text x="24" y="153" xml:space="preserve" fill="#9198a1">IllusiveHacks Corp · Nowhere · williamportfolio-eosin.vercel.app</text></g>
+<g class="ln" style="animation-delay:0.75s"><text x="24" y="201" xml:space="preserve" fill="#e6edf3"><tspan fill="#3fb950">illusive7ai@github</tspan><tspan fill="#9198a1">:~$</tspan> stats</text></g>
+<g class="ln" style="animation-delay:0.90s"><text x="24" y="225" xml:space="preserve" fill="#9198a1">repos       <tspan fill="#e6edf3" font-weight="700">57</tspan></text></g>
+<g class="ln" style="animation-delay:1.05s"><text x="24" y="249" xml:space="preserve" fill="#9198a1">stars       <tspan fill="#e6edf3" font-weight="700">332</tspan></text></g>
+<g class="ln" style="animation-delay:1.20s"><text x="24" y="273" xml:space="preserve" fill="#9198a1">followers   <tspan fill="#e6edf3" font-weight="700">1,155</tspan></text></g>
+<g class="ln" style="animation-delay:1.35s"><text x="24" y="297" xml:space="preserve" fill="#9198a1">following   <tspan fill="#e6edf3" font-weight="700">1,436</tspan></text></g>
+<g class="ln" style="animation-delay:1.65s"><text x="24" y="345" xml:space="preserve" fill="#e6edf3"><tspan fill="#3fb950">illusive7ai@github</tspan><tspan fill="#9198a1">:~$</tspan> streak</text></g>
+<g class="ln" style="animation-delay:1.80s"><text x="24" y="369" xml:space="preserve" fill="#9198a1">current     <tspan fill="#e6edf3" font-weight="700">7 days</tspan></text></g>
+<g class="ln" style="animation-delay:1.95s"><text x="24" y="393" xml:space="preserve" fill="#9198a1">longest     <tspan fill="#e6edf3" font-weight="700">25 days</tspan></text></g>
+<g class="ln" style="animation-delay:2.10s"><text x="24" y="417" xml:space="preserve" fill="#9198a1">past year   <tspan fill="#e6edf3" font-weight="700">505 contributions</tspan></text></g>
+<g class="ln" style="animation-delay:2.40s"><text x="24" y="465" xml:space="preserve" fill="#e6edf3"><tspan fill="#3fb950">illusive7ai@github</tspan><tspan fill="#9198a1">:~$</tspan> languages</text></g>
+<g class="ln" style="animation-delay:2.55s"><text x="24" y="489" xml:space="preserve" fill="#e6edf3">Python      <tspan fill="#3fb950">██████████</tspan><tspan fill="#21262d">░░░░░░░░░░░░░░</tspan><tspan fill="#9198a1"> 42%</tspan></text></g>
+<g class="ln" style="animation-delay:2.70s"><text x="24" y="513" xml:space="preserve" fill="#e6edf3">HTML        <tspan fill="#3fb950">██████</tspan><tspan fill="#21262d">░░░░░░░░░░░░░░░░░░</tspan><tspan fill="#9198a1"> 27%</tspan></text></g>
+<g class="ln" style="animation-delay:2.85s"><text x="24" y="537" xml:space="preserve" fill="#e6edf3">Batchfile   <tspan fill="#3fb950">█████</tspan><tspan fill="#21262d">░░░░░░░░░░░░░░░░░░░</tspan><tspan fill="#9198a1"> 19%</tspan></text></g>
+<g class="ln" style="animation-delay:3.00s"><text x="24" y="561" xml:space="preserve" fill="#e6edf3">Go          <tspan fill="#3fb950"></tspan><tspan fill="#21262d">░░░░░░░░░░░░░░░░░░░░░░░░</tspan><tspan fill="#9198a1"> 2%</tspan></text></g>
+<g class="ln" style="animation-delay:3.15s"><text x="24" y="585" xml:space="preserve" fill="#e6edf3">Ruby        <tspan fill="#3fb950"></tspan><tspan fill="#21262d">░░░░░░░░░░░░░░░░░░░░░░░░</tspan><tspan fill="#9198a1"> 2%</tspan></text></g>
+<g class="ln" style="animation-delay:3.45s"><text x="24" y="633" xml:space="preserve" fill="#e6edf3"><tspan fill="#3fb950">illusive7ai@github</tspan><tspan fill="#9198a1">:~$</tspan> projects --top</text></g>
+<g class="ln" style="animation-delay:3.60s"><text x="24" y="657" xml:space="preserve" fill="#e6edf3"><tspan fill="#58a6ff">★ 15       WI-FI-Brute-Forcer-Key-Combinator-</tspan><tspan fill="#9198a1"> — WI-FI Bruteforcing | Network Securi…</tspan></text></g>
+<g class="ln" style="animation-delay:3.75s"><text x="24" y="681" xml:space="preserve" fill="#e6edf3"><tspan fill="#58a6ff">★ 12       illusive7ai</tspan><tspan fill="#9198a1"></tspan></text></g>
+<g class="ln" style="animation-delay:3.90s"><text x="24" y="705" xml:space="preserve" fill="#e6edf3"><tspan fill="#58a6ff">★ 11       Telegram-controlled-remote-backdoor-spyware</tspan><tspan fill="#9198a1"> — Spyware. This application…</tspan></text></g>
+<g class="ln" style="animation-delay:4.05s"><text x="24" y="729" xml:space="preserve" fill="#e6edf3"><tspan fill="#58a6ff">★ 10       Cipher-Menace</tspan><tspan fill="#9198a1"> — This is a Ransomware/ Security demonstration/ Educationa…</tspan></text></g>
+<g class="ln" style="animation-delay:4.35s"><text x="24" y="777" xml:space="preserve" fill="#e6edf3"><tspan fill="#3fb950">illusive7ai@github</tspan><tspan fill="#9198a1">:~$</tspan> <tspan class="cursor" fill="#e6edf3">▌</tspan></text></g>
+</svg>

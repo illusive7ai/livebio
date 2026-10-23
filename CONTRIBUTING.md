@@ -13,8 +13,11 @@ npm run dev
 ## Adding a template
 
 1. Create `packages/core/src/templates/<id>.ts` and export a `Template` (see `terminal.ts` for an image-based one and `minimal.ts` for a Markdown-only one).
-2. Register it in `packages/core/src/templates/index.ts`.
-3. That is all the tests need: every registered template is automatically checked for the rules below.
+2. Register it in `packages/core/src/templates/index.ts`: add it to the `bases` list, and give it an entry in the `LIVE` map. Every design carries a live contribution city and a snake or chess game, and the entry says which preset, which game and what hue shift to use (the shift keeps designs that share a preset looking different).
+3. Give it a group on the website, in `apps/web/src/lib/catalog.ts`, so it appears on the Templates page and in the picker.
+4. That is all the tests need: every registered template is automatically checked for the rules below, and that every picture its README names is a file it generates (so it also works as a hosted picture).
+
+Helpers for drawing live in `packages/core/src/templates/kit.ts` (palettes, panels, bars, repository rows) and `shared.ts`. A design built from a profile's repositories by language can be a "lens" (see `lenses.ts`) instead of a whole file.
 
 ### Rules every template must follow
 
