@@ -11,7 +11,7 @@ A GitHub profile README that keeps itself up to date. Open source, no sign-in, n
 
 Type your GitHub username, pick a design, make it yours, and export. A small GitHub Action in your own profile repository then refreshes your stats every day, so your profile never goes stale and never depends on someone else's server.
 
-> **Status: early.** The builder, a Templates gallery, a Studio for restyling designs and the Action all work, with 35 templates. Every one carries a live contribution city and an automated snake or chess game (the two designs that already are a city or a snake carry the other half). See the [roadmap](#roadmap).
+> **Status: early.** The builder, a Templates gallery, a Studio for restyling designs and the Action all work, with 50 templates. Every one carries a live contribution city and an automated snake or chess game (the two designs that already are a city or a snake carry the other half). See the [roadmap](#roadmap).
 
 ## What it looks like
 
@@ -19,7 +19,7 @@ Type your GitHub username, pick a design, make it yours, and export. A small Git
   <img src="assets/screenshot-builder.png" width="900" alt="The livebio builder with a GitHub profile loaded: a grouped picker of designs on the left and a live preview of the README on the right">
 </p>
 
-Type a username, pick one of 35 designs, and see your own profile in it. Every design comes with a live contribution city and a chess game or snake that moves on its own (the Contribution city and Snake trail designs already are those, so they carry the other half). The pictures below are real output for the author's own profile, saved on 23 October 2026. They are animated SVGs, so they move here too.
+Type a username, pick one of 50 designs, and see your own profile in it. Every design comes with a live contribution city and a chess game or snake that moves on its own (the Contribution city and Snake trail designs already are those, so they carry the other half). The pictures below are real output for the author's own profile, saved on 23 October 2026. They are animated SVGs, so they move here too.
 
 <table>
 <tr>

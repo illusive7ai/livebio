@@ -6,11 +6,22 @@ All notable changes to livebio. The version numbers are the tags of the GitHub A
 
 ### Added
 
+- **Fifteen more designs, 50 in all**, in four new groups of look:
+  - Documents: **Passport** (a stamp for each language), **Receipt** (repositories as items, with a real subtotal), **Character sheet** and **Wall calendar** (every day coloured by its real contributions).
+  - Interfaces: **Now playing** (a music player with your weeks as an equaliser), **Inbox** (a repository is unread when it was really pushed to lately), **Retro desktop** and **Cockpit** (dials on a labelled logarithmic scale).
+  - Data art: **Metro map**, **Elements** (a periodic table of repositories), **Treemap** (tile area is stars plus one) and **Bookshelf** (spine height is stars on a log scale).
+  - Scrapbook: **Trading card**, **Polaroid wall** and **Comic strip**.
+  
+  Every one draws only what GitHub returned: a repository with no description gets no invented one, a missing date leaves its line out, and a design that has nothing to show says so. All of them carry the live city and a game, and have light and dark versions.
 - **Copy and paste, with live pictures.** The site's **Copy README** now copies a README whose pictures are addresses on the livebio server, which draws them from your public GitHub data when your profile is viewed. There is nothing to upload and no Action to set up, and your numbers, contribution city and chess game stay current by themselves (a picture is refreshed about once an hour). The zip and the Action remain as **Host the files myself**, for anyone who would rather not depend on a server.
   - The settings that shape a picture travel in its address and are checked with the same rules as `livebio.yml`.
   - The server keeps only a one-hour copy of public GitHub data. A picture that cannot be drawn is drawn as a small picture that says why, and is never cached.
   - The server only fetches profile pictures from GitHub's own hosts, and every picture carries a content security policy.
 - A reviews section on the home page that reads reviews from this repository's issues (see the README). While they load it says so, and it never claims there are none before it has looked.
+
+### Fixed
+
+- Every design crashed while drawing an account with no contributions in the past year, which left that account with a blank page. A quiet year now draws an empty city, and the city's description says "one building for each active day".
 
 ### Changed
 
