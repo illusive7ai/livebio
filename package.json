@@ -6,7 +6,8 @@
   "license": "MIT",
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/*",
+    "workers/*"
   ],
   "engines": {
     "node": ">=20"

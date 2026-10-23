@@ -1,7 +1,13 @@
 import type { LanguageShare, Profile, RepoSummary } from './types';
 import { isValidUsername } from './util';
 
-export type GitHubErrorKind = 'invalid-username' | 'not-found' | 'rate-limit' | 'network' | 'unknown';
+export type GitHubErrorKind =
+  | 'invalid-username'
+  | 'not-found'
+  | 'rate-limit'
+  | 'unauthorized'
+  | 'network'
+  | 'unknown';
 
 export class GitHubError extends Error {
   constructor(

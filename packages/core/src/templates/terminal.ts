@@ -2,7 +2,7 @@ import type { Config, Output, Profile, Template } from '../types';
 import { palettes, variantsFor, type Palette, type Variant } from '../themes';
 import { assetPath } from '../readme';
 import { formatNumber, safeUrl, truncate, xmlEscape } from '../util';
-import { FONT, describeProfile, imageReadme, motionCss, stagger } from './shared';
+import { FONT, describeProfile, imageReadme, motionCss, plural, stagger } from './shared';
 
 const WIDTH = 800;
 const PAD = 24;
@@ -11,6 +11,8 @@ const LINE_HEIGHT = 24;
 const FONT_SIZE = 14;
 const MAX_CHARS = 84;
 const LABEL_WIDTH = 12;
+/** Wide enough for "★ 999,999" plus two spaces, so project names always start in one column. */
+const STAR_COLUMN = 11;
 const BAR_CELLS = 24;
 const STEP_SECONDS = 0.15;
 
@@ -46,6 +48,12 @@ function buildLines(profile: Profile, config: Config): Line[] {
       lines.push({ kind: 'stat', label: 'stars', value: formatNumber(profile.totalStars) });
       lines.push({ kind: 'stat', label: 'followers', value: formatNumber(profile.followers) });
       lines.push({ kind: 'stat', label: 'following', value: formatNumber(profile.following) });
+    } else if (block === 'activity' && profile.contributions) {
+      const activity = profile.contributions;
+      lines.push({ kind: 'blank' }, { kind: 'prompt', command: 'streak' });
+      lines.push({ kind: 'stat', label: 'current', value: plural(activity.currentStreak, 'day') });
+      lines.push({ kind: 'stat', label: 'longest', value: plural(activity.longestStreak, 'day') });
+      lines.push({ kind: 'stat', label: 'past year', value: `${formatNumber(activity.total)} contributions` });
     } else if (block === 'languages' && profile.languages.length > 0) {
       lines.push({ kind: 'blank' }, { kind: 'prompt', command: 'languages' });
       for (const language of profile.languages) {
@@ -97,7 +105,7 @@ function renderLine(line: Line, y: number, p: Palette, login: string): string {
       );
     }
     case 'repo': {
-      const head = `★ ${formatNumber(line.stars)}`.padEnd(7) + line.name;
+      const head = `★ ${formatNumber(line.stars)}`.padEnd(STAR_COLUMN) + line.name;
       const room = Math.max(0, MAX_CHARS - head.length - 3);
       const tail = line.description && room > 10 ? ` — ${truncate(line.description, room)}` : '';
       return (
@@ -152,7 +160,7 @@ export const terminal: Template = {
       content: renderSvg(profile, config, variant),
     }));
 
-    const alt = describeProfile(profile, config);
+    const alt = describeProfile(profile, config, undefined, { activity: true });
     return { readme: imageReadme(profile, config, 'terminal', WIDTH, alt), assets };
   },
 };

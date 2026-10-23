@@ -1,4 +1,4 @@
-export const BLOCK_IDS = ['stats', 'languages', 'projects'] as const;
+export const BLOCK_IDS = ['stats', 'activity', 'languages', 'projects'] as const;
 export type BlockId = (typeof BLOCK_IDS)[number];
 
 export const THEME_MODES = ['auto', 'dark', 'light'] as const;
@@ -17,6 +17,31 @@ export interface RepoSummary {
 export interface LanguageShare {
   name: string;
   percent: number;
+}
+
+export interface ContributionDay {
+  /** Calendar date, YYYY-MM-DD. */
+  date: string;
+  count: number;
+  /** How busy the day was, 0 (none) to 4, as GitHub colours its own graph. */
+  level: 0 | 1 | 2 | 3 | 4;
+}
+
+/**
+ * What GitHub's contribution calendar shows for roughly the past year. The streak figures are
+ * always worked out from `days`, never taken on trust from another service.
+ */
+export interface Contributions {
+  from: string;
+  to: string;
+  total: number;
+  activeDays: number;
+  /** Consecutive active days ending today, or yesterday if today has no activity yet. */
+  currentStreak: number;
+  /** Longest run of active days within this window. */
+  longestStreak: number;
+  /** Oldest first, one entry per calendar day. */
+  days: ContributionDay[];
 }
 
 /** Decoded picture, one value per pixel, row by row. Both arrays hold 0-255. */
@@ -60,6 +85,8 @@ export interface Profile {
   topRepos: RepoSummary[];
   /** Present only when the host loaded the picture. Templates must cope without it. */
   avatar?: Avatar;
+  /** Present only when contribution data was available. Templates must cope without it. */
+  contributions?: Contributions;
 }
 
 export interface Config {

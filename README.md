@@ -36,7 +36,7 @@ template: showcase   # showcase, brief, terminal, neofetch or minimal
 theme: auto
 motion: true
 credit: true
-blocks: [stats, languages, projects]
+blocks: [stats, activity, languages, projects]
 text:
   headline: Security researcher
 ```
@@ -70,6 +70,15 @@ If your README already contains `<!-- livebio:start -->` and `<!-- livebio:end -
 
 The builder generates both files for you.
 
+## Activity: contribution graph and streaks
+
+The `activity` section shows your contribution graph and streaks. GitHub only shares that data with a token, so:
+
+- **In your profile**, the Action reads it with the workflow's built-in `GITHUB_TOKEN`. If it cannot, it prints a warning and leaves the section out, and everything else still updates. In that case, create a token with no scopes, save it as a repository secret and pass it as the `token` input instead.
+- **In the builder's preview**, a small [edge function](workers/contributions) supplies the same data. It is optional. Without it the preview just has no activity section, and your profile still gets one.
+
+Streaks are worked out from the calendar itself. A streak is current if it includes today, or yesterday when today has no activity yet. The longest streak is the longest within the past year of data.
+
 ## The credit line
 
 By default the generated README ends with a small "Made with livebio by illusivehacks" line. It helps the project reach people. You can switch it off with one checkbox in the builder, or with `credit: false` in `livebio.yml`.
@@ -91,6 +100,7 @@ npm run build
 | `packages/core` | The engine: GitHub data, templates, README and SVG rendering. Shared by the web app and the Action. |
 | `apps/web` | The builder. |
 | `packages/action` | The GitHub Action. Its bundle in `dist/` is committed, because Actions run it directly. |
+| `workers/contributions` | Optional edge function that gives the builder's preview contribution data. |
 
 After changing `packages/core` or `packages/action`, run `npm run build -w @livebio/action` and commit the updated `dist/index.js`.
 
@@ -100,8 +110,8 @@ After changing `packages/core` or `packages/action`, run `npm run build -w @live
 - [x] Recruiter brief: a calm, paper-style one-page summary of who you are, your work and your stack
 - [x] Neofetch: your profile picture as ASCII art beside a system-info summary
 - [ ] More templates: open-source maintainer, isometric contribution city, animated repo galaxy, snake trail and more, each with its own look
-- [ ] Contribution counts and streaks (authenticated data, available in the Action)
-- [ ] Optional small edge function so the browser preview can show contribution data too
+- [x] Contribution graph and streaks, from the Action and from an optional edge function for the preview
+- [ ] Activity in more templates, and a template built around the isometric contribution city
 - [ ] Import and improve an existing README
 - [ ] Profile lint: broken images, dead links, missing alt text
 - [ ] Template gallery site

@@ -3,10 +3,13 @@ import { AUTHOR, BLOCK_IDS, THEME_MODES, type BlockId, type Config, type ThemeMo
 interface Props {
   config: Config;
   onChange: (config: Config) => void;
+  /** Whether contribution data was available for this preview. */
+  hasActivity: boolean;
 }
 
 const BLOCK_LABELS: Record<BlockId, string> = {
   stats: 'Stats',
+  activity: 'Activity (contribution graph and streaks)',
   languages: 'Languages',
   projects: 'Top projects',
 };
@@ -17,7 +20,7 @@ const THEME_LABELS: Record<ThemeMode, string> = {
   light: 'Always light',
 };
 
-export function Customizer({ config, onChange }: Props) {
+export function Customizer({ config, onChange, hasActivity }: Props) {
   const setText = (key: 'headline' | 'bio', value: string) => {
     const text = { ...config.text };
     if (value.trim()) text[key] = value;
@@ -65,6 +68,12 @@ export function Customizer({ config, onChange }: Props) {
             {BLOCK_LABELS[block]}
           </label>
         ))}
+        {config.blocks.includes('activity') && !hasActivity && (
+          <p className="hint">
+            The activity section is not in this preview. It appears in your profile after the first automatic
+            update, because GitHub only shares contribution data with a token.
+          </p>
+        )}
       </fieldset>
 
       <label className="stack">

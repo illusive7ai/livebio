@@ -3,7 +3,7 @@ import { assetPath } from '../readme';
 import { palettes, variantsFor, type Palette, type Variant } from '../themes';
 import type { Config, Output, Profile, Template } from '../types';
 import { formatNumber, safeUrl, truncate, wrap, xmlEscape } from '../util';
-import { FONT, describeProfile, imageReadme, motionCss, stagger } from './shared';
+import { FONT, describeProfile, imageReadme, motionCss, plural, stagger } from './shared';
 
 const WIDTH = 900;
 const PAD = 28;
@@ -73,6 +73,11 @@ function infoLines(profile: Profile, config: Config): Info[] {
       field('Stars', formatNumber(profile.totalStars));
       field('Followers', formatNumber(profile.followers));
       field('Following', formatNumber(profile.following));
+    } else if (block === 'activity' && profile.contributions) {
+      const activity = profile.contributions;
+      gap();
+      field('Streak', `${plural(activity.currentStreak, 'day')} (best ${formatNumber(activity.longestStreak)})`);
+      field('Past year', `${formatNumber(activity.total)} contributions`);
     } else if (block === 'languages' && profile.languages.length > 0) {
       gap();
       field('Languages', profile.languages.slice(0, 3).map((l) => l.name).join(', '));
@@ -189,7 +194,7 @@ export const neofetch: Template = {
       content: renderSvg(profile, config, variant),
     }));
     const extra = profile.avatar ? 'with an ASCII portrait of the profile picture' : undefined;
-    const alt = describeProfile(profile, config, extra);
+    const alt = describeProfile(profile, config, extra, { activity: true });
     return { readme: imageReadme(profile, config, 'neofetch', WIDTH, alt), assets };
   },
 };

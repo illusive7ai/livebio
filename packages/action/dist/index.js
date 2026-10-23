@@ -11603,7 +11603,7 @@ var import_promises = require("node:fs/promises");
 var import_node_path = require("node:path");
 
 // ../core/src/types.ts
-var BLOCK_IDS = ["stats", "languages", "projects"];
+var BLOCK_IDS = ["stats", "activity", "languages", "projects"];
 var THEME_MODES = ["auto", "dark", "light"];
 
 // ../core/src/util.ts
@@ -11759,6 +11759,156 @@ async function fetchProfile(username, opts = {}) {
     languages: languageShares(own).slice(0, 5),
     topRepos
   };
+}
+
+// ../core/src/contributions.ts
+var DATE = /^\d{4}-\d{2}-\d{2}$/;
+var MAX_DAYS = 400;
+var MS_PER_DAY = 864e5;
+var GRAPHQL = "https://api.github.com/graphql";
+var CONTRIBUTIONS_QUERY = `query($login: String!) {
+  user(login: $login) {
+    contributionsCollection {
+      contributionCalendar {
+        totalContributions
+        weeks { contributionDays { date contributionCount contributionLevel } }
+      }
+    }
+  }
+}`;
+var LEVELS = {
+  NONE: 0,
+  FIRST_QUARTILE: 1,
+  SECOND_QUARTILE: 2,
+  THIRD_QUARTILE: 3,
+  FOURTH_QUARTILE: 4
+};
+function asRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value) ? value : null;
+}
+function isRealDate(date) {
+  if (!DATE.test(date)) return false;
+  const time = Date.parse(`${date}T00:00:00Z`);
+  return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === date;
+}
+function dayNumber(date) {
+  const [y, m, d] = date.split("-").map(Number);
+  return Date.UTC(y ?? 0, (m ?? 1) - 1, d ?? 1) / MS_PER_DAY;
+}
+function computeStreaks(days) {
+  let longest = 0;
+  let run = 0;
+  let activeDays = 0;
+  days.forEach((day, index) => {
+    if (day.count <= 0) {
+      run = 0;
+      return;
+    }
+    activeDays++;
+    const previous = days[index - 1];
+    const continues = previous !== void 0 && previous.count > 0 && dayNumber(day.date) - dayNumber(previous.date) === 1;
+    run = continues ? run + 1 : 1;
+    longest = Math.max(longest, run);
+  });
+  let end = days.length - 1;
+  if (end >= 0 && (days[end]?.count ?? 0) === 0) end--;
+  let current = 0;
+  for (let i = end; i >= 0; i--) {
+    const day = days[i];
+    if (!day || day.count <= 0) break;
+    const next = days[i + 1];
+    if (next && next.count > 0 && dayNumber(next.date) - dayNumber(day.date) !== 1) break;
+    current++;
+  }
+  return { current, longest, activeDays };
+}
+function invalid(reason) {
+  return new GitHubError(`The contribution data was not valid: ${reason}.`, "unknown");
+}
+function buildContributions(input2) {
+  if (input2.length === 0) throw invalid("it had no days");
+  if (input2.length > MAX_DAYS) throw invalid("it had too many days");
+  const days = [...input2].sort((a, b) => a.date.localeCompare(b.date));
+  for (let i = 1; i < days.length; i++) {
+    if (days[i]?.date === days[i - 1]?.date) throw invalid("a date appeared twice");
+  }
+  const { current, longest, activeDays } = computeStreaks(days);
+  return {
+    from: days[0].date,
+    to: days[days.length - 1].date,
+    total: days.reduce((sum, day) => sum + day.count, 0),
+    activeDays,
+    currentStreak: current,
+    longestStreak: longest,
+    days
+  };
+}
+function parseCalendarResponse(body) {
+  const root = asRecord(body);
+  const errors = Array.isArray(root?.errors) ? root.errors : [];
+  const type = asRecord(errors[0])?.type;
+  if (type === "NOT_FOUND") throw new GitHubError("That GitHub user was not found.", "not-found");
+  if (type === "RATE_LIMITED") throw new GitHubError("GitHub rate limit reached.", "rate-limit");
+  const user = asRecord(asRecord(root?.data)?.user);
+  if (!user) {
+    if (errors.length > 0) throw new GitHubError("GitHub returned an error.", "unknown");
+    throw new GitHubError("That GitHub user was not found.", "not-found");
+  }
+  const weeks = asRecord(asRecord(user.contributionsCollection)?.contributionCalendar)?.weeks;
+  if (!Array.isArray(weeks)) throw invalid("the calendar was missing");
+  const days = [];
+  for (const week of weeks) {
+    const list = asRecord(week)?.contributionDays;
+    if (!Array.isArray(list)) throw invalid("a week was missing its days");
+    for (const raw of list) {
+      const day = asRecord(raw);
+      const date = day?.date;
+      const count = day?.contributionCount;
+      if (typeof date !== "string" || !isRealDate(date) || typeof count !== "number") throw invalid("a day was malformed");
+      days.push({ date, count, level: LEVELS[String(day?.contributionLevel)] ?? 0 });
+    }
+  }
+  return buildContributions(days);
+}
+function statusError(status, headers) {
+  if (status === 401) return new GitHubError("GitHub did not accept the token.", "unauthorized");
+  const exhausted = headers.get("x-ratelimit-remaining") === "0";
+  if (status === 429 || status === 403 && exhausted) {
+    const reset = Number(headers.get("x-ratelimit-reset"));
+    return new GitHubError(
+      "GitHub rate limit reached.",
+      "rate-limit",
+      Number.isFinite(reset) && reset > 0 ? new Date(reset * 1e3) : void 0
+    );
+  }
+  if (status === 404) return new GitHubError("That GitHub user was not found.", "not-found");
+  return new GitHubError(`GitHub returned an unexpected error (${status}).`, "unknown");
+}
+async function fetchContributions(username, opts = {}) {
+  if (!isValidUsername(username)) throw new GitHubError("That is not a valid GitHub username.", "invalid-username");
+  if (!opts.token) throw new GitHubError("A token is needed to read contributions.", "unauthorized");
+  let response;
+  try {
+    response = await (opts.fetch ?? fetch)(GRAPHQL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${opts.token}`,
+        "Content-Type": "application/json",
+        "User-Agent": "livebio"
+      },
+      body: JSON.stringify({ query: CONTRIBUTIONS_QUERY, variables: { login: username } })
+    });
+  } catch {
+    throw new GitHubError("Could not reach GitHub. Check your connection and try again.", "network");
+  }
+  if (!response.ok) throw statusError(response.status, response.headers);
+  let body;
+  try {
+    body = await response.json();
+  } catch {
+    throw invalid("GitHub sent something that was not JSON");
+  }
+  return parseCalendarResponse(body);
 }
 
 // ../core/src/config.ts
@@ -11986,7 +12136,10 @@ function stagger(markup, motion, delay) {
   if (!markup || !motion) return markup;
   return `<g class="ln" style="animation-delay:${delay.toFixed(2)}s">${markup}</g>`;
 }
-function describeProfile(profile, config, extra) {
+function plural(count, noun) {
+  return `${formatNumber(count)} ${noun}${count === 1 ? "" : "s"}`;
+}
+function describeProfile(profile, config, extra, options = {}) {
   const parts = [`${profile.name ?? profile.login} on GitHub`];
   if (extra) parts.push(extra);
   if (config.blocks.includes("stats")) {
@@ -11994,6 +12147,13 @@ function describeProfile(profile, config, extra) {
       `${formatNumber(profile.publicRepos)} repositories`,
       `${formatNumber(profile.totalStars)} stars`,
       `${formatNumber(profile.followers)} followers`
+    );
+  }
+  const activity = profile.contributions;
+  if (options.activity && config.blocks.includes("activity") && activity) {
+    parts.push(
+      `${formatNumber(activity.total)} contributions in the past year`,
+      `a ${plural(activity.currentStreak, "day")} current streak`
     );
   }
   const languages = profile.languages.slice(0, 3).map((l) => l.name);
@@ -12385,6 +12545,11 @@ function infoLines(profile, config) {
       field("Stars", formatNumber(profile.totalStars));
       field("Followers", formatNumber(profile.followers));
       field("Following", formatNumber(profile.following));
+    } else if (block === "activity" && profile.contributions) {
+      const activity = profile.contributions;
+      gap();
+      field("Streak", `${plural(activity.currentStreak, "day")} (best ${formatNumber(activity.longestStreak)})`);
+      field("Past year", `${formatNumber(activity.total)} contributions`);
     } else if (block === "languages" && profile.languages.length > 0) {
       gap();
       field("Languages", profile.languages.slice(0, 3).map((l) => l.name).join(", "));
@@ -12476,7 +12641,7 @@ var neofetch = {
       content: renderSvg2(profile, config, variant)
     }));
     const extra = profile.avatar ? "with an ASCII portrait of the profile picture" : void 0;
-    const alt = describeProfile(profile, config, extra);
+    const alt = describeProfile(profile, config, extra, { activity: true });
     return { readme: imageReadme(profile, config, "neofetch", WIDTH2, alt), assets };
   }
 };
@@ -12489,6 +12654,9 @@ var AVATAR_GAP = 36;
 var TEXT_X = PAD3 + 8 + AVATAR + AVATAR_GAP;
 var SECTION_GAP = 30;
 var TILE_GAP = 14;
+var HEAT_CELL = 12;
+var HEAT_STEP = 15;
+var HEAT_OPACITY = [0, 0.3, 0.55, 0.78, 1];
 var MONTHS2 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function joined2(createdAt) {
   const date = new Date(createdAt);
@@ -12574,6 +12742,23 @@ function renderSvg3(profile, config, variant) {
       }).join("");
       body.push(rise(markup, motion, next()));
       cursor += 84 + SECTION_GAP;
+    } else if (block === "activity" && profile.contributions) {
+      const activity = profile.contributions;
+      const first = (/* @__PURE__ */ new Date(`${activity.days[0]?.date}T00:00:00Z`)).getUTCDay();
+      const top = cursor + 24;
+      const cells = activity.days.map((day, index) => {
+        const slot = first + index;
+        const x = PAD3 + Math.floor(slot / 7) * HEAT_STEP;
+        const y2 = top + slot % 7 * HEAT_STEP;
+        const fill = day.level === 0 ? `fill="${p.track}"` : `fill="${accent(c, 0)}" fill-opacity="${HEAT_OPACITY[day.level]}"`;
+        return `<rect x="${x}" y="${y2}" width="${HEAT_CELL}" height="${HEAT_CELL}" rx="2.5" ${fill}/>`;
+      }).join("");
+      const summaryY = top + 7 * HEAT_STEP + 20;
+      const strong = (text2) => `<tspan fill="${p.fg}" font-weight="700">${xmlEscape(text2)}</tspan>`;
+      const summary = `<text x="${PAD3}" y="${summaryY}" font-size="13" fill="${p.muted}" xml:space="preserve">${strong(formatNumber(activity.total))} contributions in the past year    \xB7    current streak ${strong(plural(activity.currentStreak, "day"))}    \xB7    longest streak ${strong(plural(activity.longestStreak, "day"))}</text>`;
+      const markup = `<text x="${PAD3}" y="${cursor + 10}" font-size="12" letter-spacing="1" fill="${p.muted}">ACTIVITY</text>` + cells + summary;
+      body.push(rise(markup, motion, next()));
+      cursor += summaryY - cursor + 6 + SECTION_GAP;
     } else if (block === "languages" && profile.languages.length > 0) {
       const barWidth = WIDTH3 - PAD3 * 2;
       const total = profile.languages.reduce((sum, l) => sum + l.percent, 0) || 1;
@@ -12659,7 +12844,8 @@ var showcase = {
       path: assetPath("showcase", variant),
       content: renderSvg3(profile, config, variant)
     }));
-    return { readme: imageReadme(profile, config, "showcase", WIDTH3, describeProfile(profile, config)), assets };
+    const alt = describeProfile(profile, config, void 0, { activity: true });
+    return { readme: imageReadme(profile, config, "showcase", WIDTH3, alt), assets };
   }
 };
 
@@ -12671,6 +12857,7 @@ var LINE_HEIGHT = 24;
 var FONT_SIZE = 14;
 var MAX_CHARS = 84;
 var LABEL_WIDTH2 = 12;
+var STAR_COLUMN = 11;
 var BAR_CELLS = 24;
 var STEP_SECONDS = 0.15;
 function buildLines(profile, config) {
@@ -12693,6 +12880,12 @@ function buildLines(profile, config) {
       lines.push({ kind: "stat", label: "stars", value: formatNumber(profile.totalStars) });
       lines.push({ kind: "stat", label: "followers", value: formatNumber(profile.followers) });
       lines.push({ kind: "stat", label: "following", value: formatNumber(profile.following) });
+    } else if (block === "activity" && profile.contributions) {
+      const activity = profile.contributions;
+      lines.push({ kind: "blank" }, { kind: "prompt", command: "streak" });
+      lines.push({ kind: "stat", label: "current", value: plural(activity.currentStreak, "day") });
+      lines.push({ kind: "stat", label: "longest", value: plural(activity.longestStreak, "day") });
+      lines.push({ kind: "stat", label: "past year", value: `${formatNumber(activity.total)} contributions` });
     } else if (block === "languages" && profile.languages.length > 0) {
       lines.push({ kind: "blank" }, { kind: "prompt", command: "languages" });
       for (const language of profile.languages) {
@@ -12733,7 +12926,7 @@ function renderLine(line, y, p, login) {
       return `<text ${base} fill="${p.fg}">${xmlEscape(truncate(line.name, LABEL_WIDTH2 - 1).padEnd(LABEL_WIDTH2))}<tspan fill="${p.accent}">${bar}</tspan><tspan fill="${p.track}">${rest}</tspan><tspan fill="${p.muted}"> ${line.percent}%</tspan></text>`;
     }
     case "repo": {
-      const head = `\u2605 ${formatNumber(line.stars)}`.padEnd(7) + line.name;
+      const head = `\u2605 ${formatNumber(line.stars)}`.padEnd(STAR_COLUMN) + line.name;
       const room = Math.max(0, MAX_CHARS - head.length - 3);
       const tail = line.description && room > 10 ? ` \u2014 ${truncate(line.description, room)}` : "";
       return `<text ${base} fill="${p.fg}"><tspan fill="${p.accent2}">${xmlEscape(head)}</tspan><tspan fill="${p.muted}">${xmlEscape(tail)}</tspan></text>`;
@@ -12776,7 +12969,7 @@ var terminal = {
       path: assetPath("terminal", variant),
       content: renderSvg4(profile, config, variant)
     }));
-    const alt = describeProfile(profile, config);
+    const alt = describeProfile(profile, config, void 0, { activity: true });
     return { readme: imageReadme(profile, config, "terminal", WIDTH4, alt), assets };
   }
 };
@@ -12860,6 +13053,18 @@ async function main() {
       else console.log("The profile picture is in a format livebio cannot read, so it is left out.");
     } catch (error) {
       console.log(`Could not load the profile picture, so it is left out: ${error.message}`);
+    }
+  }
+  if (config.blocks.includes("activity")) {
+    const token = input("token");
+    if (!token) {
+      console.log("::warning::No token was given, so the activity section is left out. Pass secrets.GITHUB_TOKEN as the token input.");
+    } else {
+      try {
+        profile.contributions = await fetchContributions(config.username, { token });
+      } catch (error) {
+        console.log(`::warning::Could not read contributions, so the activity section is left out: ${error.message}`);
+      }
     }
   }
   const output = renderProfile(profile, config);

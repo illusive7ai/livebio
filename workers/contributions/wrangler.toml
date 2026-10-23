@@ -1,0 +1,9 @@
+name = "livebio-contributions"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+
+[vars]
+# Browsers on these sites may read the data. Change this if you host the builder elsewhere.
+ALLOWED_ORIGINS = "https://illusive7ai.github.io,http://localhost:5173,http://localhost:4173"
+
+# The GitHub token is a secret, set with: npx wrangler secret put GITHUB_TOKEN

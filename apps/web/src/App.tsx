@@ -16,6 +16,7 @@ import { Gallery } from './components/Gallery';
 import { PreviewPane } from './components/PreviewPane';
 import { ProfileStrip } from './components/ProfileStrip';
 import { loadAvatar } from './lib/avatar';
+import { loadContributions } from './lib/contributions';
 import { describeError } from './lib/errors';
 
 type Status =
@@ -66,8 +67,15 @@ export function App() {
     setStatus({ state: 'loading' });
     try {
       const loaded = await fetchProfile(username);
-      const avatar = await loadAvatar(loaded.avatarUrl);
-      const profile: Profile = avatar ? { ...loaded, avatar } : loaded;
+      const [avatar, contributions] = await Promise.all([
+        loadAvatar(loaded.avatarUrl),
+        loadContributions(loaded.login),
+      ]);
+      const profile: Profile = {
+        ...loaded,
+        ...(avatar ? { avatar } : {}),
+        ...(contributions ? { contributions } : {}),
+      };
       setConfig((prev) => ({ ...prev, username: profile.login }));
       setStatus({ state: 'ready', profile });
       updateUrl('user', profile.login);
@@ -146,7 +154,7 @@ export function App() {
                     updateUrl('template', template);
                   }}
                 />
-                <Customizer config={config} onChange={setConfig} />
+                <Customizer config={config} onChange={setConfig} hasActivity={Boolean(profile.contributions)} />
               </aside>
               <PreviewPane output={output} config={config} profile={profile} />
             </div>

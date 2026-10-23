@@ -32,6 +32,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build -w @livebio/web
+        env:
+          # Address of the deployed contribution service. Set it as a repository variable; see workers/contributions/README.md.
+          VITE_CONTRIBUTIONS_URL: ${{ vars.CONTRIBUTIONS_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: apps/web/dist

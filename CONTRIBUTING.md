@@ -23,7 +23,8 @@ npm run dev
 - **Support light and dark.** Produce both variants for `theme: auto` (use `variantsFor` and `pictureTag`).
 - **Honour `motion`.** Only animate when `config.motion` is true, and add a `prefers-reduced-motion` rule.
 - **Honour `blocks`.** Only show sections listed in `config.blocks`, including in alt text.
-- **Alt text** must describe only what the image shows.
+- **Alt text** must describe only what the image shows. `describeProfile` takes `{ activity: true }`; pass it only if your template draws the activity section.
+- **Activity data** is `profile.contributions` and can be missing. Show the `activity` section only when it exists and `config.blocks` includes `activity`.
 - **System fonts only.** GitHub blocks external fonts and resources inside images.
 - **Give it its own look.** Templates should not be colour swaps of each other. Layout, motion and mood should differ.
 - **Images:** an SVG cannot load outside images, so embed them. Set `needsAvatar: true` on your template and use `profile.avatar.dataUri` to embed the profile picture, or `profile.avatar.grid` for pixel data (see `neofetch.ts`). `profile.avatar` can be missing, so always have a fallback. `profile.avatar.grid.tint` is the picture's dominant colour, and `accentColors` in `color.ts` turns it into a palette (see `showcase.ts`). Only embed a picture after checking it is a plain base64 PNG or JPEG data URI.

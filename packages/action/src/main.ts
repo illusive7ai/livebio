@@ -3,6 +3,7 @@ import { dirname } from 'node:path';
 import {
   applyToReadme,
   defaultConfig,
+  fetchContributions,
   fetchProfile,
   getTemplate,
   parseConfigYaml,
@@ -49,6 +50,19 @@ async function main(): Promise<void> {
       else console.log('The profile picture is in a format livebio cannot read, so it is left out.');
     } catch (error) {
       console.log(`Could not load the profile picture, so it is left out: ${(error as Error).message}`);
+    }
+  }
+
+  if (config.blocks.includes('activity')) {
+    const token = input('token');
+    if (!token) {
+      console.log('::warning::No token was given, so the activity section is left out. Pass secrets.GITHUB_TOKEN as the token input.');
+    } else {
+      try {
+        profile.contributions = await fetchContributions(config.username, { token });
+      } catch (error) {
+        console.log(`::warning::Could not read contributions, so the activity section is left out: ${(error as Error).message}`);
+      }
     }
   }
 

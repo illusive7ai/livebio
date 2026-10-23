@@ -1,0 +1,15 @@
+{
+  "name": "@livebio/worker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Edge function that serves GitHub contribution data to the livebio builder.",
+  "author": "illusivehacks",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json",
+    "dev": "npx wrangler dev",
+    "deploy": "npx wrangler deploy"
+  }
+}

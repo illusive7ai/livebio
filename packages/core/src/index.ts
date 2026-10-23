@@ -1,6 +1,15 @@
 export * from './types';
 export { GitHubError, fetchProfile } from './github';
 export type { FetchOptions, GitHubErrorKind } from './github';
+export {
+  CONTRIBUTIONS_QUERY,
+  buildContributions,
+  computeStreaks,
+  fetchContributions,
+  fetchContributionsViaProxy,
+  parseCalendarResponse,
+  parseContributions,
+} from './contributions';
 export { ConfigError, configToYaml, defaultConfig, parseConfig, parseConfigYaml } from './config';
 export { getTemplate, templates } from './templates';
 export { renderProfile } from './render';

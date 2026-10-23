@@ -3,7 +3,7 @@ import { assetPath } from '../readme';
 import { palettes, variantsFor, type Palette, type Variant } from '../themes';
 import type { Config, Output, Profile, Template } from '../types';
 import { formatNumber, safeUrl, truncate, wrap, xmlEscape } from '../util';
-import { FONT_SANS, SAFE_DATA_URI, describeProfile, imageReadme, rise } from './shared';
+import { FONT_SANS, SAFE_DATA_URI, describeProfile, imageReadme, plural, rise } from './shared';
 
 const WIDTH = 900;
 const PAD = 36;
@@ -12,6 +12,10 @@ const AVATAR_GAP = 36;
 const TEXT_X = PAD + 8 + AVATAR + AVATAR_GAP;
 const SECTION_GAP = 30;
 const TILE_GAP = 14;
+const HEAT_CELL = 12;
+const HEAT_STEP = 15;
+/** How strongly the accent colour shows for busy-ness levels 0 to 4. Level 0 uses the track colour. */
+const HEAT_OPACITY = [0, 0.3, 0.55, 0.78, 1];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function joined(createdAt: string): string | null {
@@ -134,6 +138,35 @@ function renderSvg(profile: Profile, config: Config, variant: Variant): string {
         .join('');
       body.push(rise(markup, motion, next()));
       cursor += 84 + SECTION_GAP;
+    } else if (block === 'activity' && profile.contributions) {
+      const activity = profile.contributions;
+      const first = new Date(`${activity.days[0]?.date}T00:00:00Z`).getUTCDay(); // weeks start on Sunday
+      const top = cursor + 24;
+      const cells = activity.days
+        .map((day, index) => {
+          const slot = first + index;
+          const x = PAD + Math.floor(slot / 7) * HEAT_STEP;
+          const y = top + (slot % 7) * HEAT_STEP;
+          const fill =
+            day.level === 0
+              ? `fill="${p.track}"`
+              : `fill="${accent(c, 0)}" fill-opacity="${HEAT_OPACITY[day.level]}"`;
+          return `<rect x="${x}" y="${y}" width="${HEAT_CELL}" height="${HEAT_CELL}" rx="2.5" ${fill}/>`;
+        })
+        .join('');
+      const summaryY = top + 7 * HEAT_STEP + 20;
+      const strong = (text: string) => `<tspan fill="${p.fg}" font-weight="700">${xmlEscape(text)}</tspan>`;
+      const summary =
+        `<text x="${PAD}" y="${summaryY}" font-size="13" fill="${p.muted}" xml:space="preserve">` +
+        `${strong(formatNumber(activity.total))} contributions in the past year    ·    ` +
+        `current streak ${strong(plural(activity.currentStreak, 'day'))}    ·    ` +
+        `longest streak ${strong(plural(activity.longestStreak, 'day'))}</text>`;
+      const markup =
+        `<text x="${PAD}" y="${cursor + 10}" font-size="12" letter-spacing="1" fill="${p.muted}">ACTIVITY</text>` +
+        cells +
+        summary;
+      body.push(rise(markup, motion, next()));
+      cursor += summaryY - cursor + 6 + SECTION_GAP;
     } else if (block === 'languages' && profile.languages.length > 0) {
       const barWidth = WIDTH - PAD * 2;
       const total = profile.languages.reduce((sum, l) => sum + l.percent, 0) || 1;
@@ -248,6 +281,7 @@ export const showcase: Template = {
       path: assetPath('showcase', variant),
       content: renderSvg(profile, config, variant),
     }));
-    return { readme: imageReadme(profile, config, 'showcase', WIDTH, describeProfile(profile, config)), assets };
+    const alt = describeProfile(profile, config, undefined, { activity: true });
+    return { readme: imageReadme(profile, config, 'showcase', WIDTH, alt), assets };
   },
 };

@@ -34,8 +34,21 @@ export function stagger(markup: string, motion: boolean, delay: number): string 
   return `<g class="ln" style="animation-delay:${delay.toFixed(2)}s">${markup}</g>`;
 }
 
-/** Alt text for a template image. It only mentions what the image actually shows. */
-export function describeProfile(profile: Profile, config: Config, extra?: string): string {
+/** "1 day" or "7 days". */
+export function plural(count: number, noun: string): string {
+  return `${formatNumber(count)} ${noun}${count === 1 ? '' : 's'}`;
+}
+
+/**
+ * Alt text for a template image. It only mentions what the image actually shows, so pass
+ * `activity: true` only from a template that draws the activity section.
+ */
+export function describeProfile(
+  profile: Profile,
+  config: Config,
+  extra?: string,
+  options: { activity?: boolean } = {},
+): string {
   const parts = [`${profile.name ?? profile.login} on GitHub`];
   if (extra) parts.push(extra);
   if (config.blocks.includes('stats')) {
@@ -43,6 +56,13 @@ export function describeProfile(profile: Profile, config: Config, extra?: string
       `${formatNumber(profile.publicRepos)} repositories`,
       `${formatNumber(profile.totalStars)} stars`,
       `${formatNumber(profile.followers)} followers`,
+    );
+  }
+  const activity = profile.contributions;
+  if (options.activity && config.blocks.includes('activity') && activity) {
+    parts.push(
+      `${formatNumber(activity.total)} contributions in the past year`,
+      `a ${plural(activity.currentStreak, 'day')} current streak`,
     );
   }
   const languages = profile.languages.slice(0, 3).map((l) => l.name);
