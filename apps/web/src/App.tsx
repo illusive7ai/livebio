@@ -14,6 +14,7 @@ import { Customizer } from './components/Customizer';
 import { Glitch } from './components/Glitch';
 import { PreviewPane } from './components/PreviewPane';
 import { ProfileStrip } from './components/ProfileStrip';
+import { ShareStars } from './components/ShareStars';
 import { TemplatePicker } from './components/TemplatePicker';
 import { Testimonials } from './components/Testimonials';
 import { loadAvatar } from './lib/avatar';
@@ -203,6 +204,7 @@ export function App() {
                   {status.message}
                 </p>
               )}
+              <ShareStars />
             </section>
 
             {!profile && <Testimonials />}

@@ -1694,3 +1694,86 @@ label {
   max-height: 220px;
   overflow: auto;
 }
+
+/* Under the username box: the star count and the share buttons. */
+.support {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.star-call {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.95rem;
+  min-height: 40px;
+}
+
+.star-call:hover {
+  border-color: var(--accent);
+}
+
+.star-mark {
+  color: #e3b341;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.support-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.share-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.share-link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.share-link:focus-visible,
+.star-call:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .share-label {
+    flex-basis: 100%;
+  }
+}

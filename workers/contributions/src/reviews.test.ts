@@ -19,8 +19,10 @@ const form = (rating: string, text: string) =>
   `### How would you rate it?\n\n${rating}\n\n### What was it like?\n\n${text}\n\n### Showing it on the website\n\n- [x] You may show this review.`;
 
 const issues = [
+  { number: 4, user: { login: 'spammer' }, author_association: 'NONE', labels: [{ name: 'hidden' }], body: form('5 - Loved it', 'Buy my thing') },
+  { number: 5, user: { login: 'robot', type: 'Bot' }, author_association: 'NONE', labels: [], body: form('5 - Loved it', 'Beep') },
   { number: 3, user: { login: 'zed' }, author_association: 'NONE', labels: [{ name: 'approved' }], body: form('4 - Good', 'Worked well') },
-  { number: 2, user: { login: 'stranger' }, author_association: 'NONE', labels: [], body: form('5 - Loved it', 'Not approved yet') },
+  { number: 2, user: { login: 'stranger' }, author_association: 'NONE', labels: [], body: form('5 - Loved it', 'Works for me') },
   { number: 1, user: { login: 'octocat' }, author_association: 'OWNER', labels: [], body: form('5 - Loved it', 'My own review') },
 ];
 
@@ -38,13 +40,14 @@ const get = (headers: Record<string, string> = {}) => new Request('https://worke
 const everything = async (r: Response) => `${r.status} ${[...r.headers].join(';')} ${await r.clone().text()}`;
 
 describe('GET /reviews', () => {
-  it('returns only the reviews that qualify', async () => {
+  it('returns every real user’s review, and leaves out hidden ones and bots', async () => {
     const { fetcher } = upstream(ok);
     const response = await handle(get(), env, { fetch: fetcher });
     expect(response.status).toBe(200);
     const body = (await response.json()) as { reviews: Array<{ login: string; rating: number; quote: string }> };
     expect(body.reviews).toEqual([
       { login: 'zed', rating: 4, quote: 'Worked well' },
+      { login: 'stranger', rating: 5, quote: 'Works for me' },
       { login: 'octocat', rating: 5, quote: 'My own review' },
     ]);
   });
@@ -52,7 +55,7 @@ describe('GET /reviews', () => {
   it('exposes nothing but the name, rating and text of each review', async () => {
     const { fetcher } = upstream(ok);
     const text = await (await handle(get(), env, { fetch: fetcher })).text();
-    for (const secret of ['author_association', 'labels', 'number', 'Not approved yet', 'stranger']) expect(text).not.toContain(secret);
+    for (const secret of ['author_association', 'labels', 'number', 'Buy my thing', 'spammer', 'Beep']) expect(text).not.toContain(secret);
   });
 
   it('asks GitHub for the configured repository, with the token only in the Authorization header', async () => {

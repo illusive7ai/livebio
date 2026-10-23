@@ -6,6 +6,7 @@ All notable changes to livebio. The version numbers are the tags of the GitHub A
 
 ### Added
 
+- **Share and star on the home page.** Under the username box the site shows how many stars the project has (read through the livebio service, shared for ten minutes, and left out rather than guessed when unavailable), a link to star it, and WhatsApp, Telegram and copy-link buttons that send the website to a friend. Nothing is sent or tracked from the site.
 - **Fifteen more designs, 50 in all**, in four new groups of look:
   - Documents: **Passport** (a stamp for each language), **Receipt** (repositories as items, with a real subtotal), **Character sheet** and **Wall calendar** (every day coloured by its real contributions).
   - Interfaces: **Now playing** (a music player with your weeks as an equaliser), **Inbox** (a repository is unread when it was really pushed to lately), **Retro desktop** and **Cockpit** (dials on a labelled logarithmic scale).
@@ -25,6 +26,7 @@ All notable changes to livebio. The version numbers are the tags of the GitHub A
 
 ### Changed
 
+- **Reviews from anyone are shown.** A review written with the form by any GitHub user, with the permission box ticked, now appears without waiting for a maintainer to approve it. Reviews from bots, and reviews containing a web address, are left out, and a maintainer can remove one by adding the `hidden` label.
 - The Studio's game choice is now a plain **Chess / Snake / No game** picker that works with every design, marks the design's own default, and explains the choice. The choice travels in the exported `livebio.yml` and in the live picture addresses. A test now runs it against all 50 designs.
 - The export panel leads with the easiest way to publish, and explains, with a checklist, why a README copied without its picture files shows broken images.
 

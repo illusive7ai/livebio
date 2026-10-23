@@ -10,6 +10,9 @@ export interface Review {
 
 export const MAX_QUOTE = 400;
 
+/** A web address, written with or without its scheme. A review that has one is left out. */
+const HAS_LINK = /\b(?:https?:\/\/|www\.)|\b[a-z0-9-]+\.(?:com|net|org|io|dev|app|xyz|ru|cn|top|shop|site|online|link|info)\b/i;
+
 /** The headings the issue form writes. A review that was not written with the form has none of them. */
 const RATING = 'how would you rate it?';
 const EXPERIENCE = 'what was it like?';
@@ -35,9 +38,8 @@ export function cleanQuote(text: string): string {
 
 interface IssueLike {
   body?: unknown;
-  user?: { login?: unknown } | null;
+  user?: { login?: unknown; type?: unknown } | null;
   labels?: unknown;
-  author_association?: unknown;
   pull_request?: unknown;
 }
 
@@ -51,16 +53,18 @@ function labelNames(labels: unknown): string[] {
  * - was written with the review form (it has the form's headings), and is an issue, not a pull request;
  * - has a rating from 1 to 5 and some text;
  * - has its permission box ticked, so the person agreed to have it shown;
- * - was opened by the repository's owner, or carries the "approved" label that only maintainers can add.
- * Anything it cannot read confidently is left out. Nothing is guessed.
+ * - comes from a person's account rather than a bot, and does not carry the "hidden" label that only maintainers can add;
+ * - holds no web address, which is how advertising gets onto a page that shows other people's words.
+ * Any GitHub user's review is shown, with no approval step. Anything it cannot read confidently is left out.
  */
 export function reviewFromIssue(issue: unknown): Review | null {
   if (typeof issue !== 'object' || issue === null) return null;
-  const { body, user, labels, author_association: association, pull_request: pullRequest } = issue as IssueLike;
+  const { body, user, labels, pull_request: pullRequest } = issue as IssueLike;
   if (pullRequest) return null;
   if (typeof body !== 'string') return null;
   const login = user?.login;
   if (typeof login !== 'string' || !isValidUsername(login)) return null;
+  if (user?.type === 'Bot') return null;
 
   const parts = sections(body);
   const rating = /^([1-5])\b/.exec(parts.get(RATING) ?? '')?.[1];
@@ -68,8 +72,8 @@ export function reviewFromIssue(issue: unknown): Review | null {
   const agreed = /^\s*-\s*\[[xX]\]/m.test(parts.get(PERMISSION) ?? '');
   if (!rating || !quote || !agreed) return null;
 
-  const approved = association === 'OWNER' || labelNames(labels).includes('approved');
-  if (!approved) return null;
+  if (labelNames(labels).includes('hidden')) return null;
+  if (HAS_LINK.test(quote)) return null;
 
   return { login, rating: Number(rating) as Review['rating'], quote };
 }

@@ -4,6 +4,7 @@ import { isValidUsername } from '@livebio/core/src/util';
 import { serveCard, serveCredit } from './card';
 import { loadData } from './data';
 import { DEFAULT_REPO, fetchReviews } from './reviews';
+import { fetchStars } from './stars';
 
 export interface Env {
   /** Read-only GitHub token. Set as a secret, never in wrangler.toml. */
@@ -30,6 +31,7 @@ export interface Deps {
 
 const FOUND_TTL = 3600;
 const REVIEWS_TTL = 600;
+const STARS_TTL = 600;
 const MISSING_TTL = 600;
 const DEFAULT_RETRY = 60;
 
@@ -81,7 +83,30 @@ function failure(error: unknown, cors: Record<string, string>): Response {
   return respond({ error: 'Something went wrong.' }, 500, noStore);
 }
 
-/** Serves GET /reviews: the approved reviews from the repository's issues, cached for ten minutes. */
+/** Serves GET /stars: how many stars the project's repository has, cached for ten minutes. */
+async function serveStars(env: Env, deps: Deps, cors: Record<string, string>): Promise<Response> {
+  const noStore = { ...cors, 'Cache-Control': 'no-store' };
+  if (!env.GITHUB_TOKEN) return respond({ error: 'The service is not configured.' }, 500, noStore);
+
+  const key = new Request('https://livebio.invalid/stars');
+  const cached = await deps.cache?.match(key);
+  if (cached) return withCors(cached, cors, 'HIT');
+
+  try {
+    const stars = await fetchStars(env.REVIEWS_REPO || DEFAULT_REPO, env.GITHUB_TOKEN, deps.fetch);
+    const bare = respond({ stars }, 200, { 'Cache-Control': `public, max-age=${STARS_TTL}` });
+    if (deps.cache) {
+      const write = deps.cache.put(key, bare.clone());
+      if (deps.waitUntil) deps.waitUntil(write);
+      else void write;
+    }
+    return withCors(bare, cors, 'MISS');
+  } catch (error) {
+    return failure(error, cors);
+  }
+}
+
+/** Serves GET /reviews: every real user's review from the repository's issues, cached for ten minutes. */
 async function serveReviews(env: Env, deps: Deps, cors: Record<string, string>): Promise<Response> {
   const noStore = { ...cors, 'Cache-Control': 'no-store' };
   if (!env.GITHUB_TOKEN) return respond({ error: 'The service is not configured.' }, 500, noStore);
@@ -143,6 +168,7 @@ export async function handle(request: Request, env: Env, deps: Deps = {}): Promi
 
   const url = new URL(request.url);
   if (url.pathname === '/reviews') return serveReviews(env, deps, cors);
+  if (url.pathname === '/stars') return serveStars(env, deps, cors);
   if (url.pathname === '/profile') return serveProfile(url, env, deps, cors);
   // The pictures a hosted README points at. These are images, so they carry their own headers.
   if (url.pathname.startsWith('/u/')) return serveCard(request, env, deps);
