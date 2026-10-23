@@ -4,7 +4,6 @@ import {
   AUTHOR_URL,
   REPO_URL,
   defaultConfig,
-  fetchProfile,
   getTemplate,
   isValidUsername,
   renderProfile,
@@ -18,8 +17,8 @@ import { ProfileStrip } from './components/ProfileStrip';
 import { TemplatePicker } from './components/TemplatePicker';
 import { Testimonials } from './components/Testimonials';
 import { loadAvatar } from './lib/avatar';
-import { loadContributions } from './lib/contributions';
 import { describeError } from './lib/errors';
+import { loadProfile } from './lib/profile';
 import { go, routeHref, useRoute, type Route } from './lib/route';
 import { designFields, loadDesigns, newId, storeDesigns, type SavedDesign } from './lib/saved';
 import { StudioPage } from './pages/StudioPage';
@@ -80,11 +79,8 @@ export function App() {
     }
     setStatus({ state: 'loading' });
     try {
-      const loaded = await fetchProfile(username);
-      const [avatar, contributions] = await Promise.all([
-        loadAvatar(loaded.avatarUrl),
-        loadContributions(loaded.login),
-      ]);
+      const { profile: loaded, contributions } = await loadProfile(username);
+      const avatar = await loadAvatar(loaded.avatarUrl);
       const profile: Profile = {
         ...loaded,
         ...(avatar ? { avatar } : {}),

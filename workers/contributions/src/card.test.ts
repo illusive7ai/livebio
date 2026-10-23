@@ -1,83 +1,10 @@
 import { DOMParser } from '@xmldom/xmldom';
-import UPNG from 'upng-js';
 import { describe, expect, it } from 'vitest';
+import { MemoryCache, github } from './fake-github';
 import { handle, type CacheLike, type Env } from './handler';
 
 const TOKEN = 'ghp_SUPERSECRET123';
 const env: Env = { GITHUB_TOKEN: TOKEN, ALLOWED_ORIGINS: 'https://app.example' };
-
-class MemoryCache implements CacheLike {
-  readonly store = new Map<string, Response>();
-  async match(request: Request) {
-    return this.store.get(request.url)?.clone();
-  }
-  async put(request: Request, response: Response) {
-    this.store.set(request.url, response);
-  }
-}
-
-/** A small red square, as a real PNG. */
-function avatarPng(): Uint8Array {
-  const rgba = new Uint8Array(8 * 8 * 4);
-  for (let i = 0; i < 64; i++) rgba.set([220, 50, 50, 255], i * 4);
-  return new Uint8Array(UPNG.encode([rgba.buffer], 8, 8, 0));
-}
-
-function calendar(total: number) {
-  const first = Date.parse('2026-01-01T00:00:00Z');
-  const counts = Array.from({ length: 60 }, (_v, i) => (i % 3 === 0 ? 0 : Math.max(1, Math.round(total / 40))));
-  return {
-    data: {
-      user: {
-        contributionsCollection: {
-          contributionCalendar: {
-            totalContributions: counts.reduce((a, b) => a + b, 0),
-            weeks: [{ contributionDays: counts.map((count, i) => ({ date: new Date(first + i * 86_400_000).toISOString().slice(0, 10), contributionCount: count, contributionLevel: count > 0 ? 'SECOND_QUARTILE' : 'NONE' })) }],
-          },
-        },
-      },
-    },
-  };
-}
-
-interface Options {
-  avatarUrl?: string;
-  userStatus?: number;
-  graphql?: () => Response;
-  avatar?: () => Response;
-  repos?: unknown[];
-}
-
-/** A fake GitHub that records every address it is asked for. */
-function github(options: Options = {}) {
-  const calls: string[] = [];
-  const fetcher = (async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = String(input);
-    calls.push(url);
-    // Like the real GitHub: a request with no User-Agent is refused. This is what broke the first deployment.
-    if (url.startsWith('https://api.github.com/') && !new Headers(init?.headers).get('user-agent')) return new Response('Request forbidden by administrative rules.', { status: 403 });
-    if (url === 'https://api.github.com/graphql') return options.graphql?.() ?? new Response(JSON.stringify(calendar(120)));
-    if (url.startsWith('https://avatars.githubusercontent.com/')) return options.avatar?.() ?? new Response(avatarPng() as unknown as BodyInit, { headers: { 'content-type': 'image/png' } });
-    if (/\/users\/[^/]+\/repos/.test(url)) {
-      return new Response(
-        JSON.stringify(
-          options.repos ?? [
-            { name: 'alpha', description: 'The first one', fork: false, archived: false, stargazers_count: 40, forks_count: 3, language: 'Go', html_url: 'https://github.com/octo/alpha', pushed_at: '2026-05-01T00:00:00Z', license: { spdx_id: 'MIT' } },
-            { name: 'beta', description: null, fork: false, archived: false, stargazers_count: 9, forks_count: 0, language: 'TypeScript', html_url: 'https://github.com/octo/beta', pushed_at: '2026-04-01T00:00:00Z', license: null },
-          ],
-        ),
-      );
-    }
-    if (/\/users\/[^/]+$/.test(url)) {
-      if (options.userStatus && options.userStatus !== 200) return new Response('{}', { status: options.userStatus, headers: options.userStatus === 403 ? { 'x-ratelimit-remaining': '0' } : {} });
-      return new Response(
-        JSON.stringify({ login: 'octo', name: 'Octo Cat', avatar_url: options.avatarUrl ?? 'https://avatars.githubusercontent.com/u/1?v=4', bio: 'Makes things', company: null, location: null, blog: '', html_url: 'https://github.com/octo', followers: 1234, following: 5, public_repos: 21, created_at: '2020-01-01T00:00:00Z' }),
-      );
-    }
-    return new Response('not found', { status: 404 });
-  }) as typeof fetch;
-  return { fetcher, calls };
-}
 
 const get = (path: string) => new Request(`https://cards.example${path}`);
 const draw = (path: string, gh = github(), cache?: CacheLike, e: Env = env) => handle(get(path), e, { fetch: gh.fetcher, cache });

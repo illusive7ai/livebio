@@ -1,23 +1,18 @@
 import { ConfigError, needsContributions } from '@livebio/core/src/config';
-import { fetchContributions } from '@livebio/core/src/contributions';
 import { creditSvg } from '@livebio/core/src/credit';
-import { fetchProfile, GitHubError } from '@livebio/core/src/github';
+import { GitHubError } from '@livebio/core/src/github';
 import { assetName, configFromParams, parseCardPath } from '@livebio/core/src/hosted';
 import { renderProfile } from '@livebio/core/src/render';
 import { getTemplate } from '@livebio/core/src/templates';
-import type { Avatar, Contributions, Profile } from '@livebio/core/src/types';
 import { xmlEscape } from '@livebio/core/src/util';
-import { loadAvatar } from './avatar';
+import { loadAvatarCached, loadData } from './data';
 import type { Deps, Env } from './handler';
-import { withUserAgent } from './http';
 
 /**
  * Draws a person's pictures on request. A README that points here shows live data, and its pictures stay current
  * without anything being stored in the person's repository: the only thing kept is a one-hour copy of public data.
  */
 
-/** How long one person's public data is reused, and so how fresh the pictures are. */
-const DATA_TTL = 3600;
 /** How long a finished picture is cached, by this server and by GitHub's image proxy. */
 const CARD_TTL = 3600;
 const CREDIT_TTL = 86_400;
@@ -54,48 +49,6 @@ export function errorSvg(message: string): string {
 
 const problem = (message: string): Response => svgResponse(errorSvg(message), ERROR_TTL);
 
-interface Bundle {
-  profile: Profile;
-  avatar: Avatar | null;
-  contributions: Contributions | null;
-}
-
-/** One person's public data: the profile, the picture and the contribution calendar, reused for an hour. */
-async function loadBundle(login: string, env: Env, deps: Deps): Promise<Bundle> {
-  const key = new Request(`https://livebio.invalid/bundle/${login.toLowerCase()}`);
-  const cached = await deps.cache?.match(key);
-  if (cached) {
-    try {
-      return (await cached.json()) as Bundle;
-    } catch {
-      // A damaged copy is simply ignored and rebuilt.
-    }
-  }
-
-  const token = env.GITHUB_TOKEN!;
-  const fetcher = withUserAgent(deps.fetch);
-  const profile = await fetchProfile(login, { token, fetch: fetcher });
-  const [contributions, avatar] = await Promise.all([
-    fetchContributions(login, { token, fetch: fetcher }).catch((error) => {
-      // A person whose calendar cannot be read still gets their pictures, just without the calendar.
-      if (error instanceof GitHubError && error.kind === 'rate-limit') throw error;
-      return null;
-    }),
-    loadAvatar(profile.avatarUrl, fetcher),
-  ]);
-
-  const bundle: Bundle = { profile, avatar, contributions };
-  if (deps.cache) {
-    const write = deps.cache.put(
-      key,
-      new Response(JSON.stringify(bundle), { headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${DATA_TTL}` } }),
-    );
-    if (deps.waitUntil) deps.waitUntil(write);
-    else void write;
-  }
-  return bundle;
-}
-
 /** Serves GET /u/{login}/{picture}.svg?{settings}. */
 export async function serveCard(request: Request, env: Env, deps: Deps): Promise<Response> {
   const url = new URL(request.url);
@@ -121,7 +74,8 @@ export async function serveCard(request: Request, env: Env, deps: Deps): Promise
 
   let svg: string;
   try {
-    const { profile, avatar, contributions } = await loadBundle(card.login, env, deps);
+    const { profile, contributions } = await loadData(card.login, env, deps);
+    const avatar = await loadAvatarCached(card.login, profile.avatarUrl, deps);
     const wanted = needsContributions(config) ? contributions : null;
     const output = renderProfile({ ...profile, ...(avatar ? { avatar } : {}), ...(wanted ? { contributions: wanted } : {}) }, config);
     const asset = output.assets.find((a) => assetName(a.path) === card.name);

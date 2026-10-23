@@ -2,6 +2,7 @@ import { fetchContributions } from '@livebio/core/src/contributions';
 import { GitHubError } from '@livebio/core/src/github';
 import { isValidUsername } from '@livebio/core/src/util';
 import { serveCard, serveCredit } from './card';
+import { loadData } from './data';
 import { DEFAULT_REPO, fetchReviews } from './reviews';
 
 export interface Env {
@@ -23,6 +24,8 @@ export interface Deps {
   fetch?: typeof fetch;
   cache?: CacheLike;
   waitUntil?: (promise: Promise<unknown>) => void;
+  /** The current time in milliseconds. Tests pass their own, so freshness is repeatable. */
+  now?: () => number;
 }
 
 const FOUND_TTL = 3600;
@@ -103,6 +106,27 @@ async function serveReviews(env: Env, deps: Deps, cors: Record<string, string>):
   }
 }
 
+/**
+ * Serves GET /profile?user=<login>: a person's public profile and contribution calendar as JSON. The website asks
+ * here instead of asking GitHub itself, because a browser may only make 60 anonymous requests an hour, while this
+ * service has a token and shares each person's data between everyone who asks.
+ */
+async function serveProfile(url: URL, env: Env, deps: Deps, cors: Record<string, string>): Promise<Response> {
+  const login = url.searchParams.get('user') ?? '';
+  const noStore = { ...cors, 'Cache-Control': 'no-store' };
+  if (!isValidUsername(login)) return respond({ error: 'Give a valid GitHub username as ?user=name.' }, 400, noStore);
+  if (!env.GITHUB_TOKEN) return respond({ error: 'The service is not configured.' }, 500, noStore);
+  try {
+    const { profile, contributions } = await loadData(login, env, deps);
+    return respond({ profile, contributions }, 200, { ...cors, 'Cache-Control': 'public, max-age=300' });
+  } catch (error) {
+    if (error instanceof GitHubError && error.kind === 'not-found') {
+      return respond({ error: 'That GitHub user was not found.' }, 404, { ...cors, 'Cache-Control': 'public, max-age=60' });
+    }
+    return failure(error, cors);
+  }
+}
+
 /** Serves GET /?user=<login> as JSON contribution data. Pure and testable: no globals are touched. */
 export async function handle(request: Request, env: Env, deps: Deps = {}): Promise<Response> {
   const cors = corsHeaders(request.headers.get('Origin'), env);
@@ -119,6 +143,7 @@ export async function handle(request: Request, env: Env, deps: Deps = {}): Promi
 
   const url = new URL(request.url);
   if (url.pathname === '/reviews') return serveReviews(env, deps, cors);
+  if (url.pathname === '/profile') return serveProfile(url, env, deps, cors);
   // The pictures a hosted README points at. These are images, so they carry their own headers.
   if (url.pathname.startsWith('/u/')) return serveCard(request, env, deps);
   if (/^\/credit-(dark|light)\.svg$/.test(url.pathname)) return serveCredit(url);
