@@ -3,7 +3,7 @@ import { assetPath } from '../readme';
 import { palettes, variantsFor, type Palette, type Variant } from '../themes';
 import type { Config, Output, Profile, Template } from '../types';
 import { formatNumber, safeUrl, truncate, wrap, xmlEscape } from '../util';
-import { FONT_SANS, describeProfile, imageReadme } from './shared';
+import { FONT_SANS, SAFE_DATA_URI, describeProfile, imageReadme, rise } from './shared';
 
 const WIDTH = 900;
 const PAD = 36;
@@ -13,15 +13,6 @@ const TEXT_X = PAD + 8 + AVATAR + AVATAR_GAP;
 const SECTION_GAP = 30;
 const TILE_GAP = 14;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-/** Only embed pictures that are plain base64 PNG or JPEG, so nothing else can reach the SVG. */
-const SAFE_DATA_URI = /^data:image\/(?:png|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/;
-
-/** Wraps markup so it rises into place after `delay` seconds. */
-function rise(markup: string, motion: boolean, delay: number): string {
-  if (!markup || !motion) return markup;
-  return `<g class="rise" style="animation-delay:${delay.toFixed(2)}s">${markup}</g>`;
-}
 
 function joined(createdAt: string): string | null {
   const date = new Date(createdAt);

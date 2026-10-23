@@ -4,6 +4,16 @@ import { formatNumber, safeUrl } from '../util';
 
 export const FONT = "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace";
 export const FONT_SANS = "'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif";
+export const FONT_SERIF = "Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif";
+
+/** Only embed pictures that are plain base64 PNG or JPEG, so nothing else can reach an SVG. */
+export const SAFE_DATA_URI = /^data:image\/(?:png|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/;
+
+/** Wraps markup so it rises into place after `delay` seconds. The template supplies the .rise CSS. */
+export function rise(markup: string, motion: boolean, delay: number): string {
+  if (!markup || !motion) return markup;
+  return `<g class="rise" style="animation-delay:${delay.toFixed(2)}s">${markup}</g>`;
+}
 
 /**
  * CSS for lines that appear one after another. Lines are visible by default and only hidden
