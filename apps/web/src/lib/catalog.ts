@@ -33,6 +33,14 @@ const GROUP_OF: Record<string, Group> = {
   spaceshooter: 'Creative',
   jetrunner: 'Creative',
   playablesignal: 'Creative',
+  cinematic: 'Creative',
+  wow: 'Creative',
+  captip: 'Creative',
+  creative: 'Creative',
+  erased: 'Creative',
+  signature: 'Professional',
+  frontpage: 'Professional',
+  hub: 'Minimal',
 };
 
 export function groupOf(templateId: string): Group {

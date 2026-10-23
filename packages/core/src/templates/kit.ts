@@ -80,7 +80,9 @@ export interface Shell {
 
 /** The card itself: background, a faint grid, a glow, a hairline border, then the content. */
 export function shell(o: Shell): string {
-  const { look, height, variant } = o;
+  const { look, variant } = o;
+  // Whole pixels only: layouts are computed from fractional sizes, but an image edge should be sharp.
+  const height = Math.ceil(o.height);
   const r = o.radius ?? 18;
   const [gx, gy] = o.glow ?? [0.92, 0];
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${height}" viewBox="0 0 ${W} ${height}" role="img" aria-labelledby="t">

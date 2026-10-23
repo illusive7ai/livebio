@@ -1,9 +1,11 @@
 import type { Template } from '../types';
 import { withLive, type LiveSpec } from '../live/compose';
 import { arcadeTemplates } from './arcade';
+import { creative, erased } from './artwork';
 import { brief } from './brief';
 import { buildlog } from './buildlog';
 import { city } from './city';
+import { frontpage, hub } from './editorial';
 import { galaxy } from './galaxy';
 import { launchpad } from './launchpad';
 import { learning } from './learning';
@@ -11,6 +13,7 @@ import { lensTemplates } from './lenses';
 import { maintainer } from './maintainer';
 import { minimal } from './minimal';
 import { neofetch } from './neofetch';
+import { captip, cinematic, signature, wow } from './showpieces';
 import { showcase } from './showcase';
 import { snake } from './snake';
 import { terminal } from './terminal';
@@ -47,9 +50,17 @@ const LIVE: Record<string, LiveSpec> = {
   spaceshooter: { preset: 'space', city: true, companion: 'chess', shift: 208 },
   jetrunner: { preset: 'sunrise', city: true, companion: 'chess', shift: 224 },
   playablesignal: { preset: 'arcade', city: true, companion: 'chess', shift: 240 },
+  cinematic: { preset: 'night', city: true, companion: 'chess', shift: 256 },
+  wow: { preset: 'glow', city: true, companion: 'snake', shift: 272 },
+  signature: { preset: 'aurora', city: true, companion: 'snake', shift: 288 },
+  captip: { preset: 'sunrise', city: true, companion: 'chess', shift: 304 },
+  frontpage: { preset: 'paper', city: true, companion: 'chess', shift: 320 },
+  hub: { preset: 'plain', city: true, companion: 'snake', shift: 336 },
+  creative: { preset: 'aurora', city: true, companion: 'chess', shift: 352 },
+  erased: { preset: 'terminal', city: true, companion: 'chess', shift: 24 },
 };
 
-const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates];
+const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates, cinematic, wow, signature, captip, frontpage, hub, creative, erased];
 
 export const templates: Template[] = bases.map((template) => {
   const spec = LIVE[template.id];
