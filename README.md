@@ -8,7 +8,7 @@ A GitHub profile README that keeps itself up to date. Open source, no sign-in, n
 
 Type your GitHub username, pick a design, make it yours, and export. A small GitHub Action in your own profile repository then refreshes your stats every day, so your profile never goes stale and never depends on someone else's server.
 
-> **Status: early.** The builder, the Action and nine templates work, including a 3D contribution city, an orbiting repo galaxy and an animated snake. More templates are the next thing on the list. See the [roadmap](#roadmap).
+> **Status: early.** The builder, the Action and twelve templates work, including a 3D contribution city, an orbiting repo galaxy and an animated snake. More templates are the next thing on the list. See the [roadmap](#roadmap).
 
 ## How it works
 
@@ -32,7 +32,7 @@ In your profile repository (named the same as your username), add `livebio.yml`:
 
 ```yaml
 username: your-username
-template: showcase   # showcase, city, galaxy, snake, maintainer, brief, terminal, neofetch or minimal
+template: showcase   # showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch or minimal
 theme: auto
 motion: true
 credit: true
@@ -115,7 +115,7 @@ After changing `packages/core` or `packages/action`, run `npm run build -w @live
 - [x] Snake trail: an animated snake that crosses your contribution graph and eats every active day, then starts over
 - [x] Launchpad: a bold, hero-first page for people shipping products, with one featured project and recent momentum
 - [x] Learning log: a notebook page with a language list, a twelve-week habit tracker and recent work
-- [ ] Build log: a timeline of what was updated most recently
+- [x] Build log: a release-notes style timeline of what was updated most recently, grouped by month
 - [x] Contribution graph and streaks, from the Action and from an optional edge function for the preview
 - [ ] Activity in more templates, and a template built around the isometric contribution city
 - [ ] Import and improve an existing README

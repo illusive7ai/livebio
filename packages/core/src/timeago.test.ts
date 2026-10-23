@@ -30,6 +30,16 @@ describe('timeAgo', () => {
     expect(timeAgo(ago(3), 'also not')).toBeNull();
   });
 
+  it('counts calendar days, so a push late yesterday is "yesterday" even when under 24 hours ago', () => {
+    expect(timeAgo('2026-06-14T23:30:00Z', '2026-06-15T01:00:00Z')).toBe('yesterday');
+    expect(timeAgo('2026-06-14T00:00:00Z', '2026-06-14T23:59:59Z')).toBe('today');
+  });
+
+  it('stays "today" from the first second of a day to the last', () => {
+    expect(timeAgo('2026-06-15T00:00:00Z', '2026-06-15T23:59:59Z')).toBe('today');
+    expect(timeAgo('2026-06-15T23:59:59Z', '2026-06-16T00:00:00Z')).toBe('yesterday');
+  });
+
   it('says "today" for a time slightly in the future, such as clock drift', () => {
     expect(timeAgo('2026-06-15T13:00:00Z', NOW)).toBe('today');
   });

@@ -50,13 +50,15 @@ export function wrap(text: string, width: number, maxLines: number): string[] {
 
 /**
  * How long before `nowIso` something happened, in plain words: "today", "3 days ago",
- * "5 weeks ago", "4 months ago", "2 years ago". Returns null for dates that cannot be read.
+ * "5 weeks ago", "4 months ago", "2 years ago". Days are calendar days in UTC, so a push late
+ * yesterday is "yesterday" even if it was under 24 hours ago, matching the date shown beside it.
+ * Returns null for dates that cannot be read.
  */
 export function timeAgo(thenIso: string, nowIso: string): string | null {
   const then = Date.parse(thenIso);
   const now = Date.parse(nowIso);
   if (!Number.isFinite(then) || !Number.isFinite(now)) return null;
-  const days = Math.floor((now - then) / 86_400_000);
+  const days = Math.floor(now / 86_400_000) - Math.floor(then / 86_400_000);
   if (days < 1) return 'today';
   if (days < 7) return days === 1 ? 'yesterday' : `${days} days ago`;
   if (days < 30) {
