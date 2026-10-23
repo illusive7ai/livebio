@@ -1,4 +1,4 @@
-export const BLOCK_IDS = ['stats', 'activity', 'languages', 'projects'] as const;
+export const BLOCK_IDS = ['stats', 'activity', 'languages', 'projects', 'city', 'game'] as const;
 export type BlockId = (typeof BLOCK_IDS)[number];
 
 export const THEME_MODES = ['auto', 'dark', 'light'] as const;

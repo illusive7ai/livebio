@@ -16,8 +16,9 @@ export function Gallery({ profile, config, onPick }: Props) {
       <h2>Choose a design</h2>
       <ul className="gallery">
         {templates.map((template) => {
-          // Thumbnails show the finished design, so animation is off here.
-          const output = renderProfile(profile, { ...config, template: template.id, motion: false });
+          // Thumbnails show only the template's own card, finished, so animation and the live panels are off.
+          const blocks = config.blocks.filter((b) => b !== 'city' && b !== 'game');
+          const output = renderProfile(profile, { ...config, template: template.id, motion: false, blocks });
           const asset = output.assets.find((a) => a.path.endsWith('-dark.svg')) ?? output.assets[0];
           const selected = config.template === template.id;
           return (

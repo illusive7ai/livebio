@@ -43,6 +43,21 @@ export function applyToReadme(existing: string | null, generated: string): strin
   return generated;
 }
 
+/**
+ * Adds more blocks to a generated README, after the template's own content and before the credit line,
+ * so the credit stays at the very end.
+ */
+export function insertBlocks(readme: string, blocks: string[]): string {
+  if (blocks.length === 0) return readme;
+  const extra = blocks.join('\n\n');
+  const credit = creditFooter();
+  const at = readme.indexOf(credit);
+  if (at !== -1) return `${readme.slice(0, at)}${extra}\n\n${readme.slice(at)}`;
+  const end = readme.lastIndexOf(MARKER_END);
+  if (end !== -1) return `${readme.slice(0, end)}${extra}\n\n${readme.slice(end)}`;
+  return `${readme.trimEnd()}\n\n${extra}\n`;
+}
+
 export function assetPath(base: string, variant: 'dark' | 'light'): string {
   return `${ASSET_DIR}/${base}-${variant}.svg`;
 }

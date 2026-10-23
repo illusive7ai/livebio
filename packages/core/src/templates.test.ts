@@ -114,11 +114,11 @@ describe.each(templates.map((t) => t.id))('%s template', (id) => {
 
 describe('terminal template', () => {
   it('makes a dark and a light image for the auto theme, and one image otherwise', () => {
-    expect(renderProfile(profile, config('terminal')).assets.map((a) => a.path)).toEqual([
-      'livebio/terminal-dark.svg',
-      'livebio/terminal-light.svg',
-    ]);
-    expect(renderProfile(profile, config('terminal', { theme: 'dark' })).assets).toHaveLength(1);
+    // The template's own card. Its live city and snake are separate images, tested elsewhere.
+    const card = (c: Config) =>
+      renderProfile(profile, c).assets.map((a) => a.path).filter((p) => /terminal-(dark|light)\.svg$/.test(p));
+    expect(card(config('terminal'))).toEqual(['livebio/terminal-dark.svg', 'livebio/terminal-light.svg']);
+    expect(card(config('terminal', { theme: 'dark' }))).toEqual(['livebio/terminal-dark.svg']);
   });
 
   it('only animates when motion is on, and honours reduced motion', () => {

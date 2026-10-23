@@ -10,6 +10,8 @@ interface Props {
 const BLOCK_LABELS: Record<BlockId, string> = {
   stats: 'Stats',
   activity: 'Activity (contribution graph and streaks)',
+  city: 'Contribution city (live, from your real activity)',
+  game: 'Live game (an automated snake or chess match)',
   languages: 'Languages',
   projects: 'Top projects',
 };
@@ -68,12 +70,14 @@ export function Customizer({ config, onChange, hasActivity }: Props) {
             {BLOCK_LABELS[block]}
           </label>
         ))}
-        {config.blocks.includes('activity') && !hasActivity && (
-          <p className="hint">
-            The activity section is not in this preview. It appears in your profile after the first automatic
-            update, because GitHub only shares contribution data with a token.
-          </p>
-        )}
+        {(config.blocks.includes('activity') || config.blocks.includes('city') || config.blocks.includes('game')) &&
+          !hasActivity && (
+            <p className="hint">
+              Your contribution city, and the snake when a design has one, are not drawn in this preview. They appear
+              in your profile after the first automatic update, because GitHub only shares contribution data with a
+              token. Chess games do not need it.
+            </p>
+          )}
       </fieldset>
 
       <label className="stack">

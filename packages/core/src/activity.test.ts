@@ -159,8 +159,10 @@ describe('the activity section', () => {
       }
     });
 
-    it('does not claim activity for a template that does not draw it', () => {
-      expect(readmeOf(withActivity, config('brief'))).not.toContain('contributions in the past year');
+    it('does not claim activity for a template card that does not draw it', () => {
+      // The card's own alt text comes first. The live city below it, a separate image, rightly mentions activity.
+      const cardAlt = /alt="([^"]*)"/.exec(readmeOf(withActivity, config('brief')))![1]!;
+      expect(cardAlt).not.toContain('contributions in the past year');
       expect(svgOf(withActivity, config('brief'))).not.toContain('ACTIVITY');
     });
   });

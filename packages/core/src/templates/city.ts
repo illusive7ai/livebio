@@ -10,16 +10,16 @@ const WIDTH = 900;
 const PAD = 36;
 
 /** Isometric projection: a grid unit moves 30 degrees down and sideways on screen. */
-const COS = Math.cos(Math.PI / 6);
-const SIN = 0.5;
-const ROWS = 7;
-const MAX_CELL = 14;
-const MAX_HEIGHT = 120;
+export const COS = Math.cos(Math.PI / 6);
+export const SIN = 0.5;
+export const ROWS = 7;
+export const MAX_CELL = 14;
+export const MAX_HEIGHT = 120;
 const MIN_HEIGHT = 4;
 /** Empty space around each building, as a share of its cell, so the city reads as separate towers. */
-const GAP = 0.14;
-const SLAB_DEPTH = 10;
-const SLAB_MARGIN = 0.45;
+export const GAP = 0.14;
+export const SLAB_DEPTH = 10;
+export const SLAB_MARGIN = 0.45;
 /** Space kept above the tallest tower for its flag and date. */
 const FLAG_ROOM = 46;
 
