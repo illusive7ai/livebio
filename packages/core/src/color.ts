@@ -39,6 +39,11 @@ export function hslToHex(h: number, s: number, l: number): string {
   return `#${hex(r ?? 0)}${hex(g ?? 0)}${hex(b ?? 0)}`;
 }
 
+/** The hue (0-360) of a picture's tint, or undefined when the picture has no colour. */
+export function hueOf(tint: [number, number, number] | undefined): number | undefined {
+  return tint ? rgbToHsl(tint[0], tint[1], tint[2])[0] : undefined;
+}
+
 /** Colours used when a picture has no usable tint, such as a greyscale photo. */
 export const FALLBACK_ACCENTS: Record<Variant, string[]> = {
   dark: ['#3fb950', '#58a6ff', '#bc8cff', '#e3b341', '#39c5cf'],
