@@ -91,6 +91,12 @@ export function weeklyTotals(days: ReadonlyArray<{ date: string; count: number }
   return weeks;
 }
 
+/** The last `count` calendar weeks of activity, oldest first. The newest may be a partial week. */
+export function recentWeeks(days: ReadonlyArray<{ date: string; count: number }>, count: number): number[] {
+  // slice(-0) would return everything, so a count of zero or less is handled on its own.
+  return count > 0 ? weeklyTotals(days).slice(-count) : [];
+}
+
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',

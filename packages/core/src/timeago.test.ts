@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { busiestMonth, weeklyTotals } from './contributions';
+import { busiestMonth, recentWeeks, weeklyTotals } from './contributions';
 import { timeAgo } from './util';
 
 const NOW = '2026-06-15T12:00:00Z';
@@ -56,6 +56,30 @@ describe('weeklyTotals', () => {
 
   it('keeps the grand total intact', () => {
     expect(weeklyTotals(days).reduce((a, b) => a + b, 0)).toBe(10);
+  });
+});
+
+describe('recentWeeks', () => {
+  const days = [
+    { date: '2026-05-24', count: 1 }, // Sunday
+    { date: '2026-05-31', count: 2 }, // Sunday
+    { date: '2026-06-07', count: 4 }, // Sunday
+    { date: '2026-06-09', count: 3 },
+  ];
+
+  it('returns the newest weeks, oldest first', () => {
+    expect(recentWeeks(days, 2)).toEqual([2, 7]);
+    expect(recentWeeks(days, 1)).toEqual([7]);
+  });
+
+  it('returns everything when fewer weeks exist than asked for', () => {
+    expect(recentWeeks(days, 12)).toEqual([1, 2, 7]);
+  });
+
+  it('returns nothing for a count of zero or less, and for no data', () => {
+    expect(recentWeeks(days, 0)).toEqual([]);
+    expect(recentWeeks(days, -3)).toEqual([]);
+    expect(recentWeeks([], 12)).toEqual([]);
   });
 });
 

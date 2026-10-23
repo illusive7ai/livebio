@@ -87,6 +87,8 @@ export interface Profile {
   createdAt: string;
   languages: LanguageShare[];
   topRepos: RepoSummary[];
+  /** The most recently pushed-to own repositories, newest first. Archived and undated ones are left out. */
+  recentRepos?: RepoSummary[];
   /** Forks of the user's own (non-fork) repositories, added together. */
   totalForks?: number;
   /** Own repositories that are not archived and were pushed to within ACTIVE_WINDOW_DAYS of `fetchedAt`. */

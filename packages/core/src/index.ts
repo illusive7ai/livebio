@@ -5,6 +5,7 @@ export {
   CONTRIBUTIONS_QUERY,
   buildContributions,
   busiestMonth,
+  recentWeeks,
   weeklyTotals,
   computeStreaks,
   fetchContributions,

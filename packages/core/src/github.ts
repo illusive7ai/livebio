@@ -168,6 +168,11 @@ export async function fetchProfile(username: string, opts: FetchOptions = {}): P
     .sort((a, b) => b.stargazers_count - a.stargazers_count)
     .slice(0, TOP_REPOS)
     .map(summarise);
+  const recentRepos = own
+    .filter((repo) => !repo.archived && Number.isFinite(Date.parse(repo.pushed_at ?? '')))
+    .sort((a, b) => Date.parse(b.pushed_at!) - Date.parse(a.pushed_at!) || a.name.localeCompare(b.name))
+    .slice(0, TOP_REPOS)
+    .map(summarise);
 
   return {
     login: user.login,
@@ -188,5 +193,6 @@ export async function fetchProfile(username: string, opts: FetchOptions = {}): P
     createdAt: user.created_at,
     languages: languageShares(own).slice(0, 5),
     topRepos,
+    recentRepos,
   };
 }

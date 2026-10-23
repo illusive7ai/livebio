@@ -103,6 +103,38 @@ describe('fetchProfile', () => {
     expect(byName.archived).toBeUndefined(); // archived repositories are not featured
   });
 
+  it('lists the most recently pushed repositories newest first, leaving out forks, archived and undated ones', async () => {
+    const now = new Date('2026-06-01T00:00:00Z');
+    const daysAgo = (n: number) => new Date(now.getTime() - n * 86_400_000).toISOString();
+    const profile = await fetchProfile('octo', {
+      now: () => now,
+      fetch: mockFetch({
+        '/repos': {
+          body: [
+            repo({ name: 'old', stargazers_count: 900, pushed_at: daysAgo(300) }),
+            repo({ name: 'fresh', stargazers_count: 1, pushed_at: daysAgo(1) }),
+            repo({ name: 'middle', stargazers_count: 5, pushed_at: daysAgo(40) }),
+            repo({ name: 'forked', fork: true, pushed_at: daysAgo(0) }),
+            repo({ name: 'archived', archived: true, pushed_at: daysAgo(0) }),
+            repo({ name: 'undated' }),
+            repo({ name: 'tie-b', pushed_at: daysAgo(10) }),
+            repo({ name: 'tie-a', pushed_at: daysAgo(10) }),
+          ],
+        },
+        '/users/octo': { body: user },
+      }),
+    });
+    expect(profile.recentRepos?.map((r) => r.name)).toEqual(['fresh', 'tie-a', 'tie-b', 'middle', 'old']);
+    expect(profile.topRepos[0]?.name).toBe('old'); // the starred list is separate and unaffected
+  });
+
+  it('keeps at most six recent repositories', async () => {
+    const many = Array.from({ length: 10 }, (_v, i) => repo({ name: `r${i}`, pushed_at: new Date(Date.UTC(2026, 0, 1 + i)).toISOString() }));
+    const profile = await fetchProfile('octo', { fetch: mockFetch({ '/repos': { body: many }, '/users/octo': { body: user } }) });
+    expect(profile.recentRepos).toHaveLength(6);
+    expect(profile.recentRepos?.[0]?.name).toBe('r9');
+  });
+
   it('rejects invalid usernames before making any request', async () => {
     const never = (() => {
       throw new Error('should not be called');
