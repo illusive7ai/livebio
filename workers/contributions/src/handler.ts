@@ -1,6 +1,7 @@
 import { fetchContributions } from '@livebio/core/src/contributions';
 import { GitHubError } from '@livebio/core/src/github';
 import { isValidUsername } from '@livebio/core/src/util';
+import { serveCard, serveCredit } from './card';
 import { DEFAULT_REPO, fetchReviews } from './reviews';
 
 export interface Env {
@@ -118,6 +119,9 @@ export async function handle(request: Request, env: Env, deps: Deps = {}): Promi
 
   const url = new URL(request.url);
   if (url.pathname === '/reviews') return serveReviews(env, deps, cors);
+  // The pictures a hosted README points at. These are images, so they carry their own headers.
+  if (url.pathname.startsWith('/u/')) return serveCard(request, env, deps);
+  if (/^\/credit-(dark|light)\.svg$/.test(url.pathname)) return serveCredit(url);
   if (url.pathname !== '/' && url.pathname !== '/contributions') {
     return respond({ error: 'Not found.' }, 404, { ...cors, 'Cache-Control': 'no-store' });
   }

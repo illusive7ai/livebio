@@ -34,3 +34,4 @@ export { PRESETS } from './live/style';
 export type { Preset } from './live/style';
 export { MAX_QUOTE, cleanQuote, parseReviews, reviewFromIssue } from './reviews';
 export type { Review } from './reviews';
+export { assetName, cardUrl, configFromParams, configToParams, creditUrl, hostedReadme, normaliseBase, parseCardPath } from './hosted';

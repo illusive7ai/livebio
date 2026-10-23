@@ -1,5 +1,6 @@
 import { GitHubError } from '@livebio/core/src/github';
 import { parseReviews, type Review } from '@livebio/core/src/reviews';
+import { withUserAgent } from './http';
 
 /** The repository whose issues hold the reviews. Change it with REVIEWS_REPO if you host your own copy. */
 export const DEFAULT_REPO = 'illusive7ai/livebio';
@@ -16,6 +17,7 @@ export async function fetchReviews(
   token: string,
   fetcher: typeof fetch = fetch,
 ): Promise<{ reviews: Review[]; seen: number }> {
+  fetcher = withUserAgent(fetcher);
   if (!REPO.test(repo)) throw new GitHubError('The reviews repository is not set up correctly.', 'unauthorized');
 
   let response: Response;

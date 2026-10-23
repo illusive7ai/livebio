@@ -11,5 +11,9 @@
     "typecheck": "tsc -p tsconfig.json",
     "dev": "npx wrangler dev",
     "deploy": "npx wrangler deploy"
+  },
+  "dependencies": {
+    "jpeg-js": "^0.4.4",
+    "upng-js": "^2.1.0"
   }
 }

@@ -29,6 +29,16 @@ Everything is generated as plain files in your own repository. Images are SVGs, 
 - **Accessible.** Images get real alt text that describes only what they show.
 - **Safe.** Profile text is escaped everywhere, and the preview is sanitised.
 
+## Copy and paste, with live pictures
+
+The quickest way: pick a design on the site, press **Copy README**, and paste it into the README of your profile repository (a public repository named like your username). That is all. There is nothing to upload and nothing to set up.
+
+The README holds no image files. Each picture is an address on the livebio server, which draws it from your public GitHub data when your profile is viewed, so your numbers, contribution city and chess game stay current by themselves. A picture is refreshed about once an hour.
+
+- **What is kept:** only a one-hour copy of public GitHub data, so a busy profile does not use up GitHub's limits. No accounts, no cookies, nothing about who looked.
+- **What it depends on:** the livebio server being up. If you would rather not depend on it, choose **Host the files myself** on the site (or use the Action below). Those files are yours and need no server.
+- **Running your own server:** the picture server is the Cloudflare Worker in [workers/contributions](workers/contributions). Deploy it with your own token and point the site's `VITE_CONTRIBUTIONS_URL` at it.
+
 ## Use the Action
 
 In your profile repository (named the same as your username), add `livebio.yml`:
@@ -75,7 +85,7 @@ jobs:
 
 If your README already contains `<!-- livebio:start -->` and `<!-- livebio:end -->`, only the text between them is replaced, so the rest of your README is left alone.
 
-The builder generates both files for you.
+The builder generates both files for you. The Action is the "host the files myself" option: it writes the pictures into your repository every day, so your profile never depends on a server.
 
 ## Activity: contribution graph and streaks
 

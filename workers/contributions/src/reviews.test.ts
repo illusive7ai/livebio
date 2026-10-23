@@ -61,7 +61,9 @@ describe('GET /reviews', () => {
     expect(calls).toHaveLength(1);
     expect(calls[0]!.url).toContain('/repos/someone/else/issues');
     expect(calls[0]!.url).not.toContain(TOKEN);
-    expect((calls[0]!.init?.headers as Record<string, string>).Authorization).toBe(`Bearer ${TOKEN}`);
+    const headers = new Headers(calls[0]!.init?.headers);
+    expect(headers.get('authorization')).toBe(`Bearer ${TOKEN}`);
+    expect(headers.get('user-agent')).toBeTruthy();
   });
 
   it('defaults to the livebio repository', async () => {
