@@ -16534,7 +16534,7 @@ function renderSvg(profile, config, variant) {
   if (footer.length > 0) parts.push(rise(footer.join(""), motion, next()));
   const height = Math.ceil(cursor + PAD2 - 14);
   const random = seeded(profile.login);
-  const stars2 = variant === "dark" ? Array.from({ length: 46 }, () => {
+  const stars3 = variant === "dark" ? Array.from({ length: 46 }, () => {
     const x = random() * WIDTH;
     const y = random() * Math.min(height * 0.55, 330);
     const r = 0.5 + random() * 1.1;
@@ -16561,7 +16561,7 @@ ${faceCss}
 ${motionCss2}
 </style>
 <rect width="${WIDTH}" height="${height}" rx="20" fill="url(#sky)"/>
-${stars2}
+${stars3}
 <rect width="${WIDTH}" height="${height}" rx="20" fill="url(#glow)"/>
 ${parts.filter(Boolean).join("\n")}
 </svg>
@@ -17022,9 +17022,386 @@ ${pictureTag(`${base.id}-${kind}`, config.theme, alt, CARD_WIDTH)}
   };
 }
 
+// ../core/src/templates/kit.ts
+var W = 900;
+var PAD6 = 36;
+function lookOf(hue, variant, profile) {
+  const picture = hueOf(profile.avatar?.grid.tint);
+  const second = picture ?? (hue + 40) % 360;
+  if (variant === "dark") {
+    return {
+      bg: hslToHex(hue, 0.4, 0.07),
+      panel: hslToHex(hue, 0.32, 0.115),
+      border: hslToHex(hue, 0.28, 0.21),
+      track: hslToHex(hue, 0.26, 0.17),
+      fg: hslToHex(hue, 0.2, 0.93),
+      muted: hslToHex(hue, 0.14, 0.67),
+      accent: hslToHex(hue, 0.85, 0.6),
+      accent2: hslToHex(second, 0.8, 0.64)
+    };
+  }
+  return {
+    bg: hslToHex(hue, 0.3, 0.97),
+    panel: "#ffffff",
+    border: hslToHex(hue, 0.25, 0.87),
+    track: hslToHex(hue, 0.25, 0.92),
+    fg: hslToHex(hue, 0.4, 0.14),
+    muted: hslToHex(hue, 0.14, 0.38),
+    accent: hslToHex(hue, 0.75, 0.38),
+    accent2: hslToHex(second, 0.7, 0.4)
+  };
+}
+var mono = (text, x, y, fill, extra = "") => `<text class="mono" x="${x}" y="${y}" fill="${fill}" ${extra}>${xmlEscape(text)}</text>`;
+var sans = (text, x, y, fill, extra = "") => `<text x="${x}" y="${y}" fill="${fill}" ${extra}>${xmlEscape(text)}</text>`;
+var label2 = (look, text, x, y) => mono(text, x, y, look.accent, 'font-size="11.5" font-weight="700" letter-spacing="2"');
+var num4 = (n) => String(Math.round(n * 100) / 100);
+function shell(o) {
+  const { look, height, variant } = o;
+  const r = o.radius ?? 18;
+  const [gx, gy] = o.glow ?? [0.92, 0];
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${height}" viewBox="0 0 ${W} ${height}" role="img" aria-labelledby="t">
+<title id="t">${xmlEscape(o.title)}</title>
+<defs>
+<pattern id="kg" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="${look.accent}" stroke-opacity="${variant === "dark" ? 0.07 : 0.07}"/></pattern>
+<radialGradient id="kglow" cx="${gx}" cy="${gy}" r="0.85"><stop offset="0" stop-color="${look.accent}" stop-opacity="${variant === "dark" ? 0.22 : 0.13}"/><stop offset="1" stop-color="${look.accent}" stop-opacity="0"/></radialGradient>
+${o.defs ?? ""}
+</defs>
+<style>
+text{font-family:${FONT_SANS}}
+.mono{font-family:${FONT}}
+${o.css ?? ""}
+</style>
+<rect width="${W}" height="${height}" rx="${r}" fill="${look.bg}"/>
+${o.grid === false ? "" : `<rect width="${W}" height="${height}" rx="${r}" fill="url(#kg)"/>`}
+<rect width="${W}" height="${height}" rx="${r}" fill="url(#kglow)"/>
+<rect x="0.5" y="0.5" width="${W - 1}" height="${height - 1}" rx="${r}" fill="none" stroke="${look.border}"/>
+${o.body}
+</svg>
+`;
+}
+function riseCss(motion) {
+  if (!motion) return "";
+  return `.rise{animation:rise .6s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}}
+.bar{transform-box:fill-box;transform-origin:50% 100%;animation:grow .7s cubic-bezier(.2,.7,.2,1) both}
+@keyframes grow{from{transform:scaleY(0)}}
+@media (prefers-reduced-motion:reduce){.rise,.bar{animation:none}}`;
+}
+function enter(markup, motion, delay) {
+  if (!markup || !motion) return markup;
+  return `<g class="rise" style="animation-delay:${delay.toFixed(2)}s">${markup}</g>`;
+}
+function portrait(profile, look, cx, cy, r) {
+  const uri = profile.avatar?.dataUri;
+  if (uri && SAFE_DATA_URI.test(uri)) {
+    return `<clipPath id="pt"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath><image href="${uri}" x="${cx - r}" y="${cy - r}" width="${r * 2}" height="${r * 2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#pt)"/><circle cx="${cx}" cy="${cy}" r="${r + 4}" fill="none" stroke="${look.accent}" stroke-width="2"/>`;
+  }
+  const initial = [...profile.name ?? profile.login][0]?.toUpperCase() ?? "?";
+  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${look.accent}"/><text x="${cx}" y="${cy + r * 0.34}" text-anchor="middle" font-size="${Math.round(r * 0.95)}" font-weight="800" fill="${look.bg}">${xmlEscape(initial)}</text>`;
+}
+function panel(look, x, y, w, h, accent2 = true) {
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="14" fill="${look.panel}" stroke="${look.border}"/>` + (accent2 ? `<rect x="${x + 18}" y="${y}" width="36" height="3" rx="1.5" fill="${look.accent}"/>` : "");
+}
+function langBars(look, languages, x, y, w, rows = 4) {
+  const shown = languages.slice(0, rows);
+  const markup = shown.map((language, index) => {
+    const top = y + index * 26;
+    const fill = index % 2 === 0 ? look.accent : look.accent2;
+    return sans(truncate(language.name, 18), x, top + 10, look.fg, 'font-size="12.5"') + mono(`${language.percent}%`, x + w, top + 10, look.muted, 'font-size="11.5" text-anchor="end"') + `<rect x="${x}" y="${top + 16}" width="${w}" height="5" rx="2.5" fill="${look.track}"/><rect x="${x}" y="${top + 16}" width="${num4(Math.max(4, w * language.percent / 100))}" height="5" rx="2.5" fill="${fill}"/>`;
+  }).join("");
+  return { markup, height: shown.length * 26 };
+}
+function weekBars(look, days, x, y, w, h, motion) {
+  const weeks = weeklyTotals(days);
+  if (weeks.length === 0) return "";
+  const peak = Math.max(...weeks, 1);
+  const peakIndex = weeks.indexOf(Math.max(...weeks));
+  const gap = 2;
+  const bar = (w - gap * (weeks.length - 1)) / weeks.length;
+  return weeks.map((total, index) => {
+    const height = Math.max(2, total / peak * h);
+    const fill = total === 0 ? look.track : index === peakIndex ? look.accent2 : look.accent;
+    const delay = motion ? ` style="animation-delay:${(0.2 + index * 0.012).toFixed(3)}s"` : "";
+    return `<rect class="bar" x="${num4(x + index * (bar + gap))}" y="${num4(y + h - height)}" width="${num4(bar)}" height="${num4(height)}" rx="1.5" fill="${fill}"${total === 0 ? "" : ' fill-opacity="0.9"'}${delay}/>`;
+  }).join("") + `<rect x="${x}" y="${y + h + 1}" width="${w}" height="1" fill="${look.border}"/>`;
+}
+function heatStrip(look, days, x, y, w) {
+  if (days.length === 0) return { markup: "", height: 0 };
+  const first = (/* @__PURE__ */ new Date(`${days[0]?.date}T00:00:00Z`)).getUTCDay();
+  const cols = Math.ceil((first + days.length) / 7);
+  const gap = 2;
+  const cell = Math.max(2, (w - gap * (cols - 1)) / cols);
+  const opacities = [0, 0.3, 0.5, 0.75, 1];
+  const markup = days.map((day, index) => {
+    const col = Math.floor((first + index) / 7);
+    const row = (first + index) % 7;
+    const attrs = day.level === 0 ? `fill="${look.track}"` : `fill="${look.accent}" fill-opacity="${opacities[day.level]}"`;
+    return `<rect x="${num4(x + col * (cell + gap))}" y="${num4(y + row * (cell + gap))}" width="${num4(cell)}" height="${num4(cell)}" rx="1.5" ${attrs}/>`;
+  }).join("");
+  return { markup, height: 7 * cell + 6 * gap };
+}
+var REPO_ROW = 58;
+function repoRow(look, repo, profile, x, y, w) {
+  const updated = repo.pushedAt && profile.fetchedAt ? timeAgo(repo.pushedAt, profile.fetchedAt) : null;
+  const meta = [repo.language, repo.license, updated ? `updated ${updated}` : null].filter((v) => Boolean(v));
+  const desc = repo.description ? wrap(repo.description, Math.max(24, Math.floor((w - 190) / 6.3)), 1)[0] : null;
+  return `<rect x="${x}" y="${y}" width="${w}" height="${REPO_ROW - 8}" rx="12" fill="${look.panel}" stroke="${look.border}"/>` + sans(truncate(repo.name, 28), x + 16, y + 22, look.accent, 'font-size="14.5" font-weight="700"') + (desc ? sans(desc, x + 16, y + 40, look.muted, 'font-size="12"') : meta.length > 0 ? mono(truncate(meta.join("  \xB7  "), 60), x + 16, y + 40, look.muted, 'font-size="11"') : "") + mono(`\u2605 ${formatNumber(repo.stars)}`, x + w - 16, y + 22, look.fg, 'font-size="12.5" font-weight="700" text-anchor="end"') + mono(`forks ${formatNumber(repo.forks)}`, x + w - 16, y + 40, look.muted, 'font-size="11" text-anchor="end"');
+}
+function reposIn(profile, languages) {
+  const wanted = new Set(languages.map((l) => l.toLowerCase()));
+  return profile.topRepos.filter((r) => r.language && wanted.has(r.language.toLowerCase())).sort((a, b) => b.stars - a.stars);
+}
+function shareIn(profile, languages) {
+  const wanted = new Set(languages.map((l) => l.toLowerCase()));
+  return profile.languages.filter((l) => wanted.has(l.name.toLowerCase())).reduce((sum, l) => sum + l.percent, 0);
+}
+
+// ../core/src/templates/arcade.ts
+var ROWS4 = 7;
+var SECONDS_PER_COLUMN = 0.16;
+var HOLD_SECONDS2 = 3;
+function gridOf(days) {
+  if (days.length === 0) return { cols: 0, cells: [] };
+  const first = (/* @__PURE__ */ new Date(`${days[0]?.date}T00:00:00Z`)).getUTCDay();
+  const cols = Math.ceil((first + days.length) / ROWS4);
+  const cells = days.map((day, index) => ({ col: Math.floor((first + index) / ROWS4), row: (first + index) % ROWS4, count: day.count, level: day.level }));
+  return { cols, cells };
+}
+function zapFraction(col, cols) {
+  return (col + 1) / (cols + 1) * 0.88;
+}
+function planRunner(days) {
+  const weeks = weeklyTotals(days);
+  const peak = Math.max(...weeks, 1);
+  const last = Math.max(weeks.length - 1, 1);
+  const orbs = weeks.flatMap((total, week) => total > 0 ? [{ week, at: week / last * 0.88, total }] : []);
+  return { weeks, peak, orbs };
+}
+function planBreakout(days) {
+  const { cols, cells } = gridOf(days);
+  const rows = ROWS4 + 4;
+  const alive = new Set(cells.filter((c2) => c2.count > 0).map((c2) => `${c2.col},${c2.row}`));
+  const path = [];
+  const hits = /* @__PURE__ */ new Map();
+  if (cols === 0) return { path, hits, cols, rows };
+  let x = 0;
+  let y = rows - 1;
+  let dy = -1;
+  const dx = 0.5;
+  for (let step = 0; x <= cols - 0.5; step++) {
+    path.push({ x, y });
+    const key = `${Math.floor(x)},${Math.floor(y)}`;
+    if (y < ROWS4 && alive.delete(key)) hits.set(key, step);
+    x += dx;
+    y += dy;
+    if (y <= 0) dy = 1;
+    if (y >= rows - 1) dy = -1;
+    y = Math.min(rows - 1, Math.max(0, y));
+  }
+  return { path, hits, cols, rows };
+}
+var INSET = PAD6;
+function telemetry(profile, blocks, look, x, y, extra = []) {
+  const lines = [`@${profile.login}`];
+  if (blocks.has("stats")) lines.push(`${formatNumber(profile.totalStars)} stars`, `${formatNumber(profile.followers)} followers`, `${formatNumber(profile.publicRepos)} repos`);
+  lines.push(...extra);
+  return lines.map((line, i) => mono(truncate(line, 30), x, y + i * 20, i === 0 ? look.fg : look.muted, `font-size="${i === 0 ? 14 : 12.5}"${i === 0 ? ' font-weight="700"' : ""}`)).join("");
+}
+function stars(look, w, h, seed, motion) {
+  const rand = seeded(seed);
+  return Array.from({ length: 70 }, (_v, i) => {
+    const twinkle = motion && i % 4 === 0 ? ` class="tw" style="animation-delay:${(rand() * 3).toFixed(1)}s"` : "";
+    return `<circle cx="${num4(rand() * w)}" cy="${num4(rand() * h)}" r="${num4(0.5 + rand() * 1.1)}" fill="${look.fg}" fill-opacity="${num4(0.2 + rand() * 0.5)}"${twinkle}/>`;
+  }).join("");
+}
+function shooter(profile, config, look, days, y0, blocks) {
+  const { cols, cells } = gridOf(days);
+  const gx = 300;
+  const gw = W - PAD6 - gx;
+  const step = Math.max(4, Math.min(12, Math.floor(gw / cols)));
+  const cell = step - 2;
+  const motion = config.motion;
+  const total = cols * SECONDS_PER_COLUMN + HOLD_SECONDS2;
+  const gridW = cols * step;
+  const top = y0 + 14;
+  const shipY = top + ROWS4 * step + 46;
+  const height = shipY + 30 - y0;
+  const opacities = [0, 0.3, 0.5, 0.75, 1];
+  const buckets = /* @__PURE__ */ new Set();
+  const grid = cells.map((c2) => {
+    const x = gx + c2.col * step;
+    const y = top + c2.row * step;
+    if (c2.count === 0) return `<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="1.5" fill="${look.track}"/>`;
+    buckets.add(c2.col);
+    const cls = motion ? ` class="z z${c2.col}"` : "";
+    return `<rect${cls} x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" fill="${look.accent}" fill-opacity="${opacities[Math.min(4, Math.max(1, c2.level))]}"/>`;
+  }).join("");
+  const shipX = (col) => gx + col * step + cell / 2;
+  const ship = (x) => `M${num4(x)} ${shipY - 14}l9 20h-18z`;
+  let css = "";
+  let beams = "";
+  let ships = `<path d="${ship(shipX(0))}" fill="${look.fg}"/><path d="M${num4(shipX(0) - 4)} ${shipY + 6}h8l-4 7z" fill="${look.accent2}"/>`;
+  if (motion) {
+    const f = (col) => num4(zapFraction(col, cols) * 100);
+    css += `.ship{animation:ar-fly ${num4(total)}s linear infinite}@keyframes ar-fly{0%{transform:translateX(0)}88%{transform:translateX(${num4(gridW - step)}px)}100%{transform:translateX(0)}}`;
+    css += `.z{animation-duration:${num4(total)}s;animation-iteration-count:infinite;animation-timing-function:linear}`;
+    css += `.bm{opacity:0;animation-duration:${num4(total)}s;animation-iteration-count:infinite;animation-timing-function:linear}`;
+    for (const col of [...buckets].sort((a, b) => a - b)) {
+      css += `@keyframes ar-z${col}{0%,${f(col)}%{opacity:1}${num4(Number(f(col)) + 0.01)}%,99.9%{opacity:0}100%{opacity:1}}.z${col}{animation-name:ar-z${col}}`;
+      css += `@keyframes ar-b${col}{0%,${num4(Number(f(col)) - 0.6)}%{opacity:0}${f(col)}%{opacity:1}${num4(Number(f(col)) + 1.2)}%,100%{opacity:0}}.b${col}{animation-name:ar-b${col}}`;
+      beams += `<rect class="bm b${col}" x="${num4(shipX(col) - 0.75)}" y="${top - 6}" width="1.5" height="${shipY - 16 - top + 6}" fill="${look.accent2}"/>`;
+    }
+    css += `.tw{animation:ar-tw 2.4s ease-in-out infinite}@keyframes ar-tw{50%{opacity:.15}}@media (prefers-reduced-motion:reduce){.ship,.z,.bm,.tw{animation:none!important}.bm{opacity:0}}`;
+    ships = `<g class="ship">${ships}</g>`;
+  }
+  const label4 = mono("TELEMETRY", INSET, y0 + 22, look.accent, 'font-size="11.5" font-weight="700" letter-spacing="2"');
+  const markup = stars(look, W, 400, `${profile.login}:shooter`, motion) + label4 + telemetry(profile, blocks, look, INSET, y0 + 48, profile.contributions ? [`${formatNumber(profile.contributions.total)} shots`] : []) + grid + beams + ships;
+  return { markup, css, height };
+}
+function runner(profile, config, look, days, y0, blocks) {
+  const plan = planRunner(days);
+  const motion = config.motion;
+  const n = plan.weeks.length;
+  const x0 = PAD6;
+  const gw = W - PAD6 * 2;
+  const bar = gw / n;
+  const base = y0 + 190;
+  const terrainH = (total2) => 8 + total2 / plan.peak * 70;
+  const jetY = (week) => {
+    const near = [-2, -1, 0, 1, 2].map((d) => plan.weeks[week + d] ?? 0);
+    return base - terrainH(Math.max(...near)) - 30;
+  };
+  const jetX = (week) => x0 + week * bar + bar / 2;
+  const total = n * SECONDS_PER_COLUMN + HOLD_SECONDS2;
+  const terrain = plan.weeks.map((w, i) => `<rect x="${num4(x0 + i * bar + 0.5)}" y="${num4(base - terrainH(w))}" width="${num4(Math.max(1, bar - 1))}" height="${num4(terrainH(w))}" rx="1.5" fill="${look.accent}" fill-opacity="${w === 0 ? 0.08 : 0.28}"/>`).join("");
+  let css = "";
+  const orbs = plan.orbs.map((o) => {
+    const cls = motion ? ` class="o o${o.week}"` : "";
+    if (motion) css += `@keyframes ar-o${o.week}{0%,${num4(o.at * 100)}%{opacity:1}${num4(o.at * 100 + 0.01)}%,99.9%{opacity:0}100%{opacity:1}}.o${o.week}{animation-name:ar-o${o.week}}`;
+    return `<circle${cls} cx="${num4(jetX(o.week))}" cy="${num4(jetY(o.week) + 4)}" r="${num4(3 + Math.min(3, o.total / plan.peak * 3))}" fill="${look.accent2}"/>`;
+  }).join("");
+  const jetShape = (x, y) => `<path d="M${num4(x - 12)} ${num4(y)}l24 -4l-8 -5v-5l-8 5l-12 -1z" fill="${look.fg}"/><circle cx="${num4(x - 14)}" cy="${num4(y - 2)}" r="3" fill="${look.accent}"/>`;
+  let jet = jetShape(jetX(0), jetY(0));
+  if (motion) {
+    const stops = Array.from({ length: n }, (_v, w) => `${num4(w / Math.max(n - 1, 1) * 88)}%{transform:translate(${num4(jetX(w) - jetX(0))}px,${num4(jetY(w) - jetY(0))}px)}`).join("");
+    css += `.jet{animation:ar-jet ${num4(total)}s linear infinite}@keyframes ar-jet{${stops}100%{transform:translate(0,0)}}`;
+    css += `.o{animation-duration:${num4(total)}s;animation-iteration-count:infinite;animation-timing-function:linear}`;
+    css += `@media (prefers-reduced-motion:reduce){.jet,.o{animation:none!important}}`;
+    jet = `<g class="jet">${jet}</g>`;
+  }
+  const height = base - y0 + 36;
+  const markup = mono("JET RUNNER", PAD6, y0 + 22, look.accent, 'font-size="11.5" font-weight="700" letter-spacing="2"') + mono(truncate([`@${profile.login}`, blocks.has("stats") ? `${formatNumber(profile.totalStars)} stars` : "", profile.contributions ? `${formatNumber(profile.contributions.total)} contributions` : ""].filter(Boolean).join("  \xB7  "), 80), PAD6, y0 + 44, look.muted, 'font-size="12.5"') + terrain + orbs + jet + `<rect x="${PAD6}" y="${base + 1}" width="${gw}" height="1" fill="${look.border}"/>` + mono(`${plural(plan.orbs.length, "active week")} collected on the run`, PAD6, base + 22, look.muted, 'font-size="11.5"');
+  return { markup, css, height };
+}
+function signal(profile, config, look, days, y0, blocks) {
+  const plan = planBreakout(days);
+  const { cells } = gridOf(days);
+  const motion = config.motion;
+  const gx = 30 + 250;
+  const gw = W - PAD6 - gx;
+  const step = Math.max(4, Math.min(12, Math.floor(gw / plan.cols)));
+  const cell = step - 2;
+  const top = y0 + 14;
+  const bottom = top + plan.rows * step;
+  const steps = plan.path.length;
+  const total = Math.max(steps * 0.06, 4) + HOLD_SECONDS2;
+  const opacities = [0, 0.3, 0.5, 0.75, 1];
+  const px = (x) => gx + x * step;
+  const py = (y) => top + y * step;
+  let css = "";
+  const buckets = /* @__PURE__ */ new Set();
+  const bricks = cells.map((c2) => {
+    const x = px(c2.col);
+    const y = py(c2.row);
+    if (c2.count === 0) return `<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="1" fill="${look.track}" fill-opacity="0.6"/>`;
+    const hit = plan.hits.get(`${c2.col},${c2.row}`);
+    let cls = "";
+    if (motion && hit !== void 0) {
+      const bucket = Math.floor(hit / 4);
+      buckets.add(bucket);
+      cls = ` class="k k${bucket}"`;
+    }
+    return `<rect${cls} x="${x}" y="${y}" width="${cell}" height="${cell}" rx="1" fill="${c2.level === 4 ? look.accent2 : look.accent}" fill-opacity="${opacities[Math.min(4, Math.max(1, c2.level))]}"/>`;
+  }).join("");
+  const ballAt = (i) => plan.path[Math.min(i, steps - 1)] ?? { x: 0, y: plan.rows - 1 };
+  let ball = `<circle cx="${num4(px(ballAt(0).x))}" cy="${num4(py(ballAt(0).y))}" r="3.2" fill="${look.fg}"/>`;
+  let paddle = `<rect x="${num4(px(0) - 14)}" y="${num4(bottom + 4)}" width="30" height="5" rx="2.5" fill="${look.accent}"/>`;
+  if (motion && steps > 1) {
+    const frames = (f) => plan.path.map((p, i) => `${num4(i / (steps - 1) * 88)}%{transform:translate(${f(p)})}`).join("");
+    const first = ballAt(0);
+    css += `.ball{animation:ar-ball ${num4(total)}s linear infinite}@keyframes ar-ball{${frames((p) => `${num4((p.x - first.x) * step)}px,${num4((p.y - first.y) * step)}px`)}100%{transform:translate(0,0)}}`;
+    css += `.pad{animation:ar-pad ${num4(total)}s linear infinite}@keyframes ar-pad{${frames((p) => `${num4((p.x - first.x) * step)}px,0`)}100%{transform:translate(0,0)}}`;
+    css += `.k{animation-duration:${num4(total)}s;animation-iteration-count:infinite;animation-timing-function:linear}`;
+    for (const bucket of [...buckets].sort((a, b) => a - b)) {
+      const at = ((bucket * 4 + 3) / (steps - 1) * 88).toFixed(2);
+      css += `@keyframes ar-k${bucket}{0%,${at}%{opacity:1}${num4(Number(at) + 0.01)}%,99.9%{opacity:0}100%{opacity:1}}.k${bucket}{animation-name:ar-k${bucket}}`;
+    }
+    css += `@media (prefers-reduced-motion:reduce){.ball,.pad,.k{animation:none!important}}`;
+    ball = `<g class="ball">${ball}</g>`;
+    paddle = `<g class="pad">${paddle}</g>`;
+  }
+  const hud = [
+    mono("PLAYABLE SIGNAL", PAD6, y0 + 22, look.accent, 'font-size="11.5" font-weight="700" letter-spacing="2"'),
+    mono(`PLAYER  @${truncate(profile.login, 18)}`, PAD6, y0 + 52, look.fg, 'font-size="13" font-weight="700"'),
+    profile.contributions ? mono(`SCORE   ${formatNumber(profile.contributions.total)}`, PAD6, y0 + 74, look.muted, 'font-size="12.5"') : "",
+    profile.contributions ? mono(`STREAK  ${profile.contributions.currentStreak}`, PAD6, y0 + 94, look.muted, 'font-size="12.5"') : "",
+    blocks.has("stats") ? mono(`STARS   ${formatNumber(profile.totalStars)}`, PAD6, y0 + 114, look.muted, 'font-size="12.5"') : ""
+  ].join("");
+  const height = bottom + 24 - y0;
+  return { markup: hud + bricks + ball + paddle, css, height };
+}
+var SPECS = [
+  { id: "spaceshooter", name: "Space Shooter", description: "Terminal telemetry and a ship that zaps your active days, column by column, then starts over.", tags: ["animated", "game", "space"], hue: 262, game: "shooter" },
+  { id: "jetrunner", name: "Jet Runner", description: "A jet flies your year as terrain, one bar per week, and collects an orb for every week you were active.", tags: ["animated", "game", "sky"], hue: 18, game: "runner" },
+  { id: "playablesignal", name: "Playable Signal", description: "Your contribution days as bricks and a ball clearing them: a tiny arcade cabinet for your activity.", tags: ["animated", "game", "arcade"], hue: 140, game: "signal" }
+];
+function renderSvg3(spec, profile, config, variant) {
+  const look = lookOf(spec.hue, variant, profile);
+  const blocks = new Set(config.blocks);
+  const days = blocks.has("activity") && profile.contributions ? profile.contributions.days : [];
+  const y0 = PAD6;
+  let part;
+  if (days.length === 0) {
+    const name = spec.name.toUpperCase();
+    const height2 = 190;
+    part = {
+      markup: mono(name, PAD6, y0 + 22, look.accent, 'font-size="11.5" font-weight="700" letter-spacing="2"') + telemetry(profile, blocks, look, PAD6, y0 + 52) + sans(blocks.has("activity") ? "Your game appears here" : "Turn on the activity section to play", 360, y0 + 70, look.fg, 'font-size="18" font-weight="700"') + sans(blocks.has("activity") ? "It is played on your contribution calendar, added at your first automatic update." : "The game is drawn from your contribution calendar.", 360, y0 + 94, look.muted, 'font-size="12.5"'),
+      css: "",
+      height: height2
+    };
+  } else if (spec.game === "shooter") part = shooter(profile, config, look, days, y0, blocks);
+  else if (spec.game === "runner") part = runner(profile, config, look, days, y0, blocks);
+  else part = signal(profile, config, look, days, y0, blocks);
+  const head = `<text x="${W - PAD6}" y="${y0 + part.height + 8}" text-anchor="end" class="mono" font-size="11" fill="${look.muted}">${xmlEscape(profile.name ?? profile.login)}</text>`;
+  const height = y0 + part.height + PAD6 - 6;
+  return shell({
+    height,
+    look,
+    variant,
+    title: `${spec.name}: ${profile.name ?? profile.login} (@${profile.login}) as a game on their contribution calendar`,
+    css: part.css,
+    body: part.markup + head,
+    glow: [0.5, 1]
+  });
+}
+function templateOf(spec) {
+  return {
+    id: spec.id,
+    name: spec.name,
+    description: spec.description,
+    tags: spec.tags,
+    needsAvatar: false,
+    render(profile, config) {
+      const assets = variantsFor(config.theme).map((variant) => ({ path: assetPath(spec.id, variant), content: renderSvg3(spec, profile, config, variant) }));
+      return { readme: imageReadme(profile, config, spec.id, W, describeProfile(profile, config, `played as ${spec.name.toLowerCase()} on a contribution calendar`, { activity: true })), assets };
+    }
+  };
+}
+var arcadeTemplates = SPECS.map(templateOf);
+
 // ../core/src/templates/brief.ts
 var WIDTH3 = 900;
-var PAD6 = 44;
+var PAD7 = 44;
 var PHOTO = 96;
 var PHOTO_GAP = 28;
 var COL_GAP = 40;
@@ -17033,10 +17410,10 @@ var PAPER = {
   light: { bg: "#fbfaf6", fg: "#1c1b19", muted: "#68655d", rule: "#dedad0", track: "#ebe7dc" },
   dark: { bg: "#14161a", fg: "#ecebe6", muted: "#9a978f", rule: "#2c2f35", track: "#23262c" }
 };
-function label2(text, x, y, color) {
+function label3(text, x, y, color) {
   return `<text x="${x}" y="${y}" font-size="12" font-weight="700" letter-spacing="1.8" fill="${color}">${xmlEscape(text)}</text>`;
 }
-function renderSvg3(profile, config, variant) {
+function renderSvg4(profile, config, variant) {
   const t = PAPER[variant];
   const accent2 = profile.avatar?.grid.tint ? accentColors(profile.avatar.grid.tint, variant)[0] ?? t.fg : FALLBACK_ACCENTS[variant][1] ?? t.fg;
   const motion = config.motion;
@@ -17045,15 +17422,15 @@ function renderSvg3(profile, config, variant) {
   const next = () => step++ * 0.1;
   const uri = profile.avatar?.dataUri;
   const hasPhoto = Boolean(uri && SAFE_DATA_URI.test(uri));
-  const textWidth = hasPhoto ? WIDTH3 - PAD6 * 2 - PHOTO - PHOTO_GAP : WIDTH3 - PAD6 * 2;
-  let y = PAD6 + 38;
+  const textWidth = hasPhoto ? WIDTH3 - PAD7 * 2 - PHOTO - PHOTO_GAP : WIDTH3 - PAD7 * 2;
+  let y = PAD7 + 38;
   const header = [
-    `<text x="${PAD6}" y="${y}" class="serif" font-size="42" font-weight="700" fill="${t.fg}">${xmlEscape(truncate(profile.name ?? profile.login, Math.floor(textWidth / 22)))}</text>`
+    `<text x="${PAD7}" y="${y}" class="serif" font-size="42" font-weight="700" fill="${t.fg}">${xmlEscape(truncate(profile.name ?? profile.login, Math.floor(textWidth / 22)))}</text>`
   ];
   if (config.text.headline) {
     y += 34;
     header.push(
-      `<text x="${PAD6}" y="${y}" font-size="19" font-weight="600" fill="${accent2}">${xmlEscape(truncate(config.text.headline, Math.floor(textWidth / 10)))}</text>`
+      `<text x="${PAD7}" y="${y}" font-size="19" font-weight="600" fill="${accent2}">${xmlEscape(truncate(config.text.headline, Math.floor(textWidth / 10)))}</text>`
     );
   }
   const website = safeUrl(profile.website)?.replace(/^https?:\/\//, "").replace(/\/$/, "");
@@ -17061,26 +17438,26 @@ function renderSvg3(profile, config, variant) {
   if (contact.length > 0) {
     y += 28;
     header.push(
-      `<text x="${PAD6}" y="${y}" font-size="14" fill="${t.muted}">${xmlEscape(truncate(contact.join("  \xB7  "), Math.floor(textWidth / 7.4)))}</text>`
+      `<text x="${PAD7}" y="${y}" font-size="14" fill="${t.muted}">${xmlEscape(truncate(contact.join("  \xB7  "), Math.floor(textWidth / 7.4)))}</text>`
     );
   }
   const bio = config.text.bio ?? profile.bio;
   if (bio) {
     wrap(bio, Math.floor(textWidth / 7.6), 3).forEach((line, index) => {
       y += index === 0 ? 32 : 22;
-      header.push(`<text x="${PAD6}" y="${y}" font-size="15" fill="${t.fg}" fill-opacity="0.85">${xmlEscape(line)}</text>`);
+      header.push(`<text x="${PAD7}" y="${y}" font-size="15" fill="${t.fg}" fill-opacity="0.85">${xmlEscape(line)}</text>`);
     });
   }
   if (hasPhoto && uri) {
-    const x = WIDTH3 - PAD6 - PHOTO;
+    const x = WIDTH3 - PAD7 - PHOTO;
     header.push(
-      `<clipPath id="photo"><rect x="${x}" y="${PAD6}" width="${PHOTO}" height="${PHOTO}" rx="16"/></clipPath><image href="${uri}" x="${x}" y="${PAD6}" width="${PHOTO}" height="${PHOTO}" preserveAspectRatio="xMidYMid slice" clip-path="url(#photo)"/><rect x="${x + 0.5}" y="${PAD6 + 0.5}" width="${PHOTO - 1}" height="${PHOTO - 1}" rx="16" fill="none" stroke="${t.rule}"/>`
+      `<clipPath id="photo"><rect x="${x}" y="${PAD7}" width="${PHOTO}" height="${PHOTO}" rx="16"/></clipPath><image href="${uri}" x="${x}" y="${PAD7}" width="${PHOTO}" height="${PHOTO}" preserveAspectRatio="xMidYMid slice" clip-path="url(#photo)"/><rect x="${x + 0.5}" y="${PAD7 + 0.5}" width="${PHOTO - 1}" height="${PHOTO - 1}" rx="16" fill="none" stroke="${t.rule}"/>`
     );
   }
-  const headerBottom = Math.max(y, hasPhoto ? PAD6 + PHOTO : 0) + 28;
+  const headerBottom = Math.max(y, hasPhoto ? PAD7 + PHOTO : 0) + 28;
   parts.push(rise(header.join(""), motion, next()));
   parts.push(
-    `<rect x="${PAD6}" y="${headerBottom}" width="${WIDTH3 - PAD6 * 2}" height="1" fill="${t.rule}"/><rect x="${PAD6}" y="${headerBottom - 1}" width="56" height="3" fill="${accent2}"/>`
+    `<rect x="${PAD7}" y="${headerBottom}" width="${WIDTH3 - PAD7 * 2}" height="1" fill="${t.rule}"/><rect x="${PAD7}" y="${headerBottom - 1}" width="56" height="3" fill="${accent2}"/>`
   );
   let cursor = headerBottom + 32;
   if (config.blocks.includes("stats")) {
@@ -17091,49 +17468,49 @@ function renderSvg3(profile, config, variant) {
       [formatNumber(profile.followers), "FOLLOWERS"]
     ];
     if (Number.isFinite(since)) cells.push([String(since), "MEMBER SINCE"]);
-    const cellWidth = (WIDTH3 - PAD6 * 2) / cells.length;
+    const cellWidth = (WIDTH3 - PAD7 * 2) / cells.length;
     const markup = cells.map(([value, caption], index) => {
-      const x = PAD6 + index * cellWidth + (index > 0 ? 22 : 0);
-      const divider = index > 0 ? `<rect x="${(PAD6 + index * cellWidth).toFixed(1)}" y="${cursor}" width="1" height="54" fill="${t.rule}"/>` : "";
+      const x = PAD7 + index * cellWidth + (index > 0 ? 22 : 0);
+      const divider = index > 0 ? `<rect x="${(PAD7 + index * cellWidth).toFixed(1)}" y="${cursor}" width="1" height="54" fill="${t.rule}"/>` : "";
       return divider + `<text x="${x.toFixed(1)}" y="${cursor + 34}" class="serif" font-size="34" font-weight="700" fill="${t.fg}">${xmlEscape(value)}</text><text x="${x.toFixed(1)}" y="${cursor + 54}" font-size="11" letter-spacing="1.3" fill="${t.muted}">${caption}</text>`;
     }).join("");
     parts.push(rise(markup, motion, next()));
     cursor += 54 + 22;
-    parts.push(`<rect x="${PAD6}" y="${cursor}" width="${WIDTH3 - PAD6 * 2}" height="1" fill="${t.rule}"/>`);
+    parts.push(`<rect x="${PAD7}" y="${cursor}" width="${WIDTH3 - PAD7 * 2}" height="1" fill="${t.rule}"/>`);
     cursor += 32;
   }
   const showWork = config.blocks.includes("projects") && profile.topRepos.length > 0;
   const showStack = config.blocks.includes("languages") && profile.languages.length > 0;
-  const workWidth = showStack ? WORK_WIDTH : WIDTH3 - PAD6 * 2;
-  const stackX = showWork ? PAD6 + WORK_WIDTH + COL_GAP : PAD6;
-  const stackWidth = showWork ? WIDTH3 - PAD6 - stackX : 360;
+  const workWidth = showStack ? WORK_WIDTH : WIDTH3 - PAD7 * 2;
+  const stackX = showWork ? PAD7 + WORK_WIDTH + COL_GAP : PAD7;
+  const stackWidth = showWork ? WIDTH3 - PAD7 - stackX : 360;
   let bottom = cursor;
   if (showWork) {
     let iy = cursor + 36;
-    const work = [label2("SELECTED WORK", PAD6, cursor + 8, accent2)];
+    const work = [label3("SELECTED WORK", PAD7, cursor + 8, accent2)];
     for (const repo of profile.topRepos.slice(0, 4)) {
       work.push(
-        `<text x="${PAD6}" y="${iy}" font-size="16" font-weight="700" fill="${t.fg}">${xmlEscape(truncate(repo.name, Math.floor((workWidth - 80) / 9)))}</text><text x="${PAD6 + workWidth}" y="${iy}" text-anchor="end" font-size="13" fill="${t.muted}">\u2605 ${xmlEscape(formatNumber(repo.stars))}</text>`
+        `<text x="${PAD7}" y="${iy}" font-size="16" font-weight="700" fill="${t.fg}">${xmlEscape(truncate(repo.name, Math.floor((workWidth - 80) / 9)))}</text><text x="${PAD7 + workWidth}" y="${iy}" text-anchor="end" font-size="13" fill="${t.muted}">\u2605 ${xmlEscape(formatNumber(repo.stars))}</text>`
       );
       let ly = iy;
       if (repo.description) {
         for (const line of wrap(repo.description, Math.floor(workWidth / 6.9), 2)) {
           ly += 20;
-          work.push(`<text x="${PAD6}" y="${ly}" font-size="13.5" fill="${t.muted}">${xmlEscape(line)}</text>`);
+          work.push(`<text x="${PAD7}" y="${ly}" font-size="13.5" fill="${t.muted}">${xmlEscape(line)}</text>`);
         }
       }
       if (repo.language) {
         ly += 20;
-        work.push(`<text x="${PAD6}" y="${ly}" font-size="12.5" fill="${accent2}">${xmlEscape(repo.language)}</text>`);
+        work.push(`<text x="${PAD7}" y="${ly}" font-size="12.5" fill="${accent2}">${xmlEscape(repo.language)}</text>`);
       }
-      work.push(`<rect x="${PAD6}" y="${ly + 14}" width="${workWidth}" height="1" fill="${t.rule}"/>`);
+      work.push(`<rect x="${PAD7}" y="${ly + 14}" width="${workWidth}" height="1" fill="${t.rule}"/>`);
       iy = ly + 14 + 30;
     }
     parts.push(rise(work.join(""), motion, next()));
     bottom = Math.max(bottom, iy - 30);
   }
   if (showStack) {
-    const stack = [label2("STACK", stackX, cursor + 8, accent2)];
+    const stack = [label3("STACK", stackX, cursor + 8, accent2)];
     let sy = cursor + 38;
     for (const language of profile.languages) {
       const filled = Math.max(3, language.percent / 100 * stackWidth);
@@ -17149,12 +17526,12 @@ function renderSvg3(profile, config, variant) {
   const footerY = bottom + 18;
   parts.push(
     rise(
-      `<rect x="${PAD6}" y="${footerY}" width="${WIDTH3 - PAD6 * 2}" height="1" fill="${t.rule}"/><text x="${PAD6}" y="${footerY + 28}" font-size="13" fill="${t.muted}">github.com/${xmlEscape(profile.login)}</text>`,
+      `<rect x="${PAD7}" y="${footerY}" width="${WIDTH3 - PAD7 * 2}" height="1" fill="${t.rule}"/><text x="${PAD7}" y="${footerY + 28}" font-size="13" fill="${t.muted}">github.com/${xmlEscape(profile.login)}</text>`,
       motion,
       next()
     )
   );
-  const height = footerY + 28 + PAD6 - 12;
+  const height = footerY + 28 + PAD7 - 12;
   const title = `${profile.name ?? profile.login} (@${profile.login}) on GitHub`;
   const css = motion ? `.rise{animation:rise .6s ease both}
 @keyframes rise{from{opacity:0;transform:translateY(6px)}}
@@ -17181,7 +17558,7 @@ var brief = {
   render(profile, config) {
     const assets = variantsFor(config.theme).map((variant) => ({
       path: assetPath("brief", variant),
-      content: renderSvg3(profile, config, variant)
+      content: renderSvg4(profile, config, variant)
     }));
     return { readme: imageReadme(profile, config, "brief", WIDTH3, describeProfile(profile, config)), assets };
   }
@@ -17189,7 +17566,7 @@ var brief = {
 
 // ../core/src/templates/buildlog.ts
 var WIDTH4 = 900;
-var PAD7 = 44;
+var PAD8 = 44;
 var AXIS_X = 168;
 var CONTENT_X = 196;
 var SPARK_WEEKS = 26;
@@ -17213,7 +17590,7 @@ function groupByMonth(repos, limit = MAX_ENTRIES) {
   }
   return groups;
 }
-var num4 = (value) => String(Math.round(value * 10) / 10 || 0);
+var num5 = (value) => String(Math.round(value * 10) / 10 || 0);
 function lookFor3(variant, hue) {
   const dark = variant === "dark";
   return {
@@ -17226,7 +17603,7 @@ function lookFor3(variant, hue) {
     accent2: hslToHex((hue + 40) % 360, 0.75, dark ? 0.62 : 0.42)
   };
 }
-function renderSvg4(profile, config, variant) {
+function renderSvg5(profile, config, variant) {
   const look = lookFor3(variant, hueOf(profile.avatar?.grid.tint) ?? 165);
   const motion = config.motion;
   const blocks = new Set(config.blocks);
@@ -17236,35 +17613,35 @@ function renderSvg4(profile, config, variant) {
   const recent = profile.recentRepos ?? [];
   const latest = recent.find((r) => r.pushedAt && Number.isFinite(Date.parse(r.pushedAt)));
   const latestAgo = latest?.pushedAt && profile.fetchedAt ? timeAgo(latest.pushedAt, profile.fetchedAt) : null;
-  let header = `<text class="mono" x="${PAD7}" y="${PAD7 + 4}" font-size="12.5" letter-spacing="2" fill="${look.accent}">BUILD LOG</text><text x="${PAD7}" y="${PAD7 + 44}" font-size="36" font-weight="800" fill="${look.fg}">${xmlEscape(truncate(profile.name ?? profile.login, 28))}</text>`;
+  let header = `<text class="mono" x="${PAD8}" y="${PAD8 + 4}" font-size="12.5" letter-spacing="2" fill="${look.accent}">BUILD LOG</text><text x="${PAD8}" y="${PAD8 + 44}" font-size="36" font-weight="800" fill="${look.fg}">${xmlEscape(truncate(profile.name ?? profile.login, 28))}</text>`;
   const sub2 = [profile.name ? `@${profile.login}` : "", config.text.headline ? truncate(config.text.headline, 56) : ""].filter(Boolean).join("  \xB7  ");
-  if (sub2) header += `<text x="${PAD7}" y="${PAD7 + 70}" font-size="14.5" fill="${look.muted}">${xmlEscape(sub2)}</text>`;
+  if (sub2) header += `<text x="${PAD8}" y="${PAD8 + 70}" font-size="14.5" fill="${look.muted}">${xmlEscape(sub2)}</text>`;
   if (blocks.has("stats")) {
     const facts = [];
     if (latestAgo) facts.push([latestAgo, "LAST PUSH"]);
     if (profile.activeRepos !== void 0) facts.push([formatNumber(profile.activeRepos), "ACTIVE, 90 DAYS"]);
     facts.push([formatNumber(profile.publicRepos), "REPOSITORIES"]);
     facts.forEach(([value, caption], index) => {
-      const x = WIDTH4 - PAD7 - (facts.length - 1 - index) * 150;
-      header += `<text x="${x}" y="${PAD7 + 26}" text-anchor="end" font-size="21" font-weight="800" fill="${look.fg}">${xmlEscape(value)}</text><text class="mono" x="${x}" y="${PAD7 + 44}" text-anchor="end" font-size="10" letter-spacing="1.2" fill="${look.muted}">${xmlEscape(caption)}</text>`;
+      const x = WIDTH4 - PAD8 - (facts.length - 1 - index) * 150;
+      header += `<text x="${x}" y="${PAD8 + 26}" text-anchor="end" font-size="21" font-weight="800" fill="${look.fg}">${xmlEscape(value)}</text><text class="mono" x="${x}" y="${PAD8 + 44}" text-anchor="end" font-size="10" letter-spacing="1.2" fill="${look.muted}">${xmlEscape(caption)}</text>`;
     });
   }
   parts.push(rise(header, motion, next()));
-  let cursor = PAD7 + 96;
+  let cursor = PAD8 + 96;
   const activity = profile.contributions;
   if (blocks.has("activity") && activity) {
     const weeks = recentWeeks(activity.days, SPARK_WEEKS);
     const peak = Math.max(...weeks, 1);
-    const width = WIDTH4 - PAD7 * 2;
+    const width = WIDTH4 - PAD8 * 2;
     const barW = (width - 4 * (weeks.length - 1)) / weeks.length;
     const bars = weeks.map((total, index) => {
       const h = Math.max(2, total / peak * 38);
-      return `<rect x="${num4(PAD7 + index * (barW + 4))}" y="${num4(cursor + 38 - h)}" width="${num4(barW)}" height="${num4(h)}" rx="2" fill="${index === weeks.length - 1 ? look.accent2 : look.accent}" fill-opacity="${total === 0 ? 0.25 : 0.9}"/>`;
+      return `<rect x="${num5(PAD8 + index * (barW + 4))}" y="${num5(cursor + 38 - h)}" width="${num5(barW)}" height="${num5(h)}" rx="2" fill="${index === weeks.length - 1 ? look.accent2 : look.accent}" fill-opacity="${total === 0 ? 0.25 : 0.9}"/>`;
     }).join("");
     const sum = weeks.reduce((a, b) => a + b, 0);
     parts.push(
       rise(
-        bars + `<text class="mono" x="${PAD7}" y="${cursor + 58}" font-size="11.5" fill="${look.muted}">${xmlEscape(`${formatNumber(sum)} contributions in the last ${weeks.length} weeks  \xB7  current streak ${plural(activity.currentStreak, "day")}`)}</text>`,
+        bars + `<text class="mono" x="${PAD8}" y="${cursor + 58}" font-size="11.5" fill="${look.muted}">${xmlEscape(`${formatNumber(sum)} contributions in the last ${weeks.length} weeks  \xB7  current streak ${plural(activity.currentStreak, "day")}`)}</text>`,
         motion,
         next()
       )
@@ -17302,7 +17679,7 @@ function renderSvg4(profile, config, variant) {
       }
       const first = dots[0] ?? cursor;
       const last = dots[dots.length - 1] ?? first;
-      const axis = `<rect class="axis" x="${AXIS_X - 1}" y="${num4(first)}" width="2" height="${num4(Math.max(0, last - first))}" fill="url(#axis)"/>`;
+      const axis = `<rect class="axis" x="${AXIS_X - 1}" y="${num5(first)}" width="2" height="${num5(Math.max(0, last - first))}" fill="url(#axis)"/>`;
       parts.push(rise(axis + markup, motion, next()));
       cursor = y;
     } else {
@@ -17320,14 +17697,14 @@ function renderSvg4(profile, config, variant) {
     const text = profile.languages.slice(0, 4).map((l) => `${truncate(l.name, 14)} ${l.percent}%`).join("   ");
     parts.push(
       rise(
-        `<text class="mono" x="${PAD7}" y="${num4(cursor)}" font-size="12.5" fill="${look.muted}">built with  <tspan fill="${look.fg}">${xmlEscape(text)}</tspan></text>`,
+        `<text class="mono" x="${PAD8}" y="${num5(cursor)}" font-size="12.5" fill="${look.muted}">built with  <tspan fill="${look.fg}">${xmlEscape(text)}</tspan></text>`,
         motion,
         next()
       )
     );
     cursor += 24;
   }
-  const height = Math.ceil(cursor + PAD7 - 22);
+  const height = Math.ceil(cursor + PAD8 - 22);
   const title = `${profile.name ?? profile.login} (@${profile.login}) on GitHub`;
   const css = motion ? `.rise{animation:rise .6s ease both}@keyframes rise{from{opacity:0;transform:translateX(-6px)}}.dot{transform-box:fill-box;transform-origin:center;animation:pop .45s cubic-bezier(.3,1.6,.5,1) .3s both}@keyframes pop{from{transform:scale(0)}}@media (prefers-reduced-motion:reduce){.rise,.dot{animation:none}}` : "";
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH4}" height="${height}" viewBox="0 0 ${WIDTH4} ${height}" role="img" aria-labelledby="t">
@@ -17355,7 +17732,7 @@ var buildlog = {
   render(profile, config) {
     const assets = variantsFor(config.theme).map((variant) => ({
       path: assetPath("buildlog", variant),
-      content: renderSvg4(profile, config, variant)
+      content: renderSvg5(profile, config, variant)
     }));
     const entries = config.blocks.includes("projects") ? groupByMonth(profile.recentRepos ?? []).flatMap((g) => g.items) : [];
     const extra = entries.length > 0 ? `a timeline of recent work: ${entries.map((r) => r.name).join(", ")}` : void 0;
@@ -17365,7 +17742,7 @@ var buildlog = {
 
 // ../core/src/templates/galaxy.ts
 var WIDTH5 = 900;
-var PAD8 = 36;
+var PAD9 = 36;
 var MAX_PLANETS = 6;
 var FIRST_ORBIT = 76;
 var ORBIT_STEP = 28;
@@ -17401,7 +17778,7 @@ function languageHue(language) {
   for (const char of language.toLowerCase()) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619) >>> 0;
   return hash % 360;
 }
-var num5 = (value) => String(Math.round(value * 10) / 10 || 0);
+var num6 = (value) => String(Math.round(value * 10) / 10 || 0);
 function lookFor4(variant, hue) {
   const dark = variant === "dark";
   return {
@@ -17414,7 +17791,7 @@ function lookFor4(variant, hue) {
     none: dark ? "#8b93b8" : "#7a82a6"
   };
 }
-function renderSvg5(profile, config, variant) {
+function renderSvg6(profile, config, variant) {
   const look = lookFor4(variant, hueOf(profile.avatar?.grid.tint) ?? 225);
   const motion = config.motion;
   const blocks = new Set(config.blocks);
@@ -17423,9 +17800,9 @@ function renderSvg5(profile, config, variant) {
   let step = 0;
   const next = () => step++ * 0.1;
   const subline = [profile.name ? `@${profile.login}` : "", config.text.headline ? truncate(config.text.headline, 46) : ""].filter(Boolean);
-  let header = `<text x="${PAD8}" y="${PAD8 + 24}" font-size="28" font-weight="800" fill="${look.fg}">${xmlEscape(truncate(profile.name ?? profile.login, 28))}</text>`;
+  let header = `<text x="${PAD9}" y="${PAD9 + 24}" font-size="28" font-weight="800" fill="${look.fg}">${xmlEscape(truncate(profile.name ?? profile.login, 28))}</text>`;
   if (subline.length > 0) {
-    header += `<text x="${PAD8}" y="${PAD8 + 46}" font-size="14" fill="${look.muted}">${xmlEscape(subline.join("  \xB7  "))}</text>`;
+    header += `<text x="${PAD9}" y="${PAD9 + 46}" font-size="14" fill="${look.muted}">${xmlEscape(subline.join("  \xB7  "))}</text>`;
   }
   if (blocks.has("stats")) {
     const stats = [
@@ -17434,20 +17811,20 @@ function renderSvg5(profile, config, variant) {
       [formatNumber(profile.followers), "FOLLOWERS"]
     ];
     stats.forEach(([value, caption], index) => {
-      const x = WIDTH5 - PAD8 - (stats.length - 1 - index) * 104;
-      header += `<text x="${x}" y="${PAD8 + 22}" text-anchor="end" font-size="22" font-weight="800" fill="${look.fg}">${xmlEscape(value)}</text><text class="mono" x="${x}" y="${PAD8 + 40}" text-anchor="end" font-size="10" letter-spacing="1.2" fill="${look.muted}">${caption}</text>`;
+      const x = WIDTH5 - PAD9 - (stats.length - 1 - index) * 104;
+      header += `<text x="${x}" y="${PAD9 + 22}" text-anchor="end" font-size="22" font-weight="800" fill="${look.fg}">${xmlEscape(value)}</text><text class="mono" x="${x}" y="${PAD9 + 40}" text-anchor="end" font-size="10" letter-spacing="1.2" fill="${look.muted}">${caption}</text>`;
     });
   }
   parts.push(rise(header, motion, next()));
-  let cursor = PAD8 + 64;
+  let cursor = PAD9 + 64;
   let bottom = cursor;
   const planets = blocks.has("projects") ? layoutGalaxy(profile.topRepos) : [];
   if (planets.length > 0) {
     const reach = Math.max(...planets.map((p) => p.orbit + p.size + (p.moons > 0 ? p.size + 8 : 0))) + 12;
-    const cx = PAD8 + reach + 4;
+    const cx = PAD9 + reach + 4;
     const cy = cursor + 8 + reach;
     const legendX = cx + reach + 36;
-    const legendWidth = WIDTH5 - PAD8 - legendX;
+    const legendWidth = WIDTH5 - PAD9 - legendX;
     const uri = profile.avatar?.dataUri;
     const hasPhoto = Boolean(uri && SAFE_DATA_URI.test(uri));
     const initial = [...profile.name ?? profile.login][0]?.toUpperCase() ?? "?";
@@ -17458,19 +17835,19 @@ function renderSvg5(profile, config, variant) {
       const px = cx + p.orbit;
       const moons = Array.from({ length: p.moons }, (_v, k) => {
         const distance = p.size + 6 + k * 3;
-        return `<g transform="rotate(${num5(360 / p.moons * k)})"><g class="moon" style="animation-duration:${num5(3.5 + k * 1.3)}s"><circle cx="${num5(distance)}" cy="0" r="2.2" fill="${look.fg}" fill-opacity="0.85"/></g></g>`;
+        return `<g transform="rotate(${num6(360 / p.moons * k)})"><g class="moon" style="animation-duration:${num6(3.5 + k * 1.3)}s"><circle cx="${num6(distance)}" cy="0" r="2.2" fill="${look.fg}" fill-opacity="0.85"/></g></g>`;
       }).join("");
-      return `<g transform="rotate(${num5(p.angle)} ${cx} ${cy})"><g class="orbit" style="transform-origin:${cx}px ${cy}px;animation-duration:${p.period}s"><g transform="translate(${num5(px)} ${cy})"><circle r="${num5(p.size)}" fill="${color}"/><circle cx="${num5(-p.size * 0.3)}" cy="${num5(-p.size * 0.3)}" r="${num5(p.size * 0.42)}" fill="#ffffff" fill-opacity="0.22"/>` + moons + `</g></g></g>`;
+      return `<g transform="rotate(${num6(p.angle)} ${cx} ${cy})"><g class="orbit" style="transform-origin:${cx}px ${cy}px;animation-duration:${p.period}s"><g transform="translate(${num6(px)} ${cy})"><circle r="${num6(p.size)}" fill="${color}"/><circle cx="${num6(-p.size * 0.3)}" cy="${num6(-p.size * 0.3)}" r="${num6(p.size * 0.42)}" fill="#ffffff" fill-opacity="0.22"/>` + moons + `</g></g></g>`;
     }).join("");
     parts.push(rise(rings + sun + bodies, motion, next()));
     const legendTop = cy - planets.length * LEGEND_ROW / 2 - 24;
     const rows = planets.map((p, index) => {
       const y = legendTop + index * LEGEND_ROW;
       const meta = [`\u2605 ${formatNumber(p.stars)}`, p.language, p.forks > 0 ? `${formatNumber(p.forks)} forks` : null].filter((v) => Boolean(v)).join("  \xB7  ");
-      return `<circle cx="${legendX + 6}" cy="${num5(y + 6)}" r="6" fill="${colorOf(p.language)}"/><text x="${legendX + 20}" y="${num5(y + 11)}" font-size="14.5" font-weight="700" fill="${look.fg}">${xmlEscape(truncate(p.name, Math.max(8, Math.floor((legendWidth - 20) / 8.4))))}</text><text class="mono" x="${legendX + 20}" y="${num5(y + 29)}" font-size="11.5" fill="${look.muted}">${xmlEscape(truncate(meta, Math.floor((legendWidth - 20) / 6.9)))}</text>`;
+      return `<circle cx="${legendX + 6}" cy="${num6(y + 6)}" r="6" fill="${colorOf(p.language)}"/><text x="${legendX + 20}" y="${num6(y + 11)}" font-size="14.5" font-weight="700" fill="${look.fg}">${xmlEscape(truncate(p.name, Math.max(8, Math.floor((legendWidth - 20) / 8.4))))}</text><text class="mono" x="${legendX + 20}" y="${num6(y + 29)}" font-size="11.5" fill="${look.muted}">${xmlEscape(truncate(meta, Math.floor((legendWidth - 20) / 6.9)))}</text>`;
     }).join("");
     const keyY = legendTop + planets.length * LEGEND_ROW + 14;
-    const key = ["size shows stars", "closest to the sun is most starred", "a moon is a fork: 1, 10+, 100+"].map((line, index) => `<text class="mono" x="${legendX}" y="${num5(keyY + index * 17)}" font-size="11" fill="${look.muted}" fill-opacity="0.85">${xmlEscape(line)}</text>`).join("");
+    const key = ["size shows stars", "closest to the sun is most starred", "a moon is a fork: 1, 10+, 100+"].map((line, index) => `<text class="mono" x="${legendX}" y="${num6(keyY + index * 17)}" font-size="11" fill="${look.muted}" fill-opacity="0.85">${xmlEscape(line)}</text>`).join("");
     parts.push(rise(rows + key, motion, next()));
     bottom = Math.max(cy + reach, keyY + 3 * 17);
   } else if (blocks.has("projects")) {
@@ -17489,21 +17866,21 @@ function renderSvg5(profile, config, variant) {
     const text = profile.languages.slice(0, 4).map((l) => `${truncate(l.name, 14)} ${l.percent}%`).join("   ");
     parts.push(
       rise(
-        `<text class="mono" x="${PAD8}" y="${num5(cursor)}" font-size="12.5" fill="${look.muted}">written in  <tspan fill="${look.fg}">${xmlEscape(text)}</tspan></text>`,
+        `<text class="mono" x="${PAD9}" y="${num6(cursor)}" font-size="12.5" fill="${look.muted}">written in  <tspan fill="${look.fg}">${xmlEscape(text)}</tspan></text>`,
         motion,
         next()
       )
     );
     cursor += 24;
   }
-  const height = Math.ceil(cursor + PAD8 - 18);
+  const height = Math.ceil(cursor + PAD9 - 18);
   const random = seeded(profile.login);
-  const stars2 = variant === "dark" ? Array.from({ length: 70 }, () => {
+  const stars3 = variant === "dark" ? Array.from({ length: 70 }, () => {
     const x = random() * WIDTH5;
     const y = random() * height;
     const r = 0.4 + random() * 1.1;
     const o = 0.2 + random() * 0.6;
-    return `<circle cx="${num5(x)}" cy="${num5(y)}" r="${num5(r)}" fill="#ffffff" fill-opacity="${num5(o)}"/>`;
+    return `<circle cx="${num6(x)}" cy="${num6(y)}" r="${num6(r)}" fill="#ffffff" fill-opacity="${num6(o)}"/>`;
   }).join("") : "";
   const css = motion ? `.rise{animation:rise .6s ease both}
 @keyframes rise{from{opacity:0}}
@@ -17526,7 +17903,7 @@ text{font-family:${FONT_SANS}}
 ${css}
 </style>
 <rect width="${WIDTH5}" height="${height}" rx="20" fill="url(#sky)"/>
-${stars2}
+${stars3}
 ${parts.filter(Boolean).join("\n")}
 </svg>
 `;
@@ -17540,7 +17917,7 @@ var galaxy = {
   render(profile, config) {
     const assets = variantsFor(config.theme).map((variant) => ({
       path: assetPath("galaxy", variant),
-      content: renderSvg5(profile, config, variant)
+      content: renderSvg6(profile, config, variant)
     }));
     const planets = config.blocks.includes("projects") ? layoutGalaxy(profile.topRepos) : [];
     const extra = planets.length > 0 ? `a galaxy with one planet for each project: ${planets.map((p) => p.name).join(", ")}` : void 0;
@@ -17550,7 +17927,7 @@ var galaxy = {
 
 // ../core/src/templates/launchpad.ts
 var WIDTH6 = 900;
-var PAD9 = 40;
+var PAD10 = 40;
 var PHOTO2 = 112;
 var WEEKS = 12;
 var GAP2 = 16;
@@ -17558,7 +17935,7 @@ function pickProjects(repos) {
   const ranked = [...repos].sort((a, b) => b.stars - a.stars || a.name.localeCompare(b.name));
   return { featured: ranked[0] ?? null, others: ranked.slice(1, 3) };
 }
-var num6 = (value) => String(Math.round(value * 10) / 10 || 0);
+var num7 = (value) => String(Math.round(value * 10) / 10 || 0);
 function lookFor5(variant, hue) {
   const dark = variant === "dark";
   return {
@@ -17579,7 +17956,7 @@ function chips(repo, profile) {
     (v) => Boolean(v)
   );
 }
-function renderSvg6(profile, config, variant) {
+function renderSvg7(profile, config, variant) {
   const look = lookFor5(variant, hueOf(profile.avatar?.grid.tint) ?? 22);
   const motion = config.motion;
   const blocks = new Set(config.blocks);
@@ -17588,56 +17965,56 @@ function renderSvg6(profile, config, variant) {
   const next = () => step++ * 0.1;
   const uri = profile.avatar?.dataUri;
   const hasPhoto = Boolean(uri && SAFE_DATA_URI.test(uri));
-  const textWidth = hasPhoto ? WIDTH6 - PAD9 * 2 - PHOTO2 - 24 : WIDTH6 - PAD9 * 2;
+  const textWidth = hasPhoto ? WIDTH6 - PAD10 * 2 - PHOTO2 - 24 : WIDTH6 - PAD10 * 2;
   const bio = config.text.bio ?? profile.bio;
-  let hero = `<text class="mono" x="${PAD9}" y="${PAD9 + 12}" font-size="13" letter-spacing="2" fill="${look.accent}">@${xmlEscape(profile.login.toUpperCase())}</text>`;
-  hero += `<text x="${PAD9}" y="${PAD9 + 62}" font-size="48" font-weight="800" fill="${look.fg}">${xmlEscape(truncate(profile.name ?? profile.login, Math.floor(textWidth / 28)))}</text>`;
-  let y = PAD9 + 62;
+  let hero = `<text class="mono" x="${PAD10}" y="${PAD10 + 12}" font-size="13" letter-spacing="2" fill="${look.accent}">@${xmlEscape(profile.login.toUpperCase())}</text>`;
+  hero += `<text x="${PAD10}" y="${PAD10 + 62}" font-size="48" font-weight="800" fill="${look.fg}">${xmlEscape(truncate(profile.name ?? profile.login, Math.floor(textWidth / 28)))}</text>`;
+  let y = PAD10 + 62;
   if (config.text.headline) {
     y += 36;
-    hero += `<text x="${PAD9}" y="${y}" font-size="21" font-weight="600" fill="${look.accent2}">${xmlEscape(truncate(config.text.headline, Math.floor(textWidth / 11)))}</text>`;
+    hero += `<text x="${PAD10}" y="${y}" font-size="21" font-weight="600" fill="${look.accent2}">${xmlEscape(truncate(config.text.headline, Math.floor(textWidth / 11)))}</text>`;
   }
   if (bio) {
     wrap(bio, Math.floor(textWidth / 7.8), 2).forEach((line, index) => {
       y += index === 0 ? 30 : 22;
-      hero += `<text x="${PAD9}" y="${y}" font-size="15" fill="${look.muted}">${xmlEscape(line)}</text>`;
+      hero += `<text x="${PAD10}" y="${y}" font-size="15" fill="${look.muted}">${xmlEscape(line)}</text>`;
     });
   }
   if (hasPhoto && uri) {
-    const x = WIDTH6 - PAD9 - PHOTO2;
-    hero += `<clipPath id="photo"><rect x="${x}" y="${PAD9 - 6}" width="${PHOTO2}" height="${PHOTO2}" rx="28"/></clipPath><image href="${uri}" x="${x}" y="${PAD9 - 6}" width="${PHOTO2}" height="${PHOTO2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#photo)"/><rect x="${x}" y="${PAD9 - 6}" width="${PHOTO2}" height="${PHOTO2}" rx="28" fill="none" stroke="${look.accent}" stroke-width="2.5"/>`;
+    const x = WIDTH6 - PAD10 - PHOTO2;
+    hero += `<clipPath id="photo"><rect x="${x}" y="${PAD10 - 6}" width="${PHOTO2}" height="${PHOTO2}" rx="28"/></clipPath><image href="${uri}" x="${x}" y="${PAD10 - 6}" width="${PHOTO2}" height="${PHOTO2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#photo)"/><rect x="${x}" y="${PAD10 - 6}" width="${PHOTO2}" height="${PHOTO2}" rx="28" fill="none" stroke="${look.accent}" stroke-width="2.5"/>`;
   }
   parts.push(rise(hero, motion, next()));
-  const heroBottom = Math.max(y, hasPhoto ? PAD9 + PHOTO2 : 0);
+  const heroBottom = Math.max(y, hasPhoto ? PAD10 + PHOTO2 : 0);
   let cursor = heroBottom + 40;
   if (blocks.has("stats")) {
     const stats = [[formatNumber(profile.totalStars), "STARS EARNED"]];
     if (profile.activeRepos !== void 0) stats.push([formatNumber(profile.activeRepos), "PROJECTS ACTIVE, LAST 90 DAYS"]);
     stats.push([formatNumber(profile.followers), "FOLLOWERS"]);
-    const width = (WIDTH6 - PAD9 * 2) / stats.length;
+    const width = (WIDTH6 - PAD10 * 2) / stats.length;
     const markup = stats.map(([value, caption], index) => {
-      const x = PAD9 + index * width;
-      return `<text x="${num6(x)}" y="${cursor + 38}" font-size="46" font-weight="800" fill="${look.fg}">${xmlEscape(value)}</text><text class="mono" x="${num6(x)}" y="${cursor + 62}" font-size="10.5" letter-spacing="1.2" fill="${look.muted}">${xmlEscape(caption)}</text>`;
+      const x = PAD10 + index * width;
+      return `<text x="${num7(x)}" y="${cursor + 38}" font-size="46" font-weight="800" fill="${look.fg}">${xmlEscape(value)}</text><text class="mono" x="${num7(x)}" y="${cursor + 62}" font-size="10.5" letter-spacing="1.2" fill="${look.muted}">${xmlEscape(caption)}</text>`;
     }).join("");
     parts.push(rise(markup, motion, next()));
     cursor += 62 + 34;
   }
   const { featured, others } = blocks.has("projects") ? pickProjects(profile.topRepos) : { featured: null, others: [] };
   if (featured) {
-    const w = WIDTH6 - PAD9 * 2;
+    const w = WIDTH6 - PAD10 * 2;
     const desc = featured.description ? wrap(featured.description, Math.floor((w - 250) / 8), 2) : [];
-    let card = `<rect x="${PAD9}" y="${cursor}" width="${w}" height="160" rx="22" fill="${look.panel}" stroke="${look.border}"/><rect x="${PAD9 + 24}" y="${cursor}" width="64" height="4" rx="2" fill="${look.accent}"/><text x="${PAD9 + 28}" y="${cursor + 52}" font-size="28" font-weight="800" fill="${look.fg}">${xmlEscape(truncate(featured.name, Math.floor((w - 250) / 15)))}</text><text class="mono" x="${PAD9 + w - 28}" y="${cursor + 56}" text-anchor="end" font-size="44" font-weight="800" fill="${look.accent}">\u2605 ${xmlEscape(formatNumber(featured.stars))}</text>`;
+    let card = `<rect x="${PAD10}" y="${cursor}" width="${w}" height="160" rx="22" fill="${look.panel}" stroke="${look.border}"/><rect x="${PAD10 + 24}" y="${cursor}" width="64" height="4" rx="2" fill="${look.accent}"/><text x="${PAD10 + 28}" y="${cursor + 52}" font-size="28" font-weight="800" fill="${look.fg}">${xmlEscape(truncate(featured.name, Math.floor((w - 250) / 15)))}</text><text class="mono" x="${PAD10 + w - 28}" y="${cursor + 56}" text-anchor="end" font-size="44" font-weight="800" fill="${look.accent}">\u2605 ${xmlEscape(formatNumber(featured.stars))}</text>`;
     desc.forEach((line, index) => {
-      card += `<text x="${PAD9 + 28}" y="${cursor + 84 + index * 21}" font-size="14.5" fill="${look.muted}">${xmlEscape(line)}</text>`;
+      card += `<text x="${PAD10 + 28}" y="${cursor + 84 + index * 21}" font-size="14.5" fill="${look.muted}">${xmlEscape(line)}</text>`;
     });
-    card += `<text class="mono" x="${PAD9 + 28}" y="${cursor + 142}" font-size="12.5" fill="${look.muted}">${xmlEscape(truncate(chips(featured, profile).join("  \xB7  "), 96))}</text>`;
+    card += `<text class="mono" x="${PAD10 + 28}" y="${cursor + 142}" font-size="12.5" fill="${look.muted}">${xmlEscape(truncate(chips(featured, profile).join("  \xB7  "), 96))}</text>`;
     parts.push(rise(card, motion, next()));
     cursor += 160 + GAP2;
   }
   if (others.length > 0) {
-    const w = others.length === 1 ? WIDTH6 - PAD9 * 2 : Math.floor((WIDTH6 - PAD9 * 2 - GAP2) / 2);
+    const w = others.length === 1 ? WIDTH6 - PAD10 * 2 : Math.floor((WIDTH6 - PAD10 * 2 - GAP2) / 2);
     const cards = others.map((repo, index) => {
-      const x = PAD9 + index * (w + GAP2);
+      const x = PAD10 + index * (w + GAP2);
       return `<rect x="${x}" y="${cursor}" width="${w}" height="92" rx="18" fill="${look.panel}" stroke="${look.border}"/><text x="${x + 22}" y="${cursor + 36}" font-size="17" font-weight="700" fill="${look.fg}">${xmlEscape(truncate(repo.name, Math.floor((w - 150) / 9.5)))}</text><text class="mono" x="${x + w - 22}" y="${cursor + 37}" text-anchor="end" font-size="18" font-weight="700" fill="${look.accent2}">\u2605 ${xmlEscape(formatNumber(repo.stars))}</text><text class="mono" x="${x + 22}" y="${cursor + 66}" font-size="12" fill="${look.muted}">${xmlEscape(truncate(chips(repo, profile).join("  \xB7  "), Math.floor((w - 44) / 7)))}</text>`;
     }).join("");
     parts.push(rise(cards, motion, next()));
@@ -17651,12 +18028,12 @@ function renderSvg6(profile, config, variant) {
     const barW = 22;
     const bars = weeks.map((total, index) => {
       const h = Math.max(3, total / peak * 56);
-      const x = PAD9 + index * (barW + 7);
+      const x = PAD10 + index * (barW + 7);
       const fill = index === weeks.length - 1 ? look.accent2 : look.accent;
-      return `<rect x="${x}" y="${num6(cursor + 56 - h)}" width="${barW}" height="${num6(h)}" rx="4" fill="${total === 0 ? look.track : fill}"/>`;
+      return `<rect x="${x}" y="${num7(cursor + 56 - h)}" width="${barW}" height="${num7(h)}" rx="4" fill="${total === 0 ? look.track : fill}"/>`;
     }).join("");
     const sum = weeks.reduce((a, b) => a + b, 0);
-    const textX = PAD9 + weeks.length * (barW + 7) + 22;
+    const textX = PAD10 + weeks.length * (barW + 7) + 22;
     const markup = bars + `<text x="${textX}" y="${cursor + 22}" font-size="26" font-weight="800" fill="${look.fg}">${xmlEscape(formatNumber(sum))}</text><text class="mono" x="${textX}" y="${cursor + 42}" font-size="11.5" fill="${look.muted}">contributions in the last ${weeks.length} weeks</text><text class="mono" x="${textX}" y="${cursor + 60}" font-size="11.5" fill="${look.muted}">current streak ${xmlEscape(plural(activity.currentStreak, "day"))}</text>`;
     parts.push(rise(markup, motion, next()));
     cursor += 56 + 34;
@@ -17665,14 +18042,14 @@ function renderSvg6(profile, config, variant) {
     const text = profile.languages.slice(0, 4).map((l) => `${truncate(l.name, 14)} ${l.percent}%`).join("   ");
     parts.push(
       rise(
-        `<text class="mono" x="${PAD9}" y="${num6(cursor)}" font-size="12.5" fill="${look.muted}">built with  <tspan fill="${look.fg}">${xmlEscape(text)}</tspan></text>`,
+        `<text class="mono" x="${PAD10}" y="${num7(cursor)}" font-size="12.5" fill="${look.muted}">built with  <tspan fill="${look.fg}">${xmlEscape(text)}</tspan></text>`,
         motion,
         next()
       )
     );
     cursor += 24;
   }
-  const height = Math.ceil(cursor + PAD9 - 22);
+  const height = Math.ceil(cursor + PAD10 - 22);
   const title = `${profile.name ?? profile.login} (@${profile.login}) on GitHub`;
   const css = motion ? `.rise{animation:rise .6s ease both}@keyframes rise{from{opacity:0;transform:translateY(8px)}}.trail{stroke-dashoffset:0;animation:draw 2.4s ease-out both}@keyframes draw{from{stroke-dashoffset:900}}@media (prefers-reduced-motion:reduce){.rise,.trail{animation:none}}` : "";
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH6}" height="${height}" viewBox="0 0 ${WIDTH6} ${height}" role="img" aria-labelledby="t">
@@ -17702,7 +18079,7 @@ var launchpad = {
   render(profile, config) {
     const assets = variantsFor(config.theme).map((variant) => ({
       path: assetPath("launchpad", variant),
-      content: renderSvg6(profile, config, variant)
+      content: renderSvg7(profile, config, variant)
     }));
     const { featured } = config.blocks.includes("projects") ? pickProjects(profile.topRepos) : { featured: null };
     const extra = featured ? `featuring ${featured.name}` : void 0;
@@ -17712,7 +18089,7 @@ var launchpad = {
 
 // ../core/src/templates/learning.ts
 var WIDTH7 = 900;
-var PAD10 = 48;
+var PAD11 = 48;
 var HABIT_WEEKS = 12;
 var DOT = 7;
 var DOT_STEP = 22;
@@ -17738,7 +18115,7 @@ function formatDate(iso) {
   const date = new Date(time);
   return `${MONTHS4[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
 }
-var num7 = (value) => String(Math.round(value * 10) / 10 || 0);
+var num8 = (value) => String(Math.round(value * 10) / 10 || 0);
 function lookFor6(variant, hue) {
   const dark = variant === "dark";
   return {
@@ -17754,27 +18131,27 @@ function lookFor6(variant, hue) {
     ring: dark ? "#7f9b93" : "#9aa3c4"
   };
 }
-function renderSvg7(profile, config, variant) {
+function renderSvg8(profile, config, variant) {
   const look = lookFor6(variant, hueOf(profile.avatar?.grid.tint) ?? 215);
   const motion = config.motion;
   const blocks = new Set(config.blocks);
   const parts = [];
   let step = 0;
   const next = () => step++ * 0.1;
-  const left = PAD10 + 36;
+  const left = PAD11 + 36;
   const heading = (text, x, y) => {
     const width = text.length * 9.2 + 16;
-    return `<rect x="${x - 6}" y="${y - 14}" width="${num7(width)}" height="19" rx="3" fill="${look.highlight}" fill-opacity="${look.highlightOpacity}"/><text class="mono" x="${x}" y="${y}" font-size="13" font-weight="700" letter-spacing="1.8" fill="${look.ink}">${xmlEscape(text)}</text>`;
+    return `<rect x="${x - 6}" y="${y - 14}" width="${num8(width)}" height="19" rx="3" fill="${look.highlight}" fill-opacity="${look.highlightOpacity}"/><text class="mono" x="${x}" y="${y}" font-size="13" font-weight="700" letter-spacing="1.8" fill="${look.ink}">${xmlEscape(text)}</text>`;
   };
   const updated = formatDate(profile.fetchedAt);
-  let title = `<text class="serif" x="${left}" y="${PAD10 + 38}" font-size="40" font-weight="700" font-style="italic" fill="${look.ink}">${xmlEscape(truncate(profile.name ?? profile.login, 28))}</text>`;
+  let title = `<text class="serif" x="${left}" y="${PAD11 + 38}" font-size="40" font-weight="700" font-style="italic" fill="${look.ink}">${xmlEscape(truncate(profile.name ?? profile.login, 28))}</text>`;
   const sub2 = ["learning log", `@${profile.login}`, updated ? `updated ${updated}` : null].filter(Boolean).join("  \xB7  ");
-  title += `<text class="mono" x="${left}" y="${PAD10 + 64}" font-size="12.5" fill="${look.muted}">${xmlEscape(sub2)}</text>`;
+  title += `<text class="mono" x="${left}" y="${PAD11 + 64}" font-size="12.5" fill="${look.muted}">${xmlEscape(sub2)}</text>`;
   if (config.text.headline) {
-    title += `<text x="${left}" y="${PAD10 + 92}" font-size="17" fill="${look.ink}">${xmlEscape(truncate(config.text.headline, 80))}</text>`;
+    title += `<text x="${left}" y="${PAD11 + 92}" font-size="17" fill="${look.ink}">${xmlEscape(truncate(config.text.headline, 80))}</text>`;
   }
   parts.push(rise(title, motion, next()));
-  let cursor = PAD10 + (config.text.headline ? 128 : 100);
+  let cursor = PAD11 + (config.text.headline ? 128 : 100);
   if (blocks.has("stats")) {
     const year = new Date(profile.createdAt).getUTCFullYear();
     const facts = [
@@ -17786,7 +18163,7 @@ function renderSvg7(profile, config, variant) {
     const notes = facts.map((fact2, index) => {
       const width = Math.ceil(fact2.length * 7.6) + 28;
       const tilt = index % 2 === 0 ? -1.2 : 1;
-      const markup = `<g transform="rotate(${tilt} ${num7(x + width / 2)} ${cursor + 16})"><rect x="${num7(x)}" y="${cursor}" width="${width}" height="32" rx="3" fill="${look.highlight}" fill-opacity="${look.highlightOpacity * 0.85}"/><text x="${num7(x + 14)}" y="${cursor + 21}" font-size="14" font-weight="600" fill="${look.ink}">${xmlEscape(fact2)}</text></g>`;
+      const markup = `<g transform="rotate(${tilt} ${num8(x + width / 2)} ${cursor + 16})"><rect x="${num8(x)}" y="${cursor}" width="${width}" height="32" rx="3" fill="${look.highlight}" fill-opacity="${look.highlightOpacity * 0.85}"/><text x="${num8(x + 14)}" y="${cursor + 21}" font-size="14" font-weight="600" fill="${look.ink}">${xmlEscape(fact2)}</text></g>`;
       x += width + 14;
       return markup;
     }).join("");
@@ -17852,7 +18229,7 @@ function renderSvg7(profile, config, variant) {
       const ago = repo.pushedAt && profile.fetchedAt ? timeAgo(repo.pushedAt, profile.fetchedAt) : null;
       markup += `<rect x="${left}" y="${y - 15}" width="18" height="18" rx="3" fill="none" stroke="${look.ink}" stroke-width="1.6"/><path d="M${left + 4} ${y - 6} l4 4 l7 -10" fill="none" stroke="${look.marker}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><text x="${left + 32}" y="${y}" font-size="16" font-weight="700" fill="${look.ink}">${xmlEscape(truncate(repo.name, 34))}</text>`;
       const detail = [ago ? `updated ${ago}` : null, repo.language].filter(Boolean).join("  \xB7  ");
-      if (detail) markup += `<text class="mono" x="${WIDTH7 - PAD10}" y="${y}" text-anchor="end" font-size="12" fill="${look.muted}">${xmlEscape(detail)}</text>`;
+      if (detail) markup += `<text class="mono" x="${WIDTH7 - PAD11}" y="${y}" text-anchor="end" font-size="12" fill="${look.muted}">${xmlEscape(detail)}</text>`;
       if (repo.description) {
         const [line] = wrap(repo.description, 96, 1);
         markup += `<text x="${left + 32}" y="${y + 20}" font-size="13" fill="${look.muted}">${xmlEscape(line ?? "")}</text>`;
@@ -17864,7 +18241,7 @@ function renderSvg7(profile, config, variant) {
     parts.push(rise(markup, motion, next()));
     cursor = y;
   }
-  const height = Math.ceil(cursor + PAD10 - 12);
+  const height = Math.ceil(cursor + PAD11 - 12);
   const title2 = `${profile.name ?? profile.login} (@${profile.login}) on GitHub`;
   const css = motion ? `.rise{animation:rise .6s ease both}@keyframes rise{from{opacity:0}}.dot,.blk{transform-box:fill-box;transform-origin:center;animation:pop .4s cubic-bezier(.3,1.6,.5,1) both}@keyframes pop{from{transform:scale(0)}}@media (prefers-reduced-motion:reduce){.rise,.dot,.blk{animation:none}}` : "";
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH7}" height="${height}" viewBox="0 0 ${WIDTH7} ${height}" role="img" aria-labelledby="t">
@@ -17880,7 +18257,7 @@ ${css}
 </style>
 <rect width="${WIDTH7}" height="${height}" rx="16" fill="${look.paper}"/>
 <rect width="${WIDTH7}" height="${height}" rx="16" fill="url(#paper)"/>
-<rect x="${PAD10 + 18}" y="0" width="2" height="${height}" fill="${look.margin}" fill-opacity="0.55"/>
+<rect x="${PAD11 + 18}" y="0" width="2" height="${height}" fill="${look.margin}" fill-opacity="0.55"/>
 ${parts.filter(Boolean).join("\n")}
 </svg>
 `;
@@ -17894,146 +18271,12 @@ var learning = {
   render(profile, config) {
     const assets = variantsFor(config.theme).map((variant) => ({
       path: assetPath("learning", variant),
-      content: renderSvg7(profile, config, variant)
+      content: renderSvg8(profile, config, variant)
     }));
     const extra = config.blocks.includes("activity") && profile.contributions ? "with a twelve-week habit tracker" : void 0;
     return { readme: imageReadme(profile, config, "learning", WIDTH7, describeProfile(profile, config, extra)), assets };
   }
 };
-
-// ../core/src/templates/kit.ts
-var W = 900;
-var PAD11 = 36;
-function lookOf(hue, variant, profile) {
-  const picture = hueOf(profile.avatar?.grid.tint);
-  const second = picture ?? (hue + 40) % 360;
-  if (variant === "dark") {
-    return {
-      bg: hslToHex(hue, 0.4, 0.07),
-      panel: hslToHex(hue, 0.32, 0.115),
-      border: hslToHex(hue, 0.28, 0.21),
-      track: hslToHex(hue, 0.26, 0.17),
-      fg: hslToHex(hue, 0.2, 0.93),
-      muted: hslToHex(hue, 0.14, 0.67),
-      accent: hslToHex(hue, 0.85, 0.6),
-      accent2: hslToHex(second, 0.8, 0.64)
-    };
-  }
-  return {
-    bg: hslToHex(hue, 0.3, 0.97),
-    panel: "#ffffff",
-    border: hslToHex(hue, 0.25, 0.87),
-    track: hslToHex(hue, 0.25, 0.92),
-    fg: hslToHex(hue, 0.4, 0.14),
-    muted: hslToHex(hue, 0.14, 0.38),
-    accent: hslToHex(hue, 0.75, 0.38),
-    accent2: hslToHex(second, 0.7, 0.4)
-  };
-}
-var mono = (text, x, y, fill, extra = "") => `<text class="mono" x="${x}" y="${y}" fill="${fill}" ${extra}>${xmlEscape(text)}</text>`;
-var sans = (text, x, y, fill, extra = "") => `<text x="${x}" y="${y}" fill="${fill}" ${extra}>${xmlEscape(text)}</text>`;
-var label3 = (look, text, x, y) => mono(text, x, y, look.accent, 'font-size="11.5" font-weight="700" letter-spacing="2"');
-var num8 = (n) => String(Math.round(n * 100) / 100);
-function shell(o) {
-  const { look, height, variant } = o;
-  const r = o.radius ?? 18;
-  const [gx, gy] = o.glow ?? [0.92, 0];
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${height}" viewBox="0 0 ${W} ${height}" role="img" aria-labelledby="t">
-<title id="t">${xmlEscape(o.title)}</title>
-<defs>
-<pattern id="kg" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="${look.accent}" stroke-opacity="${variant === "dark" ? 0.07 : 0.07}"/></pattern>
-<radialGradient id="kglow" cx="${gx}" cy="${gy}" r="0.85"><stop offset="0" stop-color="${look.accent}" stop-opacity="${variant === "dark" ? 0.22 : 0.13}"/><stop offset="1" stop-color="${look.accent}" stop-opacity="0"/></radialGradient>
-${o.defs ?? ""}
-</defs>
-<style>
-text{font-family:${FONT_SANS}}
-.mono{font-family:${FONT}}
-${o.css ?? ""}
-</style>
-<rect width="${W}" height="${height}" rx="${r}" fill="${look.bg}"/>
-${o.grid === false ? "" : `<rect width="${W}" height="${height}" rx="${r}" fill="url(#kg)"/>`}
-<rect width="${W}" height="${height}" rx="${r}" fill="url(#kglow)"/>
-<rect x="0.5" y="0.5" width="${W - 1}" height="${height - 1}" rx="${r}" fill="none" stroke="${look.border}"/>
-${o.body}
-</svg>
-`;
-}
-function riseCss(motion) {
-  if (!motion) return "";
-  return `.rise{animation:rise .6s ease both}
-@keyframes rise{from{opacity:0;transform:translateY(6px)}}
-.bar{transform-box:fill-box;transform-origin:50% 100%;animation:grow .7s cubic-bezier(.2,.7,.2,1) both}
-@keyframes grow{from{transform:scaleY(0)}}
-@media (prefers-reduced-motion:reduce){.rise,.bar{animation:none}}`;
-}
-function enter(markup, motion, delay) {
-  if (!markup || !motion) return markup;
-  return `<g class="rise" style="animation-delay:${delay.toFixed(2)}s">${markup}</g>`;
-}
-function portrait(profile, look, cx, cy, r) {
-  const uri = profile.avatar?.dataUri;
-  if (uri && SAFE_DATA_URI.test(uri)) {
-    return `<clipPath id="pt"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath><image href="${uri}" x="${cx - r}" y="${cy - r}" width="${r * 2}" height="${r * 2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#pt)"/><circle cx="${cx}" cy="${cy}" r="${r + 4}" fill="none" stroke="${look.accent}" stroke-width="2"/>`;
-  }
-  const initial = [...profile.name ?? profile.login][0]?.toUpperCase() ?? "?";
-  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${look.accent}"/><text x="${cx}" y="${cy + r * 0.34}" text-anchor="middle" font-size="${Math.round(r * 0.95)}" font-weight="800" fill="${look.bg}">${xmlEscape(initial)}</text>`;
-}
-function panel(look, x, y, w, h, accent2 = true) {
-  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="14" fill="${look.panel}" stroke="${look.border}"/>` + (accent2 ? `<rect x="${x + 18}" y="${y}" width="36" height="3" rx="1.5" fill="${look.accent}"/>` : "");
-}
-function langBars(look, languages, x, y, w, rows = 4) {
-  const shown = languages.slice(0, rows);
-  const markup = shown.map((language, index) => {
-    const top = y + index * 26;
-    const fill = index % 2 === 0 ? look.accent : look.accent2;
-    return sans(truncate(language.name, 18), x, top + 10, look.fg, 'font-size="12.5"') + mono(`${language.percent}%`, x + w, top + 10, look.muted, 'font-size="11.5" text-anchor="end"') + `<rect x="${x}" y="${top + 16}" width="${w}" height="5" rx="2.5" fill="${look.track}"/><rect x="${x}" y="${top + 16}" width="${num8(Math.max(4, w * language.percent / 100))}" height="5" rx="2.5" fill="${fill}"/>`;
-  }).join("");
-  return { markup, height: shown.length * 26 };
-}
-function weekBars(look, days, x, y, w, h, motion) {
-  const weeks = weeklyTotals(days);
-  if (weeks.length === 0) return "";
-  const peak = Math.max(...weeks, 1);
-  const peakIndex = weeks.indexOf(Math.max(...weeks));
-  const gap = 2;
-  const bar = (w - gap * (weeks.length - 1)) / weeks.length;
-  return weeks.map((total, index) => {
-    const height = Math.max(2, total / peak * h);
-    const fill = total === 0 ? look.track : index === peakIndex ? look.accent2 : look.accent;
-    const delay = motion ? ` style="animation-delay:${(0.2 + index * 0.012).toFixed(3)}s"` : "";
-    return `<rect class="bar" x="${num8(x + index * (bar + gap))}" y="${num8(y + h - height)}" width="${num8(bar)}" height="${num8(height)}" rx="1.5" fill="${fill}"${total === 0 ? "" : ' fill-opacity="0.9"'}${delay}/>`;
-  }).join("") + `<rect x="${x}" y="${y + h + 1}" width="${w}" height="1" fill="${look.border}"/>`;
-}
-function heatStrip(look, days, x, y, w) {
-  if (days.length === 0) return { markup: "", height: 0 };
-  const first = (/* @__PURE__ */ new Date(`${days[0]?.date}T00:00:00Z`)).getUTCDay();
-  const cols = Math.ceil((first + days.length) / 7);
-  const gap = 2;
-  const cell = Math.max(2, (w - gap * (cols - 1)) / cols);
-  const opacities = [0, 0.3, 0.5, 0.75, 1];
-  const markup = days.map((day, index) => {
-    const col = Math.floor((first + index) / 7);
-    const row = (first + index) % 7;
-    const attrs = day.level === 0 ? `fill="${look.track}"` : `fill="${look.accent}" fill-opacity="${opacities[day.level]}"`;
-    return `<rect x="${num8(x + col * (cell + gap))}" y="${num8(y + row * (cell + gap))}" width="${num8(cell)}" height="${num8(cell)}" rx="1.5" ${attrs}/>`;
-  }).join("");
-  return { markup, height: 7 * cell + 6 * gap };
-}
-var REPO_ROW = 58;
-function repoRow(look, repo, profile, x, y, w) {
-  const updated = repo.pushedAt && profile.fetchedAt ? timeAgo(repo.pushedAt, profile.fetchedAt) : null;
-  const meta = [repo.language, repo.license, updated ? `updated ${updated}` : null].filter((v) => Boolean(v));
-  const desc = repo.description ? wrap(repo.description, Math.max(24, Math.floor((w - 190) / 6.3)), 1)[0] : null;
-  return `<rect x="${x}" y="${y}" width="${w}" height="${REPO_ROW - 8}" rx="12" fill="${look.panel}" stroke="${look.border}"/>` + sans(truncate(repo.name, 28), x + 16, y + 22, look.accent, 'font-size="14.5" font-weight="700"') + (desc ? sans(desc, x + 16, y + 40, look.muted, 'font-size="12"') : meta.length > 0 ? mono(truncate(meta.join("  \xB7  "), 60), x + 16, y + 40, look.muted, 'font-size="11"') : "") + mono(`\u2605 ${formatNumber(repo.stars)}`, x + w - 16, y + 22, look.fg, 'font-size="12.5" font-weight="700" text-anchor="end"') + mono(`forks ${formatNumber(repo.forks)}`, x + w - 16, y + 40, look.muted, 'font-size="11" text-anchor="end"');
-}
-function reposIn(profile, languages) {
-  const wanted = new Set(languages.map((l) => l.toLowerCase()));
-  return profile.topRepos.filter((r) => r.language && wanted.has(r.language.toLowerCase())).sort((a, b) => b.stars - a.stars);
-}
-function shareIn(profile, languages) {
-  const wanted = new Set(languages.map((l) => l.toLowerCase()));
-  return profile.languages.filter((l) => wanted.has(l.name.toLowerCase())).reduce((sum, l) => sum + l.percent, 0);
-}
 
 // ../core/src/templates/lens.ts
 function motif(c2, x, y, w, h) {
@@ -18042,7 +18285,7 @@ function motif(c2, x, y, w, h) {
   const o = 'opacity="0.55"';
   switch (c2.spec.motif) {
     case "swatches":
-      return [0, 1, 2, 3, 4].map((i) => `<rect x="${num8(x + w - 40 - i * 46)}" y="${num8(y + 10 + i % 2 * 14)}" width="34" height="34" rx="9" fill="${i % 2 ? look.accent2 : look.accent}" fill-opacity="${num8(0.18 + i * 0.12)}"/>`).join("");
+      return [0, 1, 2, 3, 4].map((i) => `<rect x="${num4(x + w - 40 - i * 46)}" y="${num4(y + 10 + i % 2 * 14)}" width="34" height="34" rx="9" fill="${i % 2 ? look.accent2 : look.accent}" fill-opacity="${num4(0.18 + i * 0.12)}"/>`).join("");
     case "pipeline": {
       const xs = [0, 1, 2, 3].map((i) => x + w - 220 + i * 70);
       const cy = y + h / 2;
@@ -18053,7 +18296,7 @@ function motif(c2, x, y, w, h) {
       return Array.from({ length: 26 }, (_v, i) => {
         const px = x + w - 250 + i / 25 * 240;
         const py = y + h - 14 - i / 25 * (h - 40) - rand() * 34;
-        return `<circle cx="${num8(px)}" cy="${num8(py)}" r="${num8(2 + rand() * 2.5)}" fill="${i % 3 ? look.accent : look.accent2}" fill-opacity="0.5"/>`;
+        return `<circle cx="${num4(px)}" cy="${num4(py)}" r="${num4(2 + rand() * 2.5)}" fill="${i % 3 ? look.accent : look.accent2}" fill-opacity="0.5"/>`;
       }).join("") + `<path d="M${x + w - 250} ${y + h - 14}L${x + w - 10} ${y + 22}" stroke="${look.accent}" stroke-opacity="0.35" stroke-dasharray="3 4"/>`;
     case "racks":
       return [0, 1, 2, 3].map((i) => {
@@ -18062,18 +18305,18 @@ function motif(c2, x, y, w, h) {
         return `<rect x="${x + w - 230}" y="${py}" width="220" height="16" rx="4" fill="${look.panel}" stroke="${look.border}"/><circle class="pulse" cx="${x + w - 216}" cy="${py + 8}" r="3" fill="${i % 2 ? look.accent2 : look.accent}"${led}/>`;
       }).join("");
     case "rocket":
-      return Array.from({ length: 9 }, (_v, i) => `<circle cx="${num8(x + w - 230 + i * 20)}" cy="${num8(y + h - 20 - i * 7)}" r="${num8(1.5 + i * 0.35)}" fill="${look.accent}" fill-opacity="${num8(0.12 + i * 0.07)}"/>`).join("") + `<path d="M${x + w - 36} ${y + h - 88}l12 30l-12 -7l-12 7z" fill="${look.accent2}" fill-opacity="0.7"/>`;
+      return Array.from({ length: 9 }, (_v, i) => `<circle cx="${num4(x + w - 230 + i * 20)}" cy="${num4(y + h - 20 - i * 7)}" r="${num4(1.5 + i * 0.35)}" fill="${look.accent}" fill-opacity="${num4(0.12 + i * 0.07)}"/>`).join("") + `<path d="M${x + w - 36} ${y + h - 88}l12 30l-12 -7l-12 7z" fill="${look.accent2}" fill-opacity="0.7"/>`;
     case "spot":
-      return [70, 48, 26].map((r, i) => `<circle cx="${x + w - 90}" cy="${y + h / 2}" r="${r}" fill="none" stroke="${i === 2 ? look.accent2 : look.accent}" stroke-opacity="${num8(0.18 + i * 0.12)}"/>`).join("") + `<circle cx="${x + w - 90}" cy="${y + h / 2}" r="7" fill="${look.accent2}" fill-opacity="0.8"/>`;
+      return [70, 48, 26].map((r, i) => `<circle cx="${x + w - 90}" cy="${y + h / 2}" r="${r}" fill="none" stroke="${i === 2 ? look.accent2 : look.accent}" stroke-opacity="${num4(0.18 + i * 0.12)}"/>`).join("") + `<circle cx="${x + w - 90}" cy="${y + h / 2}" r="7" fill="${look.accent2}" fill-opacity="0.8"/>`;
     case "rings":
-      return [60, 42, 24].map((r) => `<circle cx="${x + w - 90}" cy="${y + h / 2}" r="${r}" fill="none" stroke="${look.accent2}" stroke-opacity="0.3" stroke-dasharray="3 5"/>`).join("") + [0, 1, 2].map((i) => `<circle cx="${num8(x + w - 90 + Math.cos(i * 2.1) * 42)}" cy="${num8(y + h / 2 + Math.sin(i * 2.1) * 42)}" r="4" fill="${look.accent}"/>`).join("");
+      return [60, 42, 24].map((r) => `<circle cx="${x + w - 90}" cy="${y + h / 2}" r="${r}" fill="none" stroke="${look.accent2}" stroke-opacity="0.3" stroke-dasharray="3 5"/>`).join("") + [0, 1, 2].map((i) => `<circle cx="${num4(x + w - 90 + Math.cos(i * 2.1) * 42)}" cy="${num4(y + h / 2 + Math.sin(i * 2.1) * 42)}" r="4" fill="${look.accent}"/>`).join("");
     case "tree": {
       const bx = x + w - 140;
       const by = y + h - 8;
       return `<path d="M${bx} ${by}V${y + 40}M${bx} ${y + 70}L${bx - 52} ${y + 30}M${bx} ${y + 56}L${bx + 52} ${y + 16}M${bx} ${y + 88}L${bx + 44} ${y + 60}" stroke="${look.accent}" stroke-opacity="0.45" stroke-width="2" fill="none"/>` + [[bx - 52, y + 30], [bx + 52, y + 16], [bx + 44, y + 60], [bx, y + 40]].map(([px, py]) => `<circle cx="${px}" cy="${py}" r="5" fill="${look.accent2}" fill-opacity="0.8"/>`).join("");
     }
     case "rhythm": {
-      const pts = Array.from({ length: 24 }, (_v, i) => `${i === 0 ? "M" : "L"}${num8(x + w - 250 + i * 10.4)} ${num8(y + h / 2 + Math.sin(i / 2.2) * 22 + (rand() - 0.5) * 10)}`);
+      const pts = Array.from({ length: 24 }, (_v, i) => `${i === 0 ? "M" : "L"}${num4(x + w - 250 + i * 10.4)} ${num4(y + h / 2 + Math.sin(i / 2.2) * 22 + (rand() - 0.5) * 10)}`);
       return `<path d="${pts.join("")}" fill="none" stroke="${look.accent}" stroke-width="2" stroke-opacity="0.5"/>`;
     }
     case "checks":
@@ -18103,17 +18346,17 @@ function dash(c2) {
   const next = () => step++ * 0.09;
   const name = truncate(profile.name ?? profile.login, 28);
   const bio = config.text.bio ?? profile.bio;
-  const textX = PAD11 + 38 * 2 + 26;
+  const textX = PAD6 + 38 * 2 + 26;
   const showStats = blocks.has("stats");
-  let header = motif(c2, 0, PAD11 - 10, W - PAD11 - 190, 118) + portrait(profile, look, PAD11 + 38, PAD11 + 40, 38);
-  if (plan.kicker) header += label3(look, plan.kicker, textX, PAD11 + 8);
-  header += sans(name, textX, PAD11 + 38, look.fg, 'font-size="28" font-weight="800"') + `<text x="${textX}" y="${PAD11 + 62}" font-size="14" xml:space="preserve">${sub(c2)}</text>`;
-  if (bio) header += sans(truncate(bio, 70), textX, PAD11 + 84, look.fg, 'font-size="13" fill-opacity="0.8"');
+  let header = motif(c2, 0, PAD6 - 10, W - PAD6 - 190, 118) + portrait(profile, look, PAD6 + 38, PAD6 + 40, 38);
+  if (plan.kicker) header += label2(look, plan.kicker, textX, PAD6 + 8);
+  header += sans(name, textX, PAD6 + 38, look.fg, 'font-size="28" font-weight="800"') + `<text x="${textX}" y="${PAD6 + 62}" font-size="14" xml:space="preserve">${sub(c2)}</text>`;
+  if (bio) header += sans(truncate(bio, 70), textX, PAD6 + 84, look.fg, 'font-size="13" fill-opacity="0.8"');
   if (showStats && plan.hero) {
-    header += sans(plan.hero.value, W - PAD11, PAD11 + 52, look.fg, 'font-size="46" font-weight="800" text-anchor="end"') + mono(plan.hero.label, W - PAD11, PAD11 + 74, look.muted, 'font-size="10.5" letter-spacing="1" text-anchor="end"');
+    header += sans(plan.hero.value, W - PAD6, PAD6 + 52, look.fg, 'font-size="46" font-weight="800" text-anchor="end"') + mono(plan.hero.label, W - PAD6, PAD6 + 74, look.muted, 'font-size="10.5" letter-spacing="1" text-anchor="end"');
   }
   parts.push(enter(header, motion, next()));
-  let cursor = PAD11 + 118;
+  let cursor = PAD6 + 118;
   const panes = [];
   if (showStats && plan.facts.length > 0) {
     panes.push({
@@ -18133,11 +18376,11 @@ function dash(c2) {
   }
   if (panes.length > 0) {
     const gap = 16;
-    const w = (W - PAD11 * 2 - gap * (panes.length - 1)) / panes.length;
+    const w = (W - PAD6 * 2 - gap * (panes.length - 1)) / panes.length;
     const h = 186;
     const markup = panes.map((p, i) => {
-      const x = PAD11 + i * (w + gap);
-      return panel(look, x, cursor, w, h) + label3(look, p.title, x + 18, cursor + 28) + p.draw(x + 18, cursor + 44, w - 36);
+      const x = PAD6 + i * (w + gap);
+      return panel(look, x, cursor, w, h) + label2(look, p.title, x + 18, cursor + 28) + p.draw(x + 18, cursor + 44, w - 36);
     }).join("");
     parts.push(enter(markup, motion, next()));
     cursor += h + 24;
@@ -18145,11 +18388,11 @@ function dash(c2) {
   const repoSection = blocks.has("projects") ? plan.sections.find((s) => s.repos && s.repos.length > 0) : void 0;
   if (repoSection?.repos) {
     const rows = repoSection.repos.slice(0, 4);
-    const markup = label3(look, repoSection.title, PAD11, cursor + 8) + rows.map((r, i) => repoRow(look, r, profile, PAD11, cursor + 22 + i * REPO_ROW, W - PAD11 * 2)).join("");
+    const markup = label2(look, repoSection.title, PAD6, cursor + 8) + rows.map((r, i) => repoRow(look, r, profile, PAD6, cursor + 22 + i * REPO_ROW, W - PAD6 * 2)).join("");
     parts.push(enter(markup, motion, next()));
     cursor += 22 + rows.length * REPO_ROW + 14;
   }
-  return { body: parts.join("\n"), height: Math.max(cursor - 14 + PAD11, 300) };
+  return { body: parts.join("\n"), height: Math.max(cursor - 14 + PAD6, 300) };
 }
 function board(c2) {
   const { profile, look, motion, blocks, plan, config } = c2;
@@ -18157,52 +18400,52 @@ function board(c2) {
   let step = 0;
   const next = () => step++ * 0.09;
   const leftW = 290;
-  const rightX = PAD11 + leftW + 30;
-  const rightW = W - PAD11 - rightX;
+  const rightX = PAD6 + leftW + 30;
+  const rightW = W - PAD6 - rightX;
   const showStats = blocks.has("stats");
-  let ly = PAD11;
-  let left = portrait(profile, look, PAD11 + 46, PAD11 + 46, 46);
-  ly = PAD11 + 120;
+  let ly = PAD6;
+  let left = portrait(profile, look, PAD6 + 46, PAD6 + 46, 46);
+  ly = PAD6 + 120;
   if (plan.kicker) {
-    left += label3(look, plan.kicker, PAD11, ly - 6);
+    left += label2(look, plan.kicker, PAD6, ly - 6);
     ly += 18;
   }
-  left += sans(truncate(profile.name ?? profile.login, 20), PAD11, ly + 12, look.fg, 'font-size="26" font-weight="800"') + `<text x="${PAD11}" y="${ly + 36}" font-size="13.5" xml:space="preserve">${sub(c2)}</text>`;
+  left += sans(truncate(profile.name ?? profile.login, 20), PAD6, ly + 12, look.fg, 'font-size="26" font-weight="800"') + `<text x="${PAD6}" y="${ly + 36}" font-size="13.5" xml:space="preserve">${sub(c2)}</text>`;
   ly += 56;
   const bio = config.text.bio ?? profile.bio;
   if (bio) {
-    wrap(bio, 38, 3).forEach((line, i) => left += sans(line, PAD11, ly + i * 18, look.fg, 'font-size="13" fill-opacity="0.8"'));
+    wrap(bio, 38, 3).forEach((line, i) => left += sans(line, PAD6, ly + i * 18, look.fg, 'font-size="13" fill-opacity="0.8"'));
     ly += wrap(bio, 38, 3).length * 18 + 8;
   }
   if (showStats && plan.hero) {
-    left += sans(plan.hero.value, PAD11, ly + 46, look.fg, 'font-size="46" font-weight="800"') + mono(plan.hero.label, PAD11, ly + 66, look.muted, 'font-size="10.5" letter-spacing="1"');
+    left += sans(plan.hero.value, PAD6, ly + 46, look.fg, 'font-size="46" font-weight="800"') + mono(plan.hero.label, PAD6, ly + 66, look.muted, 'font-size="10.5" letter-spacing="1"');
     ly += 90;
   }
   if (showStats) {
     plan.facts.slice(0, 3).forEach((f, i) => {
-      left += mono(f.label, PAD11, ly + 14 + i * 24, look.muted, 'font-size="10.5" letter-spacing="1"') + mono(f.value, PAD11 + leftW, ly + 14 + i * 24, look.fg, 'font-size="13" font-weight="700" text-anchor="end"') + `<rect x="${PAD11}" y="${ly + 21 + i * 24}" width="${leftW}" height="1" fill="${look.border}"/>`;
+      left += mono(f.label, PAD6, ly + 14 + i * 24, look.muted, 'font-size="10.5" letter-spacing="1"') + mono(f.value, PAD6 + leftW, ly + 14 + i * 24, look.fg, 'font-size="13" font-weight="700" text-anchor="end"') + `<rect x="${PAD6}" y="${ly + 21 + i * 24}" width="${leftW}" height="1" fill="${look.border}"/>`;
     });
     ly += plan.facts.slice(0, 3).length * 24 + 12;
   }
   const motifTop = ly + 4;
-  left = motif(c2, PAD11, motifTop, leftW + 20, 100) + left;
+  left = motif(c2, PAD6, motifTop, leftW + 20, 100) + left;
   ly = motifTop + 104;
   parts.push(enter(left, motion, next()));
-  let ry = PAD11;
+  let ry = PAD6;
   for (const section of plan.sections) {
     let markup = "";
     let used = 0;
     if (section.repos && section.repos.length > 0 && blocks.has("projects")) {
       const rows = section.repos.slice(0, 5);
-      markup = label3(look, section.title, rightX, ry + 8) + rows.map((r, i) => repoRow(look, r, profile, rightX, ry + 22 + i * REPO_ROW, rightW)).join("");
+      markup = label2(look, section.title, rightX, ry + 8) + rows.map((r, i) => repoRow(look, r, profile, rightX, ry + 22 + i * REPO_ROW, rightW)).join("");
       used = 22 + rows.length * REPO_ROW + 14;
     } else if (section.checks && section.checks.length > 0 && showStats) {
       const h = 22 + section.checks.length * 30 + 12;
-      markup = label3(look, section.title, rightX, ry + 8) + panel(look, rightX, ry + 18, rightW, h - 14 + 2, false) + section.checks.map((line, i) => `<circle cx="${rightX + 24}" cy="${ry + 44 + i * 30}" r="9" fill="${look.accent}" fill-opacity="0.18"/><path d="M${rightX + 19.5} ${ry + 44 + i * 30}l3.5 3.5l6 -7" fill="none" stroke="${look.accent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>` + sans(truncate(line, 62), rightX + 44, ry + 48.5 + i * 30, look.fg, 'font-size="13.5"')).join("");
+      markup = label2(look, section.title, rightX, ry + 8) + panel(look, rightX, ry + 18, rightW, h - 14 + 2, false) + section.checks.map((line, i) => `<circle cx="${rightX + 24}" cy="${ry + 44 + i * 30}" r="9" fill="${look.accent}" fill-opacity="0.18"/><path d="M${rightX + 19.5} ${ry + 44 + i * 30}l3.5 3.5l6 -7" fill="none" stroke="${look.accent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>` + sans(truncate(line, 62), rightX + 44, ry + 48.5 + i * 30, look.fg, 'font-size="13.5"')).join("");
       used = h + 16;
     } else if (section.text) {
       const lines = wrap(section.text, Math.floor(rightW / 8), 3);
-      markup = label3(look, section.title, rightX, ry + 8) + lines.map((line, i) => sans(line, rightX, ry + 36 + i * 22, look.fg, 'font-size="16" font-weight="600"')).join("");
+      markup = label2(look, section.title, rightX, ry + 8) + lines.map((line, i) => sans(line, rightX, ry + 36 + i * 22, look.fg, 'font-size="16" font-weight="600"')).join("");
       used = 36 + lines.length * 22 + 10;
     }
     if (markup) {
@@ -18214,13 +18457,13 @@ function board(c2) {
     const heat = heatStrip(look, profile.contributions.days, rightX + 16, ry + 44, rightW - 32);
     const h = 44 + heat.height + 40;
     const caption = activityCaption(profile);
-    const markup = label3(look, "ACTIVITY, PAST YEAR", rightX, ry + 8) + panel(look, rightX, ry + 18, rightW, h - 18, false) + heat.markup + (caption ? mono(truncate(caption, 80), rightX + 16, ry + 44 + heat.height + 22, look.muted, 'font-size="11.5"') : "");
+    const markup = label2(look, "ACTIVITY, PAST YEAR", rightX, ry + 8) + panel(look, rightX, ry + 18, rightW, h - 18, false) + heat.markup + (caption ? mono(truncate(caption, 80), rightX + 16, ry + 44 + heat.height + 22, look.muted, 'font-size="11.5"') : "");
     parts.push(enter(markup, motion, next()));
     ry += h + 8;
   }
-  return { body: parts.join("\n"), height: Math.max(ly, ry) + PAD11 - 8 };
+  return { body: parts.join("\n"), height: Math.max(ly, ry) + PAD6 - 8 };
 }
-function renderSvg8(spec, profile, config, variant) {
+function renderSvg9(spec, profile, config, variant) {
   const look = lookOf(spec.hue, variant, profile);
   const plan = spec.plan(profile, config);
   const c2 = { profile, config, look, variant, motion: config.motion, blocks: new Set(config.blocks), plan, spec };
@@ -18249,7 +18492,7 @@ function lensTemplate(spec) {
     render(profile, config) {
       const assets = variantsFor(config.theme).map((variant) => ({
         path: assetPath(spec.id, variant),
-        content: renderSvg8(spec, profile, config, variant)
+        content: renderSvg9(spec, profile, config, variant)
       }));
       const projects = config.blocks.includes("projects") && profile.topRepos.length > 0 ? `top projects ${profile.topRepos.slice(0, 4).map((r) => r.name).join(", ")}` : void 0;
       return { readme: imageReadme(profile, config, spec.id, W, describeProfile(profile, config, projects, { activity: true })), assets };
@@ -18262,7 +18505,7 @@ var WEB = ["TypeScript", "JavaScript", "CSS", "SCSS", "Less", "HTML", "Vue", "Sv
 var SERVICES = ["Go", "Rust", "Java", "Kotlin", "Scala", "C#", "Elixir", "Erlang", "Ruby", "PHP", "Python", "C", "C++", "Haskell", "Clojure", "Zig"];
 var INFRA = ["Shell", "HCL", "Dockerfile", "Makefile", "Nix", "PowerShell", "Jsonnet", "Starlark", "Bicep"];
 var DATA = ["Python", "Jupyter Notebook", "R", "Julia", "SQL", "MATLAB", "TeX", "Stata"];
-var stars = (repos) => repos.reduce((sum, r) => sum + r.stars, 0);
+var stars2 = (repos) => repos.reduce((sum, r) => sum + r.stars, 0);
 var fact = (label4, value, show = true) => show && value !== void 0 && value !== "" ? [{ label: label4, value: typeof value === "number" ? formatNumber(value) : value }] : [];
 function languagePlan(profile, languages, kicker, matchedTitle, matchedCaption) {
   const matched = reposIn(profile, languages);
@@ -18270,7 +18513,7 @@ function languagePlan(profile, languages, kicker, matchedTitle, matchedCaption) 
   const hasMatch = matched.length > 0;
   return {
     ...hasMatch ? { kicker } : {},
-    hero: hasMatch ? { value: formatNumber(stars(matched)), label: matchedCaption } : { value: formatNumber(profile.totalStars), label: "STARS EARNED" },
+    hero: hasMatch ? { value: formatNumber(stars2(matched)), label: matchedCaption } : { value: formatNumber(profile.totalStars), label: "STARS EARNED" },
     facts: [
       ...fact("TOP REPOS IN THIS AREA", matched.length, hasMatch),
       ...fact("SHARE OF REPOS IN THIS AREA", `${share}%`, share > 0),
@@ -18524,7 +18767,7 @@ function repoTile(repo, x, y, width, profile, t, accent2) {
   }
   return parts.join("");
 }
-function renderSvg9(profile, config, variant) {
+function renderSvg10(profile, config, variant) {
   const t = PALETTE[variant];
   const tint = profile.avatar?.grid.tint;
   const palette = tint ? accentColors(tint, variant) : FALLBACK_ACCENTS[variant];
@@ -18658,7 +18901,7 @@ var maintainer = {
   render(profile, config) {
     const assets = variantsFor(config.theme).map((variant) => ({
       path: assetPath("maintainer", variant),
-      content: renderSvg9(profile, config, variant)
+      content: renderSvg10(profile, config, variant)
     }));
     const projects = config.blocks.includes("projects") && profile.topRepos.length > 0 ? `top projects ${profile.topRepos.slice(0, 4).map((r) => r.name).join(", ")}` : void 0;
     const alt = describeProfile(profile, config, projects, { activity: true });
@@ -18900,7 +19143,7 @@ function renderInfo(line, y, x, p, login) {
       return `<text ${base} fill="${p.accent2}" font-weight="700">${xmlEscape(line.label.padEnd(LABEL_WIDTH))}<tspan fill="${p.fg}" font-weight="400">${xmlEscape(line.value)}</tspan></text>`;
   }
 }
-function renderSvg10(profile, config, variant) {
+function renderSvg11(profile, config, variant) {
   const p = palettes[variant];
   const art = profile.avatar ? asciiPortrait(profile.avatar.grid, ART_COLS, variant) : [];
   const info = infoLines(profile, config);
@@ -18962,7 +19205,7 @@ var neofetch = {
   render(profile, config) {
     const assets = variantsFor(config.theme).map((variant) => ({
       path: assetPath("neofetch", variant),
-      content: renderSvg10(profile, config, variant)
+      content: renderSvg11(profile, config, variant)
     }));
     const extra = profile.avatar ? "with an ASCII portrait of the profile picture" : void 0;
     const alt = describeProfile(profile, config, extra, { activity: true });
@@ -19002,7 +19245,7 @@ function avatarMarkup(profile, c2, cx, cy) {
   const initial = [...profile.name ?? profile.login][0]?.toUpperCase() ?? "?";
   return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#ring)"/><text x="${cx}" y="${cy + 20}" text-anchor="middle" font-size="56" font-weight="800" fill="#ffffff">${xmlEscape(initial)}</text>${ring}`;
 }
-function renderSvg11(profile, config, variant) {
+function renderSvg12(profile, config, variant) {
   const p = palettes[variant];
   const c2 = { p, accents: accentColors(profile.avatar?.grid.tint, variant), motion: config.motion };
   const motion = config.motion;
@@ -19166,7 +19409,7 @@ var showcase = {
   render(profile, config) {
     const assets = variantsFor(config.theme).map((variant) => ({
       path: assetPath("showcase", variant),
-      content: renderSvg11(profile, config, variant)
+      content: renderSvg12(profile, config, variant)
     }));
     const alt = describeProfile(profile, config, void 0, { activity: true });
     return { readme: imageReadme(profile, config, "showcase", WIDTH10, alt), assets };
@@ -19257,7 +19500,7 @@ function renderLine(line, y, p, login) {
     }
   }
 }
-function renderSvg12(profile, config, variant) {
+function renderSvg13(profile, config, variant) {
   const p = palettes[variant];
   const lines = buildLines(profile, config);
   const height = TITLE_BAR + PAD15 * 2 + lines.length * LINE_HEIGHT;
@@ -19291,7 +19534,7 @@ var terminal = {
   render(profile, config) {
     const assets = variantsFor(config.theme).map((variant) => ({
       path: assetPath("terminal", variant),
-      content: renderSvg12(profile, config, variant)
+      content: renderSvg13(profile, config, variant)
     }));
     const alt = describeProfile(profile, config, void 0, { activity: true });
     return { readme: imageReadme(profile, config, "terminal", WIDTH11, alt), assets };
@@ -19323,9 +19566,12 @@ var LIVE = {
   framework: { preset: "blueprint", city: true, companion: "snake", shift: 144 },
   ossbuilder: { preset: "editor", city: true, companion: "snake", shift: 160 },
   ossproof: { preset: "blueprint", city: true, companion: "chess", shift: 176 },
-  founder: { preset: "paper", city: true, companion: "chess", shift: 192 }
+  founder: { preset: "paper", city: true, companion: "chess", shift: 192 },
+  spaceshooter: { preset: "space", city: true, companion: "chess", shift: 208 },
+  jetrunner: { preset: "sunrise", city: true, companion: "chess", shift: 224 },
+  playablesignal: { preset: "arcade", city: true, companion: "chess", shift: 240 }
 };
-var bases = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates];
+var bases = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates];
 var templates = bases.map((template) => {
   const spec = LIVE[template.id];
   if (!spec) throw new Error(`Template "${template.id}" has no live preset`);

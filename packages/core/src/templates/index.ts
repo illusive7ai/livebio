@@ -1,5 +1,6 @@
 import type { Template } from '../types';
 import { withLive, type LiveSpec } from '../live/compose';
+import { arcadeTemplates } from './arcade';
 import { brief } from './brief';
 import { buildlog } from './buildlog';
 import { city } from './city';
@@ -43,9 +44,12 @@ const LIVE: Record<string, LiveSpec> = {
   ossbuilder: { preset: 'editor', city: true, companion: 'snake', shift: 160 },
   ossproof: { preset: 'blueprint', city: true, companion: 'chess', shift: 176 },
   founder: { preset: 'paper', city: true, companion: 'chess', shift: 192 },
+  spaceshooter: { preset: 'space', city: true, companion: 'chess', shift: 208 },
+  jetrunner: { preset: 'sunrise', city: true, companion: 'chess', shift: 224 },
+  playablesignal: { preset: 'arcade', city: true, companion: 'chess', shift: 240 },
 };
 
-const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates];
+const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates];
 
 export const templates: Template[] = bases.map((template) => {
   const spec = LIVE[template.id];
