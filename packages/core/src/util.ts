@@ -39,8 +39,12 @@ export function wrap(text: string, width: number, maxLines: number): string[] {
   }
   if (current) lines.push(current);
   if (lines.length <= maxLines) return lines;
+
+  // Text was cut: drop whole words from the last line until the ellipsis fits.
   const kept = lines.slice(0, maxLines);
-  kept[maxLines - 1] = truncate(`${kept[maxLines - 1]} …`, width);
+  let last = kept[maxLines - 1] ?? '';
+  while (last.length + 1 > width && last.includes(' ')) last = last.slice(0, last.lastIndexOf(' '));
+  kept[maxLines - 1] = `${truncate(last, width - 1)}…`;
   return kept;
 }
 

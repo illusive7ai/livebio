@@ -36,9 +36,9 @@ function initialUsername(): string {
 function initialTemplate(): string {
   try {
     const id = new URLSearchParams(window.location.search).get('template');
-    return id && getTemplate(id) ? id : 'terminal';
+    return id && getTemplate(id) ? id : 'showcase';
   } catch {
-    return 'terminal';
+    return 'showcase';
   }
 }
 

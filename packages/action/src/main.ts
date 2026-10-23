@@ -70,5 +70,6 @@ async function main(): Promise<void> {
 main().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
   console.error(`::error::${message}`);
-  process.exit(1);
+  // Set the code instead of calling process.exit, so open network handles can close cleanly.
+  process.exitCode = 1;
 });

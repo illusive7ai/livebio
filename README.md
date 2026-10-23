@@ -32,7 +32,7 @@ In your profile repository (named the same as your username), add `livebio.yml`:
 
 ```yaml
 username: your-username
-template: terminal
+template: showcase   # showcase, terminal, neofetch or minimal
 theme: auto
 motion: true
 credit: true
@@ -96,8 +96,9 @@ After changing `packages/core` or `packages/action`, run `npm run build -w @live
 
 ## Roadmap
 
+- [x] Showcase: a banner built around your profile picture, coloured from the picture itself
 - [x] Neofetch: your profile picture as ASCII art beside a system-info summary
-- [ ] More templates: recruiter brief, open-source maintainer, isometric contribution city, animated repo galaxy, snake trail and more, each with its own look, and some built around images
+- [ ] More templates: recruiter brief, open-source maintainer, isometric contribution city, animated repo galaxy, snake trail and more, each with its own look
 - [ ] Contribution counts and streaks (authenticated data, available in the Action)
 - [ ] Optional small edge function so the browser preview can show contribution data too
 - [ ] Import and improve an existing README

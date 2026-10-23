@@ -7,6 +7,8 @@ export const RAMP = ' .:-=+*#%@';
 const CELL_ASPECT = 0.6;
 /** Cells less opaque than this (out of 255) are left empty, so transparent corners stay blank. */
 const OPAQUE_AT = 64;
+/** A picture needs at least this share of vivid pixels before it is considered to have a colour. */
+const TINT_SHARE = 0.03;
 /** How strongly a cell is pushed away from the average of its neighbours. */
 const SHARPEN = 1.1;
 
@@ -15,14 +17,33 @@ export function gridFromRgba(rgba: ArrayLike<number>, width: number, height: num
   const count = width * height;
   const luma = new Array<number>(count);
   const alpha = new Array<number>(count);
+  let tintR = 0;
+  let tintG = 0;
+  let tintB = 0;
+  let tinted = 0;
   for (let i = 0; i < count; i++) {
     const r = rgba[i * 4] ?? 0;
     const g = rgba[i * 4 + 1] ?? 0;
     const b = rgba[i * 4 + 2] ?? 0;
+    const a = rgba[i * 4 + 3] ?? 255;
     luma[i] = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    alpha[i] = rgba[i * 4 + 3] ?? 255;
+    alpha[i] = a;
+
+    // Only vivid, reasonably bright pixels say anything about the picture's colour.
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    if (a >= 128 && max > 64 && (max - min) / max > 0.35) {
+      tintR += r;
+      tintG += g;
+      tintB += b;
+      tinted++;
+    }
   }
-  return { width, height, luma, alpha };
+  const grid: PixelGrid = { width, height, luma, alpha };
+  if (tinted >= count * TINT_SHARE) {
+    grid.tint = [Math.round(tintR / tinted), Math.round(tintG / tinted), Math.round(tintB / tinted)];
+  }
+  return grid;
 }
 
 function percentile(sorted: number[], p: number): number {

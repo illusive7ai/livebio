@@ -11,7 +11,7 @@ export class ConfigError extends Error {
 
 const MAX_TEXT = 200;
 
-export function defaultConfig(username: string, template = 'terminal'): Config {
+export function defaultConfig(username: string, template = 'showcase'): Config {
   return {
     username,
     template,
@@ -49,7 +49,7 @@ export function parseConfig(input: unknown): Config {
     throw new ConfigError('"username" must be a valid GitHub username.');
   }
 
-  const template = raw.template ?? 'terminal';
+  const template = raw.template ?? 'showcase';
   if (typeof template !== 'string' || !template) throw new ConfigError('"template" must be a template id.');
 
   const theme = raw.theme ?? 'auto';

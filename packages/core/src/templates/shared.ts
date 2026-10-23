@@ -3,6 +3,7 @@ import type { Config, Profile } from '../types';
 import { formatNumber, safeUrl } from '../util';
 
 export const FONT = "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace";
+export const FONT_SANS = "'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif";
 
 /**
  * CSS for lines that appear one after another. Lines are visible by default and only hidden

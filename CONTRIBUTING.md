@@ -26,7 +26,7 @@ npm run dev
 - **Alt text** must describe only what the image shows.
 - **System fonts only.** GitHub blocks external fonts and resources inside images.
 - **Give it its own look.** Templates should not be colour swaps of each other. Layout, motion and mood should differ.
-- **Images:** an SVG cannot load outside images, so embed them. Set `needsAvatar: true` on your template and use `profile.avatar.dataUri` to embed the profile picture, or `profile.avatar.grid` for pixel data (see `neofetch.ts`). `profile.avatar` can be missing, so always have a fallback.
+- **Images:** an SVG cannot load outside images, so embed them. Set `needsAvatar: true` on your template and use `profile.avatar.dataUri` to embed the profile picture, or `profile.avatar.grid` for pixel data (see `neofetch.ts`). `profile.avatar` can be missing, so always have a fallback. `profile.avatar.grid.tint` is the picture's dominant colour, and `accentColors` in `color.ts` turns it into a palette (see `showcase.ts`). Only embed a picture after checking it is a plain base64 PNG or JPEG data URI.
 
 GitHub strips CSS, scripts and iframes from READMEs, so animation has to live inside the SVG, and hover or click effects are not possible.
 

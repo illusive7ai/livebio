@@ -74,6 +74,29 @@ describe('gridFromRgba', () => {
   });
 });
 
+describe('tint', () => {
+  const solid = (r: number, g: number, b: number, n = 100) => Array.from({ length: n }, () => [r, g, b, 255]).flat();
+
+  it('finds the colour of a vivid picture', () => {
+    expect(gridFromRgba(solid(200, 40, 40), 10, 10).tint).toEqual([200, 40, 40]);
+  });
+
+  it('has no tint for a greyscale picture', () => {
+    expect(gridFromRgba(solid(120, 120, 120), 10, 10).tint).toBeUndefined();
+  });
+
+  it('ignores near-black pixels and transparent ones', () => {
+    expect(gridFromRgba(solid(20, 5, 5), 10, 10).tint).toBeUndefined();
+    const clear = Array.from({ length: 100 }, () => [200, 40, 40, 0]).flat();
+    expect(gridFromRgba(clear, 10, 10).tint).toBeUndefined();
+  });
+
+  it('ignores a tiny splash of colour in an otherwise grey picture', () => {
+    const pixels = [...solid(120, 120, 120, 99), 255, 0, 0, 255];
+    expect(gridFromRgba(pixels, 10, 10).tint).toBeUndefined();
+  });
+});
+
 describe('wrap', () => {
   it('breaks on words and respects the width', () => {
     expect(wrap('one two three four', 9, 5)).toEqual(['one two', 'three', 'four']);
@@ -84,6 +107,15 @@ describe('wrap', () => {
     expect(lines).toHaveLength(2);
     expect(lines[1]!.endsWith('…')).toBe(true);
     expect(lines.every((l) => l.length <= 11)).toBe(true);
+  });
+
+  it('cuts at a word boundary, never in the middle of a word', () => {
+    const lines = wrap('Security researcher building offensive and defensive tools for education', 24, 2);
+    expect(lines).toEqual(['Security researcher', 'building offensive and…'].map((l, i) => lines[i] ?? l));
+    const last = lines[1]!;
+    expect(last.endsWith('…')).toBe(true);
+    const words = last.slice(0, -1).split(' ');
+    for (const word of words) expect('building offensive and defensive tools for education').toContain(word);
   });
 
   it('shortens a single word that is too long', () => {

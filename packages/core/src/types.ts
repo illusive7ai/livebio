@@ -25,6 +25,8 @@ export interface PixelGrid {
   height: number;
   luma: number[];
   alpha: number[];
+  /** Average [r, g, b] of the picture's colourful pixels. Missing for greyscale pictures. */
+  tint?: [number, number, number];
 }
 
 /**
