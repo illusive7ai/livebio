@@ -1,4 +1,4 @@
-import { PRESETS, type Companion, type Config, type CustomStyle, type Preset } from '@livebio/core';
+import { PRESETS, defaultCompanion, getTemplate, type Companion, type Config, type CustomStyle, type Preset } from '@livebio/core';
 
 interface Props {
   config: Config;
@@ -20,11 +20,10 @@ const LOOK_LABELS: Record<Preset, string> = {
   plain: 'Plain',
 };
 
-const GAMES: Array<[Companion | 'default', string]> = [
-  ['default', 'Design default'],
-  ['snake', 'Snake'],
-  ['chess', 'Chess'],
-  ['none', 'No game'],
+const GAMES: Array<[Companion, string, string]> = [
+  ['chess', 'Chess', 'A famous game, replayed two moves a day'],
+  ['snake', 'Snake', 'A snake that eats your active days'],
+  ['none', 'No game', 'Only the contribution city'],
 ];
 
 /** The changes a person can make to any design: its colour, the look of its live panels, and its game. */
@@ -39,7 +38,9 @@ export function StyleControls({ config, onChange }: Props) {
   };
 
   const hue = custom.hue ?? 160;
-  const game = custom.companion ?? 'default';
+  const fallback: Companion = defaultCompanion(config.template) ?? 'none';
+  const game: Companion = custom.companion ?? fallback;
+  const doubled = config.template === 'snake' && game === 'snake';
 
   return (
     <section className="panel">
@@ -83,20 +84,27 @@ export function StyleControls({ config, onChange }: Props) {
       </label>
 
       <fieldset className="plain">
-        <legend>Live game</legend>
+        <legend>Game under the card</legend>
         <div className="segmented">
-          {GAMES.map(([value, label]) => (
-            <label key={value} className={game === value ? 'on' : ''}>
+          {GAMES.map(([value, label, about]) => (
+            <label key={value} className={game === value ? 'on' : ''} title={about}>
               <input
                 type="radio"
                 name="game"
                 checked={game === value}
-                onChange={() => (value === 'default' ? update({}, ['companion']) : update({ companion: value }))}
+                onChange={() => (value === fallback ? update({}, ['companion']) : update({ companion: value }))}
               />
               {label}
+              {value === fallback && <span className="muted-line"> (default)</span>}
             </label>
           ))}
         </div>
+        <small className="muted-line">
+          {GAMES.find(([value]) => value === game)?.[2]}.
+          {game !== 'none' && ' It plays itself from your real activity.'}
+          {config.template === 'snake' && game === 'none' && ' The Snake trail design is already a snake game.'}
+          {doubled && ' The Snake trail design is already a snake game, so this adds a second one under it.'} Any design can carry either game.
+        </small>
       </fieldset>
     </section>
   );

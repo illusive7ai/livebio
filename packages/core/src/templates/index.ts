@@ -87,6 +87,11 @@ export const templates: Template[] = bases.map((template) => {
   return withLive(template, spec);
 });
 
+/** The game a design carries when nothing is chosen, or null for a design that is itself a game or carries none. */
+export function defaultCompanion(id: string): 'snake' | 'chess' | null {
+  return LIVE[id]?.companion ?? null;
+}
+
 export function getTemplate(id: string): Template | undefined {
   return templates.find((template) => template.id === id);
 }

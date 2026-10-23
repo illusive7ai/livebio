@@ -25,6 +25,7 @@ All notable changes to livebio. The version numbers are the tags of the GitHub A
 
 ### Changed
 
+- The Studio's game choice is now a plain **Chess / Snake / No game** picker that works with every design, marks the design's own default, and explains the choice. The choice travels in the exported `livebio.yml` and in the live picture addresses. A test now runs it against all 50 designs.
 - The export panel leads with the easiest way to publish, and explains, with a checklist, why a README copied without its picture files shows broken images.
 
 ## 0.1.1 - 2026-10-23

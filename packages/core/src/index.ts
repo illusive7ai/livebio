@@ -14,7 +14,7 @@ export {
   parseContributions,
 } from './contributions';
 export { ConfigError, configToYaml, defaultConfig, needsContributions, parseConfig, parseConfigYaml } from './config';
-export { getTemplate, templates } from './templates';
+export { defaultCompanion, getTemplate, templates } from './templates';
 export { renderProfile } from './render';
 export { previewMarkdown } from './preview';
 export { ACTION_REF, workflowYaml } from './workflow';
