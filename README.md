@@ -4,6 +4,8 @@ A GitHub profile README that keeps itself up to date. Open source, no sign-in, n
 
 **Built by [illusivehacks](https://github.com/illusive7ai).**
 
+### [Try it: illusive7ai.github.io/livebio](https://illusive7ai.github.io/livebio/)
+
 Type your GitHub username, pick a design, make it yours, and export. A small GitHub Action in your own profile repository then refreshes your stats every day, so your profile never goes stale and never depends on someone else's server.
 
 > **Status: early.** The builder, the Action and two templates work. More templates are the next thing on the list. See the [roadmap](#roadmap).
