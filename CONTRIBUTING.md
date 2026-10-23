@@ -24,6 +24,7 @@ npm run dev
 - **Honour `motion`.** Only animate when `config.motion` is true, and add a `prefers-reduced-motion` rule.
 - **Honour `blocks`.** Only show sections listed in `config.blocks`, including in alt text.
 - **Alt text** must describe only what the image shows. `describeProfile` takes `{ activity: true }`; pass it only if your template draws the activity section.
+- **Optional project facts** can be missing too: `profile.totalForks`, `profile.activeRepos` (pushed within `ACTIVE_WINDOW_DAYS`), `profile.fetchedAt`, and each repository's `pushedAt` and `license`. Measure "updated 3 days ago" from `fetchedAt` with `timeAgo`, never from the current time, so output stays repeatable. Leave out whatever is missing instead of printing a placeholder.
 - **Activity data** is `profile.contributions` and can be missing. Show the `activity` section only when it exists and `config.blocks` includes `activity`.
 - **System fonts only.** GitHub blocks external fonts and resources inside images.
 - **Give it its own look.** Templates should not be colour swaps of each other. Layout, motion and mood should differ.

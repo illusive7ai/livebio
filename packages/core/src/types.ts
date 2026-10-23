@@ -11,6 +11,10 @@ export interface RepoSummary {
   forks: number;
   language: string | null;
   url: string;
+  /** When the repository was last pushed to, if GitHub said. */
+  pushedAt?: string | null;
+  /** SPDX licence id such as "MIT", if the repository declares a recognised licence. */
+  license?: string | null;
 }
 
 /** Share of the user's own (non-fork) repositories whose main language this is. */
@@ -83,6 +87,12 @@ export interface Profile {
   createdAt: string;
   languages: LanguageShare[];
   topRepos: RepoSummary[];
+  /** Forks of the user's own (non-fork) repositories, added together. */
+  totalForks?: number;
+  /** Own repositories that are not archived and were pushed to within ACTIVE_WINDOW_DAYS of `fetchedAt`. */
+  activeRepos?: number;
+  /** When this data was read. Relative times such as "3 days ago" are measured from here. */
+  fetchedAt?: string;
   /** Present only when the host loaded the picture. Templates must cope without it. */
   avatar?: Avatar;
   /** Present only when contribution data was available. Templates must cope without it. */

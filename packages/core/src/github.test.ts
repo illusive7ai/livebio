@@ -72,6 +72,37 @@ describe('fetchProfile', () => {
     expect(profile.company).toBeNull();
   });
 
+  it('records licences, last-push dates, total forks and recently active repositories', async () => {
+    const now = new Date('2026-06-01T00:00:00Z');
+    const daysAgo = (n: number) => new Date(now.getTime() - n * 86_400_000).toISOString();
+    const profile = await fetchProfile('octo', {
+      now: () => now,
+      fetch: mockFetch({
+        '/repos': {
+          body: [
+            repo({ name: 'a', stargazers_count: 10, forks_count: 3, pushed_at: daysAgo(12), license: { spdx_id: 'MIT' } }),
+            repo({ name: 'forked', fork: true, stargazers_count: 99, forks_count: 99, pushed_at: daysAgo(1) }),
+            repo({ name: 'archived', archived: true, stargazers_count: 7, forks_count: 1, pushed_at: daysAgo(2) }),
+            repo({ name: 'old', stargazers_count: 5, forks_count: 2, pushed_at: daysAgo(400), license: { spdx_id: 'NOASSERTION' } }),
+            repo({ name: 'undated', stargazers_count: 1, forks_count: 4 }),
+            repo({ name: 'edge-in', stargazers_count: 0, pushed_at: daysAgo(90) }),
+            repo({ name: 'edge-out', stargazers_count: 0, pushed_at: daysAgo(91) }),
+          ],
+        },
+        '/users/octo': { body: user },
+      }),
+    });
+
+    expect(profile.fetchedAt).toBe('2026-06-01T00:00:00.000Z');
+    expect(profile.totalForks).toBe(10); // forks of own repositories only: 3 + 1 + 2 + 4
+    expect(profile.activeRepos).toBe(2); // "a" and the repository pushed exactly 90 days ago
+    const byName = Object.fromEntries(profile.topRepos.map((r) => [r.name, r]));
+    expect(byName.a).toMatchObject({ license: 'MIT', pushedAt: daysAgo(12) });
+    expect(byName.old?.license).toBeNull(); // NOASSERTION is not shown as a licence
+    expect(byName.undated).toMatchObject({ license: null, pushedAt: null });
+    expect(byName.archived).toBeUndefined(); // archived repositories are not featured
+  });
+
   it('rejects invalid usernames before making any request', async () => {
     const never = (() => {
       throw new Error('should not be called');

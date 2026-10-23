@@ -1,9 +1,11 @@
 export * from './types';
-export { GitHubError, fetchProfile } from './github';
+export { ACTIVE_WINDOW_DAYS, GitHubError, fetchProfile } from './github';
 export type { FetchOptions, GitHubErrorKind } from './github';
 export {
   CONTRIBUTIONS_QUERY,
   buildContributions,
+  busiestMonth,
+  weeklyTotals,
   computeStreaks,
   fetchContributions,
   fetchContributionsViaProxy,

@@ -48,6 +48,29 @@ export function wrap(text: string, width: number, maxLines: number): string[] {
   return kept;
 }
 
+/**
+ * How long before `nowIso` something happened, in plain words: "today", "3 days ago",
+ * "5 weeks ago", "4 months ago", "2 years ago". Returns null for dates that cannot be read.
+ */
+export function timeAgo(thenIso: string, nowIso: string): string | null {
+  const then = Date.parse(thenIso);
+  const now = Date.parse(nowIso);
+  if (!Number.isFinite(then) || !Number.isFinite(now)) return null;
+  const days = Math.floor((now - then) / 86_400_000);
+  if (days < 1) return 'today';
+  if (days < 7) return days === 1 ? 'yesterday' : `${days} days ago`;
+  if (days < 30) {
+    const weeks = Math.floor(days / 7);
+    return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+  }
+  if (days < 365) {
+    const months = Math.floor(days / 30);
+    return months === 1 ? '1 month ago' : `${months} months ago`;
+  }
+  const years = Math.floor(days / 365);
+  return years === 1 ? '1 year ago' : `${years} years ago`;
+}
+
 export function formatNumber(n: number): string {
   return n.toLocaleString('en-US');
 }

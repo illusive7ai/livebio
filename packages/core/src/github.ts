@@ -27,7 +27,12 @@ export interface FetchOptions {
   fetch?: typeof fetch;
   /** Pages of 100 repositories to read. Defaults to 3. */
   maxRepoPages?: number;
+  /** The current time. Tests pass a fixed one so "recently active" is repeatable. */
+  now?: () => Date;
 }
+
+/** A repository counts as recently active if it was pushed to within this many days. */
+export const ACTIVE_WINDOW_DAYS = 90;
 
 interface ApiUser {
   login: string;
@@ -53,6 +58,8 @@ interface ApiRepo {
   forks_count: number;
   language: string | null;
   html_url: string;
+  pushed_at?: string | null;
+  license?: { spdx_id?: string | null } | null;
 }
 
 const API = 'https://api.github.com';
@@ -104,6 +111,12 @@ function languageShares(repos: ApiRepo[]): LanguageShare[] {
     .map(([name, count]) => ({ name, percent: Math.round((count / total) * 100) }));
 }
 
+/** GitHub reports "NOASSERTION" when it cannot recognise a licence, which says nothing useful. */
+function licenseOf(repo: ApiRepo): string | null {
+  const id = repo.license?.spdx_id?.trim();
+  return id && id !== 'NOASSERTION' ? id : null;
+}
+
 function summarise(repo: ApiRepo): RepoSummary {
   return {
     name: repo.name,
@@ -112,6 +125,8 @@ function summarise(repo: ApiRepo): RepoSummary {
     forks: repo.forks_count,
     language: repo.language,
     url: repo.html_url,
+    pushedAt: repo.pushed_at ?? null,
+    license: licenseOf(repo),
   };
 }
 
@@ -137,7 +152,14 @@ export async function fetchProfile(username: string, opts: FetchOptions = {}): P
     if (batch.length < PAGE_SIZE) break;
   }
 
+  const now = (opts.now ?? (() => new Date()))();
+  const cutoff = now.getTime() - ACTIVE_WINDOW_DAYS * 86_400_000;
+
   const own = repos.filter((repo) => !repo.fork);
+  const activeRepos = own.filter((repo) => {
+    const pushed = repo.pushed_at ? Date.parse(repo.pushed_at) : NaN;
+    return !repo.archived && Number.isFinite(pushed) && pushed >= cutoff;
+  }).length;
   const topRepos = own
     .filter((repo) => !repo.archived)
     .sort((a, b) => b.stargazers_count - a.stargazers_count)
@@ -157,6 +179,9 @@ export async function fetchProfile(username: string, opts: FetchOptions = {}): P
     following: user.following,
     publicRepos: user.public_repos,
     totalStars: own.reduce((sum, repo) => sum + repo.stargazers_count, 0),
+    totalForks: own.reduce((sum, repo) => sum + repo.forks_count, 0),
+    activeRepos,
+    fetchedAt: now.toISOString(),
     createdAt: user.created_at,
     languages: languageShares(own).slice(0, 5),
     topRepos,

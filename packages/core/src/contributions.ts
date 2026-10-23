@@ -80,6 +80,37 @@ export function computeStreaks(days: ReadonlyArray<{ date: string; count: number
   return { current, longest, activeDays };
 }
 
+/** Contributions added up for each calendar week (weeks start on Sunday), oldest first. */
+export function weeklyTotals(days: ReadonlyArray<{ date: string; count: number }>): number[] {
+  const weeks: number[] = [];
+  days.forEach((day, index) => {
+    const weekday = new Date(`${day.date}T00:00:00Z`).getUTCDay();
+    if (index === 0 || weekday === 0) weeks.push(0);
+    weeks[weeks.length - 1] = (weeks[weeks.length - 1] ?? 0) + day.count;
+  });
+  return weeks;
+}
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+/** The calendar month with the most contributions, or null if there were none. */
+export function busiestMonth(days: ReadonlyArray<{ date: string; count: number }>): { name: string; total: number } | null {
+  const totals = new Map<string, number>();
+  for (const day of days) {
+    const key = day.date.slice(0, 7);
+    totals.set(key, (totals.get(key) ?? 0) + day.count);
+  }
+  let best: { key: string; total: number } | null = null;
+  for (const [key, total] of totals) {
+    if (total > 0 && (!best || total > best.total)) best = { key, total };
+  }
+  if (!best) return null;
+  return { name: MONTH_NAMES[Number(best.key.slice(5, 7)) - 1] ?? best.key, total: best.total };
+}
+
 function invalid(reason: string): GitHubError {
   return new GitHubError(`The contribution data was not valid: ${reason}.`, 'unknown');
 }
