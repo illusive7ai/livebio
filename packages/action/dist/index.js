@@ -15520,7 +15520,14 @@ async function fetchContributions(username, opts = {}) {
   } catch {
     throw new GitHubError("Could not reach GitHub. Check your connection and try again.", "network");
   }
-  if (!response.ok) throw statusError(response.status, response.headers);
+  if (!response.ok) {
+    const error = statusError(response.status, response.headers);
+    if (error.kind === "unknown") {
+      const detail = (await response.text().catch(() => "")).replace(/\s+/g, " ").slice(0, 200);
+      if (detail) error.message = `${error.message} ${detail}`;
+    }
+    throw error;
+  }
   let body;
   try {
     body = await response.json();
