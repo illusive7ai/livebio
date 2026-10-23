@@ -2,13 +2,16 @@
 
 A GitHub profile README that keeps itself up to date. Open source, no sign-in, nothing stored.
 
-**Built by [illusivehacks](https://github.com/illusive7ai).**
+<a href="https://github.com/illusive7ai"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/credit-dark.svg">
+  <img alt="livebio by illusivehacks" src="assets/credit-light.svg" width="222">
+</picture></a>
 
 ### [Try it: illusive7ai.github.io/livebio](https://illusive7ai.github.io/livebio/)
 
 Type your GitHub username, pick a design, make it yours, and export. A small GitHub Action in your own profile repository then refreshes your stats every day, so your profile never goes stale and never depends on someone else's server.
 
-> **Status: early.** The builder, the Action and twelve templates work, including a 3D contribution city, an orbiting repo galaxy and an animated snake. More templates are the next thing on the list. See the [roadmap](#roadmap).
+> **Status: early.** The builder, a Templates gallery, a Studio for restyling designs and the Action all work, with 35 templates. Every one carries a live contribution city and an automated snake or chess game. See the [roadmap](#roadmap).
 
 ## How it works
 
@@ -89,11 +92,11 @@ The site has a **Templates** page with every design in one grid, and a **Studio*
 
 ## Reviews on the website
 
-The home page shows reviews from real users, and says plainly when there are none yet. To add one, someone submits the **Share your experience** form (`.github/ISSUE_TEMPLATE/review.yml`) and agrees to have it shown. The maintainer then copies it into `apps/web/src/data/testimonials.ts`. Please never add a review there that was not submitted by the person it names.
+The home page shows reviews from real users, and says plainly when there are none yet. To add one, someone submits the **Share your experience** form (`.github/ISSUE_TEMPLATE/review.yml`) and ticks the box that agrees to have it shown. The site reads these issues itself, through the contribution service (`/reviews`), and caches them for ten minutes. A review appears when it was opened by the repository owner, or when the maintainer adds the `approved` label to it. Only reviews written with the form, with a rating, some text and the box ticked, are shown, and each is shown as plain text next to the GitHub username that opened the issue. `apps/web/src/data/testimonials.ts` is only a fallback for when the service cannot be reached; never add a review there that was not submitted by the person it names.
 
 ## The credit line
 
-By default the generated README ends with a small "Made with livebio by illusivehacks" line. It helps the project reach people. You can switch it off with one checkbox in the builder, or with `credit: false` in `livebio.yml`.
+By default the generated README ends with a small glitching "livebio by illusivehacks" credit. It is an image, because a profile README cannot run CSS, and it links to this project. It helps the project reach people. You can switch it off with one checkbox in the builder, or with `credit: false` in `livebio.yml`.
 
 ## Develop
 

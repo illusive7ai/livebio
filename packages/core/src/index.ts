@@ -26,7 +26,10 @@ export {
   applyToReadme,
   creditFooter,
 } from './readme';
+export { CREDIT_TEXT, creditSvg } from './credit';
 export { isValidUsername } from './util';
 export { asciiPortrait, gridFromRgba } from './avatar';
 export { PRESETS } from './live/style';
 export type { Preset } from './live/style';
+export { MAX_QUOTE, cleanQuote, parseReviews, reviewFromIssue } from './reviews';
+export type { Review } from './reviews';

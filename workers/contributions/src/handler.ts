@@ -1,12 +1,15 @@
 import { fetchContributions } from '@livebio/core/src/contributions';
 import { GitHubError } from '@livebio/core/src/github';
 import { isValidUsername } from '@livebio/core/src/util';
+import { DEFAULT_REPO, fetchReviews } from './reviews';
 
 export interface Env {
   /** Read-only GitHub token. Set as a secret, never in wrangler.toml. */
   GITHUB_TOKEN?: string;
   /** Comma-separated list of origins whose pages may read the data. */
   ALLOWED_ORIGINS?: string;
+  /** The repository whose issues hold the reviews, as owner/name. */
+  REVIEWS_REPO?: string;
 }
 
 /** The part of the Workers Cache API this handler uses. */
@@ -22,6 +25,7 @@ export interface Deps {
 }
 
 const FOUND_TTL = 3600;
+const REVIEWS_TTL = 600;
 const MISSING_TTL = 600;
 const DEFAULT_RETRY = 60;
 
@@ -73,6 +77,31 @@ function failure(error: unknown, cors: Record<string, string>): Response {
   return respond({ error: 'Something went wrong.' }, 500, noStore);
 }
 
+/** Serves GET /reviews: the approved reviews from the repository's issues, cached for ten minutes. */
+async function serveReviews(env: Env, deps: Deps, cors: Record<string, string>): Promise<Response> {
+  const noStore = { ...cors, 'Cache-Control': 'no-store' };
+  if (!env.GITHUB_TOKEN) return respond({ error: 'The service is not configured.' }, 500, noStore);
+
+  const key = new Request('https://livebio.invalid/reviews');
+  const cached = await deps.cache?.match(key);
+  if (cached) return withCors(cached, cors, 'HIT');
+
+  try {
+    const { reviews, seen } = await fetchReviews(env.REVIEWS_REPO || DEFAULT_REPO, env.GITHUB_TOKEN, deps.fetch);
+    // For whoever runs the service: how many issues were read and how many qualified. No names, no text.
+    console.log(`livebio: reviews, ${seen} issues read, ${reviews.length} shown`);
+    const bare = respond({ reviews }, 200, { 'Cache-Control': `public, max-age=${REVIEWS_TTL}` });
+    if (deps.cache) {
+      const write = deps.cache.put(key, bare.clone());
+      if (deps.waitUntil) deps.waitUntil(write);
+      else void write;
+    }
+    return withCors(bare, cors, 'MISS');
+  } catch (error) {
+    return failure(error, cors);
+  }
+}
+
 /** Serves GET /?user=<login> as JSON contribution data. Pure and testable: no globals are touched. */
 export async function handle(request: Request, env: Env, deps: Deps = {}): Promise<Response> {
   const cors = corsHeaders(request.headers.get('Origin'), env);
@@ -88,6 +117,7 @@ export async function handle(request: Request, env: Env, deps: Deps = {}): Promi
   }
 
   const url = new URL(request.url);
+  if (url.pathname === '/reviews') return serveReviews(env, deps, cors);
   if (url.pathname !== '/' && url.pathname !== '/contributions') {
     return respond({ error: 'Not found.' }, 404, { ...cors, 'Cache-Control': 'no-store' });
   }

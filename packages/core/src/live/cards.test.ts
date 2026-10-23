@@ -186,7 +186,7 @@ describe('every template carries the live panels', () => {
 
   it('keeps the credit line last', () => {
     const out = renderProfile(base, config('showcase'));
-    const credit = out.readme.indexOf('Made with <a');
+    const credit = out.readme.indexOf('livebio/credit-');
     expect(credit).toBeGreaterThan(out.readme.lastIndexOf('showcase-city'));
     expect(credit).toBeGreaterThan(out.readme.lastIndexOf('showcase-chess'));
   });

@@ -15802,23 +15802,74 @@ function needsContributions(config) {
   return config.blocks.some((block) => block === "activity" || block === "city" || block === "game");
 }
 
+// ../core/src/credit.ts
+var CREDIT_TEXT = "livebio by illusivehacks";
+var FONT = "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace";
+var SIZE = 15;
+var CELL = 9.2;
+var HEIGHT = 34;
+var BASELINE = 22;
+var PERIOD = 4.6;
+var NOISE = ["#", "%", "@", "$", "&", "/", "\\", "<", ">", "0", "1", "*", "?", "+", "=", "~"];
+var CREDIT_WIDTH = Math.ceil(CREDIT_TEXT.length * CELL) + 8;
+var COLORS = {
+  dark: { fg: "#e6edf3", red: "#ff3b6b", cyan: "#27e1f0" },
+  light: { fg: "#1f2328", red: "#e11d48", cyan: "#0891b2" }
+};
+function seeded(seed) {
+  let state = 2166136261;
+  for (const char of seed) state = Math.imul(state ^ char.charCodeAt(0), 16777619) >>> 0;
+  return () => {
+    state = Math.imul(state ^ state >>> 15, 2246822507) >>> 0;
+    state = Math.imul(state ^ state >>> 13, 3266489909) >>> 0;
+    return ((state ^= state >>> 16) >>> 0) / 4294967296;
+  };
+}
+function creditSvg(variant, motion) {
+  const { fg, red, cyan } = COLORS[variant];
+  const rand = seeded("livebio-credit");
+  const chars = [...CREDIT_TEXT];
+  const layer = (cls, x, glyph, fill, extra = "") => `<text class="${cls}" x="${x.toFixed(1)}" y="${BASELINE}" fill="${fill}"${extra}>${xmlEscape(glyph)}</text>`;
+  const groups = chars.map((char, index) => {
+    if (char === " ") return "";
+    const x = 4 + index * CELL;
+    const delay = (rand() * 2.4).toFixed(2);
+    const noise = NOISE[Math.floor(rand() * NOISE.length)];
+    const style = motion ? ` style="--d:${delay}s"` : "";
+    return `<g class="g"${style}>` + layer("r", x, char, red) + layer("b", x, char, cyan) + layer("w", x, char, fg) + (motion ? layer("a", x, noise, fg) : "") + `</g>`;
+  }).join("");
+  const css = motion ? `text{font-family:${FONT};font-size:${SIZE}px;font-weight:700}
+.r{transform:translate(-1px,0);opacity:.75}.b{transform:translate(1px,0);opacity:.75}.a{opacity:0}
+.g,.r,.b,.w,.a{animation-duration:${PERIOD}s;animation-delay:var(--d);animation-iteration-count:infinite;animation-timing-function:steps(1,end)}
+.g{animation-name:g}.r{animation-name:r}.b{animation-name:b}.w{animation-name:w}.a{animation-name:a}
+@keyframes g{0%,84%{transform:none}86%{transform:translate(2px,-1px) skewX(-10deg)}88%{transform:translate(-2px,1px) skewX(8deg)}90%{transform:translate(1px,0)}92%,100%{transform:none}}
+@keyframes r{0%,84%{transform:translate(-1px,0)}86%{transform:translate(-5px,1px)}88%{transform:translate(-3px,-1px)}90%{transform:translate(4px,0)}92%,100%{transform:translate(-1px,0)}}
+@keyframes b{0%,84%{transform:translate(1px,0)}86%{transform:translate(5px,-1px)}88%{transform:translate(3px,1px)}90%{transform:translate(-4px,0)}92%,100%{transform:translate(1px,0)}}
+@keyframes w{0%,85%{opacity:1}86%,89%{opacity:0}90%,100%{opacity:1}}
+@keyframes a{0%,85%{opacity:0}86%,89%{opacity:1}90%,100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.g,.r,.b,.w,.a{animation:none}.a{opacity:0}.w{opacity:1}}` : `text{font-family:${FONT};font-size:${SIZE}px;font-weight:700}
+.r{transform:translate(-1px,0);opacity:.75}.b{transform:translate(1px,0);opacity:.75}`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${CREDIT_WIDTH}" height="${HEIGHT}" viewBox="0 0 ${CREDIT_WIDTH} ${HEIGHT}" role="img" aria-labelledby="t">
+<title id="t">${xmlEscape(CREDIT_TEXT)}</title>
+<style>
+${css}
+</style>
+${groups}
+</svg>
+`;
+}
+
 // ../core/src/readme.ts
 var REPO_URL = "https://github.com/illusive7ai/livebio";
-var AUTHOR = "illusivehacks";
-var AUTHOR_URL = "https://github.com/illusive7ai";
 var ASSET_DIR = "livebio";
 var MARKER_START = "<!-- livebio:start -->";
 var MARKER_END = "<!-- livebio:end -->";
-function creditFooter() {
-  return [
-    '<div align="center">',
-    `<sub>Made with <a href="${REPO_URL}">livebio</a> by <a href="${AUTHOR_URL}">${AUTHOR}</a></sub>`,
-    "</div>"
-  ].join("\n");
+function creditFooter(theme = "auto") {
+  return ['<div align="center">', `<a href="${REPO_URL}">`, pictureTag("credit", theme, CREDIT_TEXT, CREDIT_WIDTH), "</a>", "</div>"].join("\n");
 }
 function wrapReadme(body, config) {
   const parts = [MARKER_START, body.trim()];
-  if (config.credit) parts.push(creditFooter());
+  if (config.credit) parts.push(creditFooter(config.theme));
   parts.push(MARKER_END);
   return `${parts.join("\n\n")}
 `;
@@ -15834,10 +15885,10 @@ function applyToReadme(existing, generated) {
   }
   return generated;
 }
-function insertBlocks(readme, blocks) {
+function insertBlocks(readme, blocks, theme = "auto") {
   if (blocks.length === 0) return readme;
   const extra = blocks.join("\n\n");
-  const credit = creditFooter();
+  const credit = creditFooter(theme);
   const at = readme.indexOf(credit);
   if (at !== -1) return `${readme.slice(0, at)}${extra}
 
@@ -15895,7 +15946,7 @@ function variantsFor(theme) {
 }
 
 // ../core/src/templates/shared.ts
-var FONT = "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace";
+var FONT2 = "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace";
 var FONT_SANS = "'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif";
 var FONT_SERIF = "Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif";
 var SAFE_DATA_URI = /^data:image\/(?:png|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/;
@@ -15915,7 +15966,7 @@ function stagger(markup, motion, delay) {
   if (!markup || !motion) return markup;
   return `<g class="ln" style="animation-delay:${delay.toFixed(2)}s">${markup}</g>`;
 }
-function seeded(text) {
+function seeded2(text) {
   let state = 2166136261;
   for (const char of text) state = Math.imul(state ^ char.charCodeAt(0), 16777619) >>> 0;
   return () => {
@@ -15969,10 +16020,10 @@ ${links.join(" \xB7 ")}
 var CARD_WIDTH = 900;
 var num = (value) => String(Math.round(value * 100) / 100 || 0);
 function fontFamily(style) {
-  return style.font === "mono" ? FONT : style.font === "serif" ? FONT_SERIF : FONT_SANS;
+  return style.font === "mono" ? FONT2 : style.font === "serif" ? FONT_SERIF : FONT_SANS;
 }
 function baseCss(style) {
-  return `text{font-family:${fontFamily(style)}}.mono{font-family:${FONT}}`;
+  return `text{font-family:${fontFamily(style)}}.mono{font-family:${FONT2}}`;
 }
 function cardBackground(style, height, seed) {
   const w = CARD_WIDTH;
@@ -15980,7 +16031,7 @@ function cardBackground(style, height, seed) {
   const defs = `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${style.bgTop}"/><stop offset="1" stop-color="${style.bgBottom}"/></linearGradient>`;
   let texture = "";
   if (style.texture === "stars" && style.variant === "dark") {
-    const random = seeded(`sky:${seed}`);
+    const random = seeded2(`sky:${seed}`);
     texture = Array.from({ length: 60 }, () => {
       const x = random() * w;
       const y = random() * height;
@@ -16194,7 +16245,7 @@ function dayNumber2(iso) {
   return Number.isFinite(time) ? Math.floor(time / 864e5) : 0;
 }
 function playlistFor(login, games = GAMES) {
-  const random = seeded(`chess:${login.toLowerCase()}`);
+  const random = seeded2(`chess:${login.toLowerCase()}`);
   const order = [...games];
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
@@ -16203,7 +16254,7 @@ function playlistFor(login, games = GAMES) {
   return order;
 }
 function startOffset(login, cycle) {
-  return Math.floor(seeded(`start:${login.toLowerCase()}`)() * cycle);
+  return Math.floor(seeded2(`start:${login.toLowerCase()}`)() * cycle);
 }
 function scheduleGame(login, nowIso, games = GAMES) {
   const order = playlistFor(login, games);
@@ -16229,7 +16280,7 @@ var SQ = 48;
 var BOARD = SQ * 8;
 var FRAME = 16;
 var OUTER = BOARD + FRAME * 2;
-var HEIGHT = OUTER + 68;
+var HEIGHT2 = OUTER + 68;
 var ANIMATED_PLIES = 4;
 var MOVE_SECONDS = 1.6;
 var HOLD_SECONDS = 4.2;
@@ -16297,8 +16348,8 @@ function renderChess(opts) {
   const { game } = state;
   const chess = style.chess;
   const bx = CARD_WIDTH - PAD - OUTER + FRAME;
-  const by = (HEIGHT - OUTER) / 2 + FRAME;
-  const bg = cardBackground(style, HEIGHT, opts.login);
+  const by = (HEIGHT2 - OUTER) / 2 + FRAME;
+  const bg = cardBackground(style, HEIGHT2, opts.login);
   let board2 = `<rect x="${bx - FRAME}" y="${by - FRAME}" width="${OUTER}" height="${OUTER}" rx="${chess.frame === "terminal" || chess.frame === "blueprint" ? 4 : 14}" fill="${chess.frameFill}" stroke="${chess.frameStroke}" stroke-width="${chess.frame === "wood" ? 2.5 : 1.5}"${chess.frame === "chalk" ? ' stroke-dasharray="7 5"' : ""}/>`;
   if (chess.frame === "glass") {
     board2 += `<rect x="${bx - FRAME + 5}" y="${by - FRAME + 5}" width="${OUTER - 10}" height="${OUTER - 10}" rx="10" fill="none" stroke="${chess.frameStroke}" stroke-opacity="0.45"/>`;
@@ -16363,10 +16414,10 @@ function renderChess(opts) {
       text += `<text class="mono" x="${PAD}" y="${movesY + 24 + i * 22}" font-size="14" fill="${style.fg}">${xmlEscape(line)}</text>`;
     });
   }
-  text += `<text class="mono" x="${PAD}" y="${HEIGHT - 30}" font-size="11.500" fill="${style.muted}">two moves a day, played automatically</text>`;
+  text += `<text class="mono" x="${PAD}" y="${HEIGHT2 - 30}" font-size="11.500" fill="${style.muted}">two moves a day, played automatically</text>`;
   const glow = chess.pieces === "glow" ? `<filter id="chs-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.800" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` : "";
   const title = `A live chess game: ${game.title}, ${game.white} against ${game.black}, ${game.place} ${game.year}. ${statusText(state, replay)}.`;
-  return svgDocument(style, HEIGHT, title, bg.defs + glow, css, bg.markup + text + board2);
+  return svgDocument(style, HEIGHT2, title, bg.defs + glow, css, bg.markup + text + board2);
 }
 
 // ../core/src/templates/city.ts
@@ -16543,7 +16594,7 @@ function renderSvg(profile, config, variant) {
   }
   if (footer.length > 0) parts.push(rise(footer.join(""), motion, next()));
   const height = Math.ceil(cursor + PAD2 - 14);
-  const random = seeded(profile.login);
+  const random = seeded2(profile.login);
   const stars3 = variant === "dark" ? Array.from({ length: 46 }, () => {
     const x = random() * WIDTH;
     const y = random() * Math.min(height * 0.55, 330);
@@ -16566,7 +16617,7 @@ function renderSvg(profile, config, variant) {
 </defs>
 <style>
 text{font-family:${FONT_SANS}}
-.mono{font-family:${FONT}}
+.mono{font-family:${FONT2}}
 ${faceCss}
 ${motionCss2}
 </style>
@@ -16677,7 +16728,7 @@ function renderCityCard(opts) {
 var WIDTH2 = 900;
 var PAD4 = 36;
 var ROWS2 = 7;
-var CELL = 11;
+var CELL2 = 11;
 var STEP = 14;
 var STEP_SECONDS = 0.075;
 var BODY = 5;
@@ -16747,7 +16798,7 @@ function renderSvg2(profile, config, variant) {
   const plan = planSnake(activity?.days ?? []);
   let css = "";
   if (wantsGrid && activity && plan.cols > 0) {
-    const gridWidth = plan.cols * STEP - (STEP - CELL);
+    const gridWidth = plan.cols * STEP - (STEP - CELL2);
     const x0 = Math.round((WIDTH2 - gridWidth) / 2);
     const y0 = cursor + STEP + 6;
     const at = (col, row) => [x0 + col * STEP, y0 + row * STEP];
@@ -16765,12 +16816,12 @@ function renderSvg2(profile, config, variant) {
         buckets.add(bucket);
         cls = ` class="c e${bucket}"`;
       }
-      return `<rect${cls} x="${x}" y="${y}" width="${CELL}" height="${CELL}" rx="2.5" ${fill}/>`;
+      return `<rect${cls} x="${x}" y="${y}" width="${CELL2}" height="${CELL2}" rx="2.5" ${fill}/>`;
     }).join("");
     const poseAt = (index) => at(...plan.path[(index % length + length) % length] ?? [0, 0]);
     const segments = Array.from({ length: BODY + 1 }, (_v, i) => {
-      const size = i === 0 ? CELL : CELL - Math.min(3, i * 0.5);
-      const inset = (CELL - size) / 2;
+      const size = i === 0 ? CELL2 : CELL2 - Math.min(3, i * 0.5);
+      const inset = (CELL2 - size) / 2;
       const [px, py] = poseAt(BODY - i);
       const fill = i === 0 ? look.head : look.body;
       const opacity = i === 0 ? 1 : Math.max(0.35, 1 - i * 0.13);
@@ -16835,7 +16886,7 @@ function renderSvg2(profile, config, variant) {
 </defs>
 <style>
 text{font-family:${FONT_SANS}}
-.mono{font-family:${FONT}}
+.mono{font-family:${FONT2}}
 ${entrance}
 ${css}
 </style>
@@ -17027,7 +17078,7 @@ ${pictureTag(`${base.id}-${kind}`, config.theme, alt, CARD_WIDTH)}
           });
         }
       }
-      return { readme: insertBlocks(out.readme, pictures), assets: [...out.assets, ...assets] };
+      return { readme: insertBlocks(out.readme, pictures, config.theme), assets: [...out.assets, ...assets] };
     }
   };
 }
@@ -17079,7 +17130,7 @@ ${o.defs ?? ""}
 </defs>
 <style>
 text{font-family:${FONT_SANS}}
-.mono{font-family:${FONT}}
+.mono{font-family:${FONT2}}
 ${o.css ?? ""}
 </style>
 <rect width="${W}" height="${height}" rx="${r}" fill="${look.bg}"/>
@@ -17219,7 +17270,7 @@ function telemetry(profile, blocks, look, x, y, extra = []) {
   return lines.map((line, i) => mono(truncate(line, 30), x, y + i * 20, i === 0 ? look.fg : look.muted, `font-size="${i === 0 ? 14 : 12.5}"${i === 0 ? ' font-weight="700"' : ""}`)).join("");
 }
 function stars(look, w, h, seed, motion) {
-  const rand = seeded(seed);
+  const rand = seeded2(seed);
   return Array.from({ length: 70 }, (_v, i) => {
     const twinkle = motion && i % 4 === 0 ? ` class="tw" style="animation-delay:${(rand() * 3).toFixed(1)}s"` : "";
     return `<circle cx="${num4(rand() * w)}" cy="${num4(rand() * h)}" r="${num4(0.5 + rand() * 1.1)}" fill="${look.fg}" fill-opacity="${num4(0.2 + rand() * 0.5)}"${twinkle}/>`;
@@ -17547,7 +17598,7 @@ function cinematicSvg(profile, config, variant) {
   const look = lookOf(232, variant, profile);
   const motion = config.motion;
   const blocks = new Set(config.blocks);
-  const rand = seeded(`${profile.login}:cinema`);
+  const rand = seeded2(`${profile.login}:cinema`);
   const bar = 34;
   const height = 470;
   const stageTop = bar;
@@ -17704,7 +17755,7 @@ function capTipSvg(profile, config, variant) {
   const look = lookOf(48, variant, profile);
   const motion = config.motion;
   const blocks = new Set(config.blocks);
-  const rand = seeded(`${profile.login}:cap`);
+  const rand = seeded2(`${profile.login}:cap`);
   const cx = W / 2;
   const cy = 168;
   const r = 62;
@@ -17767,7 +17818,7 @@ function creativeSvg(profile, config, variant) {
   const look = lookOf(tint ? 0 : 280, variant, profile);
   const motion = config.motion;
   const blocks = new Set(config.blocks);
-  const rand = seeded(`${profile.login}:art`);
+  const rand = seeded2(`${profile.login}:art`);
   const pick = (i) => colours[i % colours.length];
   const art = 340;
   const drift = () => motion ? ` class="dr" style="--dx:${num4((rand() - 0.5) * 36)}px;--dy:${num4((rand() - 0.5) * 28)}px;animation-duration:${num4(14 + rand() * 14)}s"` : "";
@@ -18201,7 +18252,7 @@ function renderSvg5(profile, config, variant) {
 </defs>
 <style>
 text{font-family:${FONT_SANS}}
-.mono{font-family:${FONT}}
+.mono{font-family:${FONT2}}
 ${css}
 </style>
 <rect width="${WIDTH4}" height="${height}" rx="14" fill="${look.bg}"/>
@@ -18571,7 +18622,7 @@ function renderSvg6(profile, config, variant) {
     cursor += 24;
   }
   const height = Math.ceil(cursor + PAD9 - 18);
-  const random = seeded(profile.login);
+  const random = seeded2(profile.login);
   const stars3 = variant === "dark" ? Array.from({ length: 70 }, () => {
     const x = random() * WIDTH5;
     const y = random() * height;
@@ -18596,7 +18647,7 @@ function renderSvg6(profile, config, variant) {
 </defs>
 <style>
 text{font-family:${FONT_SANS}}
-.mono{font-family:${FONT}}
+.mono{font-family:${FONT2}}
 ${css}
 </style>
 <rect width="${WIDTH5}" height="${height}" rx="20" fill="url(#sky)"/>
@@ -18757,7 +18808,7 @@ function renderSvg7(profile, config, variant) {
 </defs>
 <style>
 text{font-family:${FONT_SANS}}
-.mono{font-family:${FONT}}
+.mono{font-family:${FONT2}}
 ${css}
 </style>
 <rect width="${WIDTH6}" height="${height}" rx="24" fill="url(#sky)"/>
@@ -18948,7 +18999,7 @@ function renderSvg8(profile, config, variant) {
 </defs>
 <style>
 text{font-family:${FONT_SANS}}
-.mono{font-family:${FONT}}
+.mono{font-family:${FONT2}}
 .serif{font-family:${FONT_SERIF}}
 ${css}
 </style>
@@ -18978,7 +19029,7 @@ var learning = {
 // ../core/src/templates/lens.ts
 function motif(c2, x, y, w, h) {
   const { look, motion } = c2;
-  const rand = seeded(`${c2.profile.login}:${c2.spec.id}`);
+  const rand = seeded2(`${c2.profile.login}:${c2.spec.id}`);
   const o = 'opacity="0.55"';
   switch (c2.spec.motif) {
     case "swatches":
@@ -19578,7 +19629,7 @@ function renderSvg10(profile, config, variant) {
 </defs>
 <style>
 text{font-family:${FONT_SANS}}
-.mono{font-family:${FONT}}
+.mono{font-family:${FONT2}}
 ${css}
 </style>
 <rect width="${WIDTH8}" height="${height}" rx="18" fill="${t.bg}"/>
@@ -19771,7 +19822,7 @@ function renderSvg11(profile, config, variant) {
 <radialGradient id="glow" cx="0.12" cy="0.1" r="0.9"><stop offset="0" stop-color="${p.accent}" stop-opacity="${variant === "dark" ? 0.16 : 0.1}"/><stop offset="1" stop-color="${p.accent}" stop-opacity="0"/></radialGradient>
 </defs>
 <style>
-text{font-family:${FONT};font-size:${INFO_SIZE}px}
+text{font-family:${FONT2};font-size:${INFO_SIZE}px}
 .art{font-size:${ART_SIZE}px;font-weight:700}
 ${motionCss(motion)}
 </style>
@@ -20103,7 +20154,7 @@ function renderSvg13(profile, config, variant) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${height}" viewBox="0 0 ${w} ${height}" role="img" aria-labelledby="t">
 <title id="t">${xmlEscape(label4)}</title>
 <style>
-text{font-family:${FONT};font-size:${FONT_SIZE}px}
+text{font-family:${FONT2};font-size:${FONT_SIZE}px}
 ${css}
 </style>
 <rect x="0.5" y="0.5" width="${w - 1}" height="${height - 1}" rx="10" fill="${p.bg}" stroke="${p.border}"/>
@@ -20185,7 +20236,10 @@ function renderProfile(profile, config) {
     const known = templates.map((t) => t.id).join(", ");
     throw new ConfigError(`Unknown template "${config.template}". Choose from: ${known}.`);
   }
-  return template.render(withHue(profile, config), config);
+  const output = template.render(withHue(profile, config), config);
+  if (!config.credit) return output;
+  const credit = variantsFor(config.theme).map((variant) => ({ path: assetPath("credit", variant), content: creditSvg(variant, config.motion) }));
+  return { ...output, assets: [...output.assets, ...credit] };
 }
 function withHue(profile, config) {
   const hue = config.custom?.hue;

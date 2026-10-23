@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for trying livebio. Your words may be shown on the website, next to your GitHub username, if you tick the box below.
+        Thank you for trying livebio. Your words are shown on the website, next to your GitHub username, only if you tick the box at the bottom.
   - type: dropdown
     id: rating
     attributes:
@@ -30,5 +30,6 @@ body:
     id: permission
     attributes:
       label: Showing it on the website
+      description: Tick the box to let this review appear on the livebio website. If you leave it empty, your review stays here on GitHub and is not shown.
       options:
         - label: You may show this review, with my GitHub username, on the livebio website.

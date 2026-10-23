@@ -12,6 +12,7 @@ import {
   type Profile,
 } from '@livebio/core';
 import { Customizer } from './components/Customizer';
+import { Glitch } from './components/Glitch';
 import { PreviewPane } from './components/PreviewPane';
 import { ProfileStrip } from './components/ProfileStrip';
 import { TemplatePicker } from './components/TemplatePicker';
@@ -234,13 +235,18 @@ export function App() {
       </main>
 
       <footer className="bottom">
-        <span>
-          Open source under the MIT license. Built by{' '}
-          <a href={AUTHOR_URL} target="_blank" rel="noreferrer">
-            {AUTHOR}
+        <p className="credit-line">
+          <a href={REPO_URL} target="_blank" rel="noreferrer">
+            <Glitch text="livebio" />
           </a>
-          .
-        </span>
+          {' '}
+          <Glitch text="by" offset={7} />
+          {' '}
+          <a href={AUTHOR_URL} target="_blank" rel="noreferrer">
+            <Glitch text={AUTHOR} offset={10} />
+          </a>
+        </p>
+        <span>Free and open source under the MIT license.</span>
       </footer>
     </>
   );

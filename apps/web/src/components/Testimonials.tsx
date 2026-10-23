@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { REPO_URL } from '@livebio/core';
-import { TESTIMONIALS, type Testimonial } from '../data/testimonials';
+import type { Testimonial } from '../data/testimonials';
+import { useReviews } from '../lib/reviews';
 
 const REVIEW_URL = `${REPO_URL}/issues/new?template=review.yml`;
 const AUTOPLAY_MS = 6500;
@@ -29,10 +30,27 @@ function Stars({ rating }: { rating: number }) {
 }
 
 /**
- * What real users say about livebio. Without reviews it says so plainly and invites one: it never
- * shows praise nobody wrote.
+ * What real users say about livebio. The reviews come from the project's GitHub issues, through the same service
+ * that supplies contribution data. While they load it says so, and without reviews it says that plainly and invites
+ * one: it never shows praise nobody wrote, and never claims there are none before it has looked.
  */
-export function Testimonials({ items = TESTIMONIALS }: { items?: Testimonial[] }) {
+export function Testimonials({ items }: { items?: Testimonial[] }) {
+  const loaded = useReviews(items === undefined);
+  const source = items ?? (loaded.status === 'ready' ? loaded.reviews : null);
+  if (source === null) {
+    return (
+      <section className="reviews" aria-labelledby="reviews-title" aria-busy="true">
+        <h2 id="reviews-title">What people say</h2>
+        <div className="reviews-loading" role="status">
+          Loading reviews…
+        </div>
+      </section>
+    );
+  }
+  return <ReviewCarousel items={source} />;
+}
+
+function ReviewCarousel({ items }: { items: Testimonial[] }) {
   const wide = useMatch('(min-width: 900px)');
   const medium = useMatch('(min-width: 600px)');
   const reduced = useMatch('(prefers-reduced-motion: reduce)');
@@ -60,7 +78,7 @@ export function Testimonials({ items = TESTIMONIALS }: { items?: Testimonial[] }
         <div className="reviews-empty">
           <p>
             <strong>No reviews yet.</strong> livebio is new, and we only show words from people who really used it.
-            If it helped you, tell us how it went. With your OK, it appears here.
+            If it helped you, tell us how it went. Tick the box on the form to let it appear here.
           </p>
           <a className="button" href={REVIEW_URL} target="_blank" rel="noreferrer">
             Share your experience

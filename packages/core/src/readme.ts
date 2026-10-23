@@ -1,3 +1,4 @@
+import { CREDIT_TEXT, CREDIT_WIDTH } from './credit';
 import type { Config, ThemeMode } from './types';
 import { xmlEscape } from './util';
 
@@ -11,18 +12,18 @@ export const ASSET_DIR = 'livebio';
 export const MARKER_START = '<!-- livebio:start -->';
 export const MARKER_END = '<!-- livebio:end -->';
 
-export function creditFooter(): string {
-  return [
-    '<div align="center">',
-    `<sub>Made with <a href="${REPO_URL}">livebio</a> by <a href="${AUTHOR_URL}">${AUTHOR}</a></sub>`,
-    '</div>',
-  ].join('\n');
+/**
+ * The credit line, "livebio by illusivehacks", as a small glitching image that links to the project. It is an
+ * image because a profile README cannot run CSS. The words are also in its alt text.
+ */
+export function creditFooter(theme: ThemeMode = 'auto'): string {
+  return ['<div align="center">', `<a href="${REPO_URL}">`, pictureTag('credit', theme, CREDIT_TEXT, CREDIT_WIDTH), '</a>', '</div>'].join('\n');
 }
 
 /** Wraps generated Markdown in markers so later runs only replace this block. */
 export function wrapReadme(body: string, config: Config): string {
   const parts = [MARKER_START, body.trim()];
-  if (config.credit) parts.push(creditFooter());
+  if (config.credit) parts.push(creditFooter(config.theme));
   parts.push(MARKER_END);
   return `${parts.join('\n\n')}\n`;
 }
@@ -47,10 +48,10 @@ export function applyToReadme(existing: string | null, generated: string): strin
  * Adds more blocks to a generated README, after the template's own content and before the credit line,
  * so the credit stays at the very end.
  */
-export function insertBlocks(readme: string, blocks: string[]): string {
+export function insertBlocks(readme: string, blocks: string[], theme: ThemeMode = 'auto'): string {
   if (blocks.length === 0) return readme;
   const extra = blocks.join('\n\n');
-  const credit = creditFooter();
+  const credit = creditFooter(theme);
   const at = readme.indexOf(credit);
   if (at !== -1) return `${readme.slice(0, at)}${extra}\n\n${readme.slice(at)}`;
   const end = readme.lastIndexOf(MARKER_END);

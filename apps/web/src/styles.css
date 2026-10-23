@@ -1465,3 +1465,199 @@ label {
     outline-offset: 3px;
   }
 }
+
+/* ---- The credit: "livebio by illusivehacks", each letter glitching on its own ---- */
+
+.credit-line {
+  margin: 0 0 6px;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: pre-wrap;
+}
+
+.credit-line a {
+  text-decoration: none;
+  color: var(--text);
+}
+
+.credit-line a:hover .gm,
+.credit-line a:focus-visible .gm {
+  color: var(--accent);
+}
+
+.glitch {
+  display: inline-block;
+}
+
+/* Only the real words are copied, once. The decorative letters are not selectable. */
+.glitch [aria-hidden="true"] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.gc {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+  white-space: pre;
+  animation: gc-jump 4.6s steps(1, end) infinite;
+  animation-delay: var(--d);
+}
+
+/* The red and cyan copies sit just behind the letter. */
+.gc::before,
+.gc::after {
+  content: attr(data-c);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.75;
+  animation-duration: 4.6s;
+  animation-iteration-count: infinite;
+  animation-timing-function: steps(1, end);
+  animation-delay: var(--d);
+}
+
+.gc::before {
+  color: #27e1f0;
+  transform: translate(1px, 0);
+  animation-name: gc-cyan;
+}
+
+.gc::after {
+  color: #ff3b6b;
+  transform: translate(-1px, 0);
+  animation-name: gc-red;
+}
+
+.gn::before {
+  content: attr(data-n);
+}
+
+.gn {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  animation: gc-noise 4.6s steps(1, end) infinite;
+  animation-delay: var(--d);
+}
+
+.gm {
+  animation: gc-main 4.6s steps(1, end) infinite;
+  animation-delay: var(--d);
+}
+
+@keyframes gc-jump {
+  0%,
+  84% {
+    transform: none;
+  }
+  86% {
+    transform: translate(2px, -1px) skewX(-10deg);
+  }
+  88% {
+    transform: translate(-2px, 1px) skewX(8deg);
+  }
+  90% {
+    transform: translate(1px, 0);
+  }
+  92%,
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes gc-cyan {
+  0%,
+  84% {
+    transform: translate(1px, 0);
+  }
+  86% {
+    transform: translate(5px, -1px);
+  }
+  88% {
+    transform: translate(3px, 1px);
+  }
+  90% {
+    transform: translate(-4px, 0);
+  }
+  92%,
+  100% {
+    transform: translate(1px, 0);
+  }
+}
+
+@keyframes gc-red {
+  0%,
+  84% {
+    transform: translate(-1px, 0);
+  }
+  86% {
+    transform: translate(-5px, 1px);
+  }
+  88% {
+    transform: translate(-3px, -1px);
+  }
+  90% {
+    transform: translate(4px, 0);
+  }
+  92%,
+  100% {
+    transform: translate(-1px, 0);
+  }
+}
+
+@keyframes gc-main {
+  0%,
+  85% {
+    opacity: 1;
+  }
+  86%,
+  89% {
+    opacity: 0;
+  }
+  90%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes gc-noise {
+  0%,
+  85% {
+    opacity: 0;
+  }
+  86%,
+  89% {
+    opacity: 1;
+  }
+  90%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Reduced motion: no movement at all, only the faint colour fringe. */
+@media (prefers-reduced-motion: reduce) {
+  .gc,
+  .gc::before,
+  .gc::after,
+  .gn,
+  .gm {
+    animation: none;
+  }
+}
+
+/* Reviews that are still loading keep their place, so the page does not jump when they arrive. */
+.reviews-loading {
+  display: grid;
+  place-items: center;
+  min-height: 110px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: 0.92rem;
+}

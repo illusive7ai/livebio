@@ -101,8 +101,8 @@ export function Customizer({ config, onChange, hasActivity, bare = false }: Prop
       <label className="check">
         <input type="checkbox" checked={config.credit} onChange={(event) => onChange({ ...config, credit: event.target.checked })} />
         <span>
-          Show “Made with livebio by {AUTHOR}”
-          <small>A small line under your profile. It helps the project, and you can switch it off at any time.</small>
+          Show the “livebio by {AUTHOR}” credit
+          <small>A small glitching line under your profile. It helps the project, and you can switch it off at any time.</small>
         </span>
       </label>
     </section>

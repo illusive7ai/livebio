@@ -111,7 +111,7 @@ export interface Config {
   template: string;
   theme: ThemeMode;
   motion: boolean;
-  /** Show the small "Made with livebio by illusivehacks" line. On by default. */
+  /** Show the small glitching "livebio by illusivehacks" credit. On by default. */
   credit: boolean;
   blocks: BlockId[];
   text: {

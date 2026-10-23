@@ -105,7 +105,7 @@ export function withLive(base: Template, spec: LiveSpec): Template {
         }
       }
 
-      return { readme: insertBlocks(out.readme, pictures), assets: [...out.assets, ...assets] };
+      return { readme: insertBlocks(out.readme, pictures, config.theme), assets: [...out.assets, ...assets] };
     },
   };
 }
