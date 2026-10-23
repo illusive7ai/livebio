@@ -15798,6 +15798,9 @@ function parseConfigYaml(source) {
   }
   return parseConfig(data);
 }
+function needsContributions(config) {
+  return config.blocks.some((block) => block === "activity" || block === "city" || block === "game");
+}
 
 // ../core/src/readme.ts
 var REPO_URL = "https://github.com/illusive7ai/livebio";
@@ -20255,15 +20258,15 @@ async function main() {
       console.log(`Could not load the profile picture, so it is left out: ${error.message}`);
     }
   }
-  if (config.blocks.includes("activity")) {
+  if (needsContributions(config)) {
     const token = input("token");
     if (!token) {
-      console.log("::warning::No token was given, so the activity section is left out. Pass secrets.GITHUB_TOKEN as the token input.");
+      console.log("::warning::No token was given, so the activity graph, city and snake are left out. Pass secrets.GITHUB_TOKEN as the token input.");
     } else {
       try {
         profile.contributions = await fetchContributions(config.username, { token });
       } catch (error) {
-        console.log(`::warning::Could not read contributions, so the activity section is left out: ${error.message}`);
+        console.log(`::warning::Could not read contributions, so the activity graph, city and snake are left out: ${error.message}`);
       }
     }
   }

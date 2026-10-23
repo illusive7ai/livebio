@@ -128,3 +128,11 @@ export function parseConfigYaml(source: string): Config {
 export function configToYaml(config: Config): string {
   return stringify(config);
 }
+
+/**
+ * Whether a config needs the contribution calendar. The activity section, the live city and the live game all
+ * draw it, so the calendar is worth fetching when any of them is on.
+ */
+export function needsContributions(config: Config): boolean {
+  return config.blocks.some((block) => block === 'activity' || block === 'city' || block === 'game');
+}

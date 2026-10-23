@@ -13,7 +13,7 @@ export {
   parseCalendarResponse,
   parseContributions,
 } from './contributions';
-export { ConfigError, configToYaml, defaultConfig, parseConfig, parseConfigYaml } from './config';
+export { ConfigError, configToYaml, defaultConfig, needsContributions, parseConfig, parseConfigYaml } from './config';
 export { getTemplate, templates } from './templates';
 export { renderProfile } from './render';
 export { previewMarkdown } from './preview';

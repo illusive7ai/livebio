@@ -6,6 +6,7 @@ import {
   fetchContributions,
   fetchProfile,
   getTemplate,
+  needsContributions,
   parseConfigYaml,
   renderProfile,
   type Config,
@@ -53,15 +54,15 @@ async function main(): Promise<void> {
     }
   }
 
-  if (config.blocks.includes('activity')) {
+  if (needsContributions(config)) {
     const token = input('token');
     if (!token) {
-      console.log('::warning::No token was given, so the activity section is left out. Pass secrets.GITHUB_TOKEN as the token input.');
+      console.log('::warning::No token was given, so the activity graph, city and snake are left out. Pass secrets.GITHUB_TOKEN as the token input.');
     } else {
       try {
         profile.contributions = await fetchContributions(config.username, { token });
       } catch (error) {
-        console.log(`::warning::Could not read contributions, so the activity section is left out: ${(error as Error).message}`);
+        console.log(`::warning::Could not read contributions, so the activity graph, city and snake are left out: ${(error as Error).message}`);
       }
     }
   }
