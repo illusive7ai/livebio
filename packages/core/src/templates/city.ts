@@ -168,14 +168,15 @@ function renderSvg(profile: Profile, config: Config, variant: Variant): string {
     const m = SLAB_MARGIN;
     const size = Math.min(MAX_CELL, (WIDTH - PAD * 2 - 8) / ((cols + ROWS + 2 * m) * COS));
     const ox = WIDTH / 2 - ((cols - ROWS) / 2) * COS * size;
-    const peak = buildings.reduce((best, b) => (b.count > best.count || (b.count === best.count && b.date > best.date) ? b : best), buildings[0]!);
+    // The tallest tower, which is flagged. A year with no activity has no towers and so no tallest one.
+    const peak = buildings.length > 0 ? buildings.reduce((best, b) => (b.count > best.count || (b.count === best.count && b.date > best.date) ? b : best), buildings[0]!) : undefined;
 
     // Place the city from its real shape, so there is no dead space above short skylines.
     // First work out how far up anything reaches, then shift everything down to sit under the header.
     const rawY = (u: number, v: number, z = 0): number => (u + v) * SIN * size - z;
     let reach = rawY(-m, -m);
     for (const b of buildings) reach = Math.min(reach, rawY(b.col + GAP, b.row + GAP, b.height));
-    reach = Math.min(reach, rawY(peak.col + 0.5, peak.row + 0.5, peak.height) - FLAG_ROOM);
+    if (peak) reach = Math.min(reach, rawY(peak.col + 0.5, peak.row + 0.5, peak.height) - FLAG_ROOM);
     const oy = cursor + 6 - reach;
 
     const at = (u: number, v: number, z = 0): [number, number] => [ox + (u - v) * COS * size, oy + rawY(u, v, z)];
@@ -209,12 +210,15 @@ function renderSvg(profile: Profile, config: Config, variant: Variant): string {
       .join('');
 
     // A flag over the tallest tower says which day it was.
-    const [px, py] = at(peak.col + 0.5, peak.row + 0.5, peak.height);
-    const labelX = Math.min(WIDTH - PAD - 70, Math.max(PAD + 70, px));
-    const flag =
-      `<path d="M${num(px)} ${num(py - 3)}L${num(px)} ${num(py - 24)}" stroke="${look.fg}" stroke-opacity="0.6"/>` +
-      `<text class="mono" x="${num(labelX)}" y="${num(py - 30)}" text-anchor="middle" font-size="12" font-weight="700" fill="${look.fg}">` +
-      `${xmlEscape(shortDate(peak.date))}: ${xmlEscape(formatNumber(peak.count))}</text>`;
+    let flag = '';
+    if (peak) {
+      const [px, py] = at(peak.col + 0.5, peak.row + 0.5, peak.height);
+      const labelX = Math.min(WIDTH - PAD - 70, Math.max(PAD + 70, px));
+      flag =
+        `<path d="M${num(px)} ${num(py - 3)}L${num(px)} ${num(py - 24)}" stroke="${look.fg}" stroke-opacity="0.6"/>` +
+        `<text class="mono" x="${num(labelX)}" y="${num(py - 30)}" text-anchor="middle" font-size="12" font-weight="700" fill="${look.fg}">` +
+        `${xmlEscape(shortDate(peak.date))}: ${xmlEscape(formatNumber(peak.count))}</text>`;
+    }
 
     const cityMarkup =
       `<path d="${slabTop}" fill="${look.slabTop}"/>` +
@@ -331,7 +335,7 @@ export const city: Template = {
       content: renderSvg(profile, config, variant),
     }));
     const drawn = config.blocks.includes('activity') && profile.contributions && profile.contributions.days.length > 0;
-    const extra = drawn ? 'an isometric city with one building for each day, taller on busier days' : undefined;
+    const extra = drawn ? 'an isometric city with one building for each active day, taller on busier days' : undefined;
     return { readme: imageReadme(profile, config, 'city', WIDTH, describeProfile(profile, config, extra, { activity: true })), assets };
   },
 };

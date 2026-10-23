@@ -30,7 +30,7 @@ export interface CityCardOptions {
 export function renderCityCard(opts: CityCardOptions): string {
   const { style, motion, contributions } = opts;
   const title = contributions
-    ? `Contribution city for @${opts.login}: ${contributions.total} contributions in the past year, one building for each day`
+    ? `Contribution city for @${opts.login}: ${contributions.total} contributions in the past year, one building for each active day`
     : `Contribution city for @${opts.login}, shown once contribution data is available`;
 
   if (!contributions || contributions.days.length === 0) {
@@ -51,12 +51,13 @@ export function renderCityCard(opts: CityCardOptions): string {
   const size = Math.min(MAX_CELL, regionW / ((cols + ROWS + 2 * m) * COS));
   const k = size / MAX_CELL; // heights were planned for the largest cell, so scale them to this one
   const ox = regionX + regionW / 2 - ((cols - ROWS) / 2) * COS * size;
-  const peak = buildings.reduce((best, b) => (b.count > best.count || (b.count === best.count && b.date > best.date) ? b : best), buildings[0]!);
+  // The tallest building, which is flagged. A year with no activity has no buildings and so no tallest one.
+  const peak = buildings.length > 0 ? buildings.reduce((best, b) => (b.count > best.count || (b.count === best.count && b.date > best.date) ? b : best), buildings[0]!) : undefined;
 
   const rawY = (u: number, v: number, z = 0): number => (u + v) * SIN * size - z;
   let reach = rawY(-m, -m);
   for (const b of buildings) reach = Math.min(reach, rawY(b.col + GAP, b.row + GAP, b.height * k));
-  reach = Math.min(reach, rawY(peak.col + 0.5, peak.row + 0.5, peak.height * k) - FLAG_ROOM);
+  if (peak) reach = Math.min(reach, rawY(peak.col + 0.5, peak.row + 0.5, peak.height * k) - FLAG_ROOM);
   const top = 40;
   const oy = top - reach;
   const at = (u: number, v: number, z = 0): [number, number] => [ox + (u - v) * COS * size, oy + rawY(u, v, z)];
@@ -94,11 +95,14 @@ export function renderCityCard(opts: CityCardOptions): string {
     })
     .join('');
 
-  const [px, py] = at(peak.col + 0.5, peak.row + 0.5, peak.height * k);
-  const labelX = Math.min(CARD_WIDTH - PAD - 60, Math.max(regionX + 40, px));
-  const flag =
-    `<path d="M${num(px)} ${num(py - 3)}L${num(px)} ${num(py - 22)}" stroke="${style.fg}" stroke-opacity="0.6"/>` +
-    `<text class="mono" x="${num(labelX)}" y="${num(py - 28)}" text-anchor="middle" font-size="11.500" font-weight="700" fill="${style.fg}">${xmlEscape(shortDate(peak.date))}: ${xmlEscape(formatNumber(peak.count))}</text>`;
+  let flag = '';
+  if (peak) {
+    const [px, py] = at(peak.col + 0.5, peak.row + 0.5, peak.height * k);
+    const labelX = Math.min(CARD_WIDTH - PAD - 60, Math.max(regionX + 40, px));
+    flag =
+      `<path d="M${num(px)} ${num(py - 3)}L${num(px)} ${num(py - 22)}" stroke="${style.fg}" stroke-opacity="0.6"/>` +
+      `<text class="mono" x="${num(labelX)}" y="${num(py - 28)}" text-anchor="middle" font-size="11.500" font-weight="700" fill="${style.fg}">${xmlEscape(shortDate(peak.date))}: ${xmlEscape(formatNumber(peak.count))}</text>`;
+  }
 
   const month = busiestMonth(contributions.days);
   let text = liveBadge(style, PAD, 52, motion) + label(style, 'CONTRIBUTION CITY', PAD, 90);
@@ -106,7 +110,7 @@ export function renderCityCard(opts: CityCardOptions): string {
   text += `<text x="${PAD}" y="172" font-size="14.500" font-weight="600" fill="${style.fg}">contributions in the last year</text>`;
   const facts = [
     plural(contributions.activeDays, 'active day'),
-    `Busiest day: ${formatNumber(peak.count)}`,
+    peak ? `Busiest day: ${formatNumber(peak.count)}` : null,
     `Current streak: ${plural(contributions.currentStreak, 'day')}`,
     `Longest streak: ${plural(contributions.longestStreak, 'day')}`,
     month ? `Busiest month: ${month.name}` : null,
@@ -115,7 +119,7 @@ export function renderCityCard(opts: CityCardOptions): string {
     text += `<text x="${PAD}" y="${204 + i * 24}" font-size="13.500" font-weight="600" fill="${style.muted}">${xmlEscape(fact)}</text>`;
   });
   text += `<text class="mono" x="${PAD}" y="${height - 36}" font-size="12" font-weight="700" fill="${style.fg}">@${xmlEscape(opts.login)}</text>`;
-  text += `<text class="mono" x="${PAD}" y="${height - 18}" font-size="10.500" fill="${style.muted}">one building for every day</text>`;
+  text += `<text class="mono" x="${PAD}" y="${height - 18}" font-size="10.500" fill="${style.muted}">one building for every active day</text>`;
 
   const css =
     (motion ? LIVE_BADGE_CSS : '') +

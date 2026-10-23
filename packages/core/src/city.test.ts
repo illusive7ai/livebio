@@ -247,7 +247,7 @@ describe('contribution city template', () => {
   });
 
   it('describes the city in the alt text when it is drawn', () => {
-    expect(renderProfile(profile, config()).readme).toContain('an isometric city with one building for each day');
+    expect(renderProfile(profile, config()).readme).toContain('an isometric city with one building for each active day');
   });
 
   describe('sky and colour', () => {

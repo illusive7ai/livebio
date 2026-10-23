@@ -16537,11 +16537,11 @@ function renderSvg(profile, config, variant) {
     const m = SLAB_MARGIN;
     const size = Math.min(MAX_CELL, (WIDTH - PAD2 * 2 - 8) / ((cols + ROWS + 2 * m) * COS));
     const ox = WIDTH / 2 - (cols - ROWS) / 2 * COS * size;
-    const peak = buildings.reduce((best, b) => b.count > best.count || b.count === best.count && b.date > best.date ? b : best, buildings[0]);
+    const peak = buildings.length > 0 ? buildings.reduce((best, b) => b.count > best.count || b.count === best.count && b.date > best.date ? b : best, buildings[0]) : void 0;
     const rawY = (u, v, z = 0) => (u + v) * SIN * size - z;
     let reach = rawY(-m, -m);
     for (const b of buildings) reach = Math.min(reach, rawY(b.col + GAP, b.row + GAP, b.height));
-    reach = Math.min(reach, rawY(peak.col + 0.5, peak.row + 0.5, peak.height) - FLAG_ROOM);
+    if (peak) reach = Math.min(reach, rawY(peak.col + 0.5, peak.row + 0.5, peak.height) - FLAG_ROOM);
     const oy = cursor + 6 - reach;
     const at = (u, v, z = 0) => [ox + (u - v) * COS * size, oy + rawY(u, v, z)];
     const poly = (points) => `M${points.map(([x, y]) => `${num2(x)} ${num2(y)}`).join("L")}Z`;
@@ -16561,9 +16561,12 @@ function renderSvg(profile, config, variant) {
       const delay = motion ? ` style="animation-delay:${(0.2 + (b.col + b.row) * 0.011).toFixed(3)}s"` : "";
       return `<g class="b"${delay}><path class="l${cls}" d="${poly([at(u0, v1), at(u1, v1), at(u1, v1, h), at(u0, v1, h)])}"/><path class="r${cls}" d="${poly([at(u1, v0), at(u1, v1), at(u1, v1, h), at(u1, v0, h)])}"/><path class="t${cls}" d="${poly([at(u0, v0, h), at(u1, v0, h), at(u1, v1, h), at(u0, v1, h)])}"/></g>`;
     }).join("");
-    const [px, py] = at(peak.col + 0.5, peak.row + 0.5, peak.height);
-    const labelX = Math.min(WIDTH - PAD2 - 70, Math.max(PAD2 + 70, px));
-    const flag = `<path d="M${num2(px)} ${num2(py - 3)}L${num2(px)} ${num2(py - 24)}" stroke="${look.fg}" stroke-opacity="0.6"/><text class="mono" x="${num2(labelX)}" y="${num2(py - 30)}" text-anchor="middle" font-size="12" font-weight="700" fill="${look.fg}">${xmlEscape(shortDate(peak.date))}: ${xmlEscape(formatNumber(peak.count))}</text>`;
+    let flag = "";
+    if (peak) {
+      const [px, py] = at(peak.col + 0.5, peak.row + 0.5, peak.height);
+      const labelX = Math.min(WIDTH - PAD2 - 70, Math.max(PAD2 + 70, px));
+      flag = `<path d="M${num2(px)} ${num2(py - 3)}L${num2(px)} ${num2(py - 24)}" stroke="${look.fg}" stroke-opacity="0.6"/><text class="mono" x="${num2(labelX)}" y="${num2(py - 30)}" text-anchor="middle" font-size="12" font-weight="700" fill="${look.fg}">${xmlEscape(shortDate(peak.date))}: ${xmlEscape(formatNumber(peak.count))}</text>`;
+    }
     const cityMarkup = `<path d="${slabTop}" fill="${look.slabTop}"/><path d="${leftSide}" fill="${look.slabSide}"/><path d="${rightSide}" fill="${look.slabSide}" fill-opacity="0.75"/><path d="${streets.join("")}" fill="none" stroke="${look.slabLine}" stroke-opacity="0.35" stroke-width="0.6"/>` + towers + flag;
     parts.push(rise(cityMarkup, motion, next()));
     cursor = at(cols + m, ROWS + m, -SLAB_DEPTH)[1] + 30;
@@ -16645,7 +16648,7 @@ var city = {
       content: renderSvg(profile, config, variant)
     }));
     const drawn = config.blocks.includes("activity") && profile.contributions && profile.contributions.days.length > 0;
-    const extra = drawn ? "an isometric city with one building for each day, taller on busier days" : void 0;
+    const extra = drawn ? "an isometric city with one building for each active day, taller on busier days" : void 0;
     return { readme: imageReadme(profile, config, "city", WIDTH, describeProfile(profile, config, extra, { activity: true })), assets };
   }
 };
@@ -16661,7 +16664,7 @@ function shortDate2(date) {
 }
 function renderCityCard(opts) {
   const { style, motion, contributions } = opts;
-  const title = contributions ? `Contribution city for @${opts.login}: ${contributions.total} contributions in the past year, one building for each day` : `Contribution city for @${opts.login}, shown once contribution data is available`;
+  const title = contributions ? `Contribution city for @${opts.login}: ${contributions.total} contributions in the past year, one building for each active day` : `Contribution city for @${opts.login}, shown once contribution data is available`;
   if (!contributions || contributions.days.length === 0) {
     const height2 = 220;
     const bg2 = cardBackground(style, height2, opts.login);
@@ -16675,11 +16678,11 @@ function renderCityCard(opts) {
   const size = Math.min(MAX_CELL, regionW / ((cols + ROWS + 2 * m) * COS));
   const k = size / MAX_CELL;
   const ox = regionX + regionW / 2 - (cols - ROWS) / 2 * COS * size;
-  const peak = buildings.reduce((best, b) => b.count > best.count || b.count === best.count && b.date > best.date ? b : best, buildings[0]);
+  const peak = buildings.length > 0 ? buildings.reduce((best, b) => b.count > best.count || b.count === best.count && b.date > best.date ? b : best, buildings[0]) : void 0;
   const rawY = (u, v, z = 0) => (u + v) * SIN * size - z;
   let reach = rawY(-m, -m);
   for (const b of buildings) reach = Math.min(reach, rawY(b.col + GAP, b.row + GAP, b.height * k));
-  reach = Math.min(reach, rawY(peak.col + 0.5, peak.row + 0.5, peak.height * k) - FLAG_ROOM2);
+  if (peak) reach = Math.min(reach, rawY(peak.col + 0.5, peak.row + 0.5, peak.height * k) - FLAG_ROOM2);
   const top = 40;
   const oy = top - reach;
   const at = (u, v, z = 0) => [ox + (u - v) * COS * size, oy + rawY(u, v, z)];
@@ -16705,16 +16708,19 @@ function renderCityCard(opts) {
     const delay = motion ? ` style="animation-delay:${(0.2 + (b.col + b.row) * 0.011).toFixed(3)}s"` : "";
     return `<g class="cty-b"${delay}><path d="${poly([at(u0, v1), at(u1, v1), at(u1, v1, h), at(u0, v1, h)])}" fill="${colors[1]}"/><path d="${poly([at(u1, v0), at(u1, v1), at(u1, v1, h), at(u1, v0, h)])}" fill="${colors[2]}"/><path d="${poly([at(u0, v0, h), at(u1, v0, h), at(u1, v1, h), at(u0, v1, h)])}" fill="${colors[0]}"/></g>`;
   }).join("");
-  const [px, py] = at(peak.col + 0.5, peak.row + 0.5, peak.height * k);
-  const labelX = Math.min(CARD_WIDTH - PAD3 - 60, Math.max(regionX + 40, px));
-  const flag = `<path d="M${num(px)} ${num(py - 3)}L${num(px)} ${num(py - 22)}" stroke="${style.fg}" stroke-opacity="0.6"/><text class="mono" x="${num(labelX)}" y="${num(py - 28)}" text-anchor="middle" font-size="11.500" font-weight="700" fill="${style.fg}">${xmlEscape(shortDate2(peak.date))}: ${xmlEscape(formatNumber(peak.count))}</text>`;
+  let flag = "";
+  if (peak) {
+    const [px, py] = at(peak.col + 0.5, peak.row + 0.5, peak.height * k);
+    const labelX = Math.min(CARD_WIDTH - PAD3 - 60, Math.max(regionX + 40, px));
+    flag = `<path d="M${num(px)} ${num(py - 3)}L${num(px)} ${num(py - 22)}" stroke="${style.fg}" stroke-opacity="0.6"/><text class="mono" x="${num(labelX)}" y="${num(py - 28)}" text-anchor="middle" font-size="11.500" font-weight="700" fill="${style.fg}">${xmlEscape(shortDate2(peak.date))}: ${xmlEscape(formatNumber(peak.count))}</text>`;
+  }
   const month = busiestMonth(contributions.days);
   let text = liveBadge(style, PAD3, 52, motion) + label(style, "CONTRIBUTION CITY", PAD3, 90);
   text += `<text x="${PAD3}" y="146" font-size="52" font-weight="800" fill="${style.accent}">${xmlEscape(formatNumber(contributions.total))}</text>`;
   text += `<text x="${PAD3}" y="172" font-size="14.500" font-weight="600" fill="${style.fg}">contributions in the last year</text>`;
   const facts = [
     plural(contributions.activeDays, "active day"),
-    `Busiest day: ${formatNumber(peak.count)}`,
+    peak ? `Busiest day: ${formatNumber(peak.count)}` : null,
     `Current streak: ${plural(contributions.currentStreak, "day")}`,
     `Longest streak: ${plural(contributions.longestStreak, "day")}`,
     month ? `Busiest month: ${month.name}` : null
@@ -16723,7 +16729,7 @@ function renderCityCard(opts) {
     text += `<text x="${PAD3}" y="${204 + i * 24}" font-size="13.500" font-weight="600" fill="${style.muted}">${xmlEscape(fact2)}</text>`;
   });
   text += `<text class="mono" x="${PAD3}" y="${height - 36}" font-size="12" font-weight="700" fill="${style.fg}">@${xmlEscape(opts.login)}</text>`;
-  text += `<text class="mono" x="${PAD3}" y="${height - 18}" font-size="10.500" fill="${style.muted}">one building for every day</text>`;
+  text += `<text class="mono" x="${PAD3}" y="${height - 18}" font-size="10.500" fill="${style.muted}">one building for every active day</text>`;
   const css = (motion ? LIVE_BADGE_CSS : "") + (motion ? `.cty-b{transform-box:fill-box;transform-origin:50% 100%;animation:cty-grow .8s cubic-bezier(.2,.8,.2,1) both}@keyframes cty-grow{from{transform:scaleY(0)}}@media (prefers-reduced-motion:reduce){.cty-b,.lv-live{animation:none}}` : "");
   const scene = `<path d="${slabTop}" fill="${city2.slab}"/><path d="${leftSide}" fill="${city2.slabSide}"/><path d="${rightSide}" fill="${city2.slabSide}" fill-opacity="0.75"/><path d="${streets.join("")}" fill="none" stroke="${city2.line}" stroke-opacity="0.35" stroke-width="0.6"/>` + towers + flag;
   return svgDocument(style, height, title, bg.defs, css, bg.markup + scene + text);
@@ -17049,7 +17055,7 @@ ${pictureTag(`${base.id}-${kind}`, config.theme, alt, CARD_WIDTH)}
         const peak = days.reduce((best, d) => Math.max(best, d.count), 0);
         picture(
           "city",
-          profile.contributions ? `Contribution city: ${profile.contributions.total} contributions in the past year across ${profile.contributions.activeDays} active days, busiest day ${peak}, one building for each day` : "Contribution city, shown once contribution data is available"
+          profile.contributions ? `Contribution city: ${profile.contributions.total} contributions in the past year across ${profile.contributions.activeDays} active days${peak > 0 ? `, busiest day ${peak}` : ""}, one building for each active day` : "Contribution city, shown once contribution data is available"
         );
       }
       if (wantGame && companion === "snake") {

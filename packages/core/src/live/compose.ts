@@ -66,7 +66,7 @@ export function withLive(base: Template, spec: LiveSpec): Template {
         picture(
           'city',
           profile.contributions
-            ? `Contribution city: ${profile.contributions.total} contributions in the past year across ${profile.contributions.activeDays} active days, busiest day ${peak}, one building for each day`
+            ? `Contribution city: ${profile.contributions.total} contributions in the past year across ${profile.contributions.activeDays} active days${peak > 0 ? `, busiest day ${peak}` : ''}, one building for each active day`
             : 'Contribution city, shown once contribution data is available',
         );
       }
