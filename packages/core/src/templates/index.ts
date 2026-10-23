@@ -6,6 +6,7 @@ import { city } from './city';
 import { galaxy } from './galaxy';
 import { launchpad } from './launchpad';
 import { learning } from './learning';
+import { lensTemplates } from './lenses';
 import { maintainer } from './maintainer';
 import { minimal } from './minimal';
 import { neofetch } from './neofetch';
@@ -30,9 +31,21 @@ const LIVE: Record<string, LiveSpec> = {
   terminal: { preset: 'terminal', city: true, companion: 'snake' },
   neofetch: { preset: 'glow', city: true, companion: 'chess' },
   minimal: { preset: 'plain', city: true, companion: 'snake' },
+  frontend: { preset: 'aurora', city: true, companion: 'chess', shift: 14 },
+  backend: { preset: 'sunrise', city: true, companion: 'snake', shift: 31 },
+  devops: { preset: 'terminal', city: true, companion: 'snake', shift: 47 },
+  datalab: { preset: 'glow', city: true, companion: 'chess', shift: 63 },
+  indie: { preset: 'arcade', city: true, companion: 'snake', shift: 79 },
+  animatedfrontend: { preset: 'glow', city: true, companion: 'chess', shift: 96 },
+  product: { preset: 'night', city: true, companion: 'chess', shift: 112 },
+  advocate: { preset: 'space', city: true, companion: 'chess', shift: 128 },
+  framework: { preset: 'blueprint', city: true, companion: 'snake', shift: 144 },
+  ossbuilder: { preset: 'editor', city: true, companion: 'snake', shift: 160 },
+  ossproof: { preset: 'blueprint', city: true, companion: 'chess', shift: 176 },
+  founder: { preset: 'paper', city: true, companion: 'chess', shift: 192 },
 };
 
-const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal];
+const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates];
 
 export const templates: Template[] = bases.map((template) => {
   const spec = LIVE[template.id];

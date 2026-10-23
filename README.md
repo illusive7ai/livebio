@@ -32,7 +32,7 @@ In your profile repository (named the same as your username), add `livebio.yml`:
 
 ```yaml
 username: your-username
-template: showcase   # showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch or minimal
+template: showcase   # see the Templates page for every id, for example showcase, launchpad, city, frontend, backend, ossproof or minimal
 theme: auto
 motion: true
 credit: true

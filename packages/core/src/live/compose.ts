@@ -14,6 +14,8 @@ export interface LiveSpec {
   companion: 'snake' | 'chess' | null;
   /** False when the template already is the contribution city. */
   city: boolean;
+  /** Degrees added to the preset's hue, so designs that share a preset still look different. */
+  shift?: number;
 }
 
 /** The hue used when the user has no profile picture colour to draw from. */
@@ -82,7 +84,7 @@ export function withLive(base: Template, spec: LiveSpec): Template {
       }
 
       for (const variant of variantsFor(config.theme)) {
-        const style = styleFor(preset, variant, hue);
+        const style = styleFor(preset, variant, hue, spec.shift ?? 0);
         if (wantCity) {
           assets.push({
             path: assetPath(`${base.id}-city`, variant),

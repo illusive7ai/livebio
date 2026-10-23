@@ -105,10 +105,10 @@ const RECIPES: Record<Preset, Recipe> = {
 };
 
 /** Builds a preset's colours for one theme variant, around the picture's hue. */
-export function styleFor(preset: Preset, variant: Variant, pictureHue: number): LiveStyle {
+export function styleFor(preset: Preset, variant: Variant, pictureHue: number, shift = 0): LiveStyle {
   const r = RECIPES[preset];
   const dark = variant === 'dark';
-  const hue = r.fixedHue ?? pictureHue + r.hueShift;
+  const hue = (r.fixedHue ?? pictureHue + r.hueShift) + shift;
   const [bgA, bgB] = dark ? r.bg.dark : r.bg.light;
   const [fg, muted] = dark ? r.ink.dark : r.ink.light;
   const accent = c(hue, 0.78, dark ? 0.6 : 0.4);

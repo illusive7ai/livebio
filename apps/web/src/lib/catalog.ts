@@ -18,6 +18,18 @@ const GROUP_OF: Record<string, Group> = {
   neofetch: 'Developer',
   buildlog: 'Developer',
   minimal: 'Minimal',
+  frontend: 'Developer',
+  backend: 'Developer',
+  devops: 'Developer',
+  datalab: 'Developer',
+  ossbuilder: 'Developer',
+  framework: 'Developer',
+  product: 'Professional',
+  founder: 'Professional',
+  ossproof: 'Professional',
+  advocate: 'Professional',
+  indie: 'Creative',
+  animatedfrontend: 'Creative',
 };
 
 export function groupOf(templateId: string): Group {
