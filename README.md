@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: illusive7ai/livebio@v0.1.0
+      - uses: illusive7ai/livebio@v0.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - run: |
