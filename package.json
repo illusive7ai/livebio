@@ -1,0 +1,20 @@
+{
+  "name": "livebio",
+  "private": true,
+  "description": "Open-source GitHub profile README generator that keeps itself up to date. By illusivehacks.",
+  "author": "illusivehacks",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "npm run dev -w @livebio/web",
+    "build": "npm run build -w @livebio/action && npm run build -w @livebio/web",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}

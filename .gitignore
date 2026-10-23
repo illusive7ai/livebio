@@ -1,0 +1,8 @@
+node_modules/
+coverage/
+.vite/
+*.log
+.DS_Store
+
+# build output (the Action bundle in packages/action/dist is committed on purpose)
+apps/web/dist/

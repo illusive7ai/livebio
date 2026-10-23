@@ -1,0 +1,19 @@
+name: livebio
+description: Keeps your GitHub profile README up to date with live stats and designed templates.
+author: illusivehacks
+branding:
+  icon: user
+  color: green
+inputs:
+  config:
+    description: Path to the livebio config file.
+    default: livebio.yml
+  readme:
+    description: Path to the README to update.
+    default: README.md
+  token:
+    description: Token used to read your public GitHub data. Pass secrets.GITHUB_TOKEN.
+    required: false
+runs:
+  using: node24
+  main: packages/action/dist/index.js

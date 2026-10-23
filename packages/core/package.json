@@ -1,0 +1,23 @@
+{
+  "name": "@livebio/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "livebio engine: GitHub data, templates and README/SVG rendering. Shared by the web app and the Action.",
+  "author": "illusivehacks",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@xmldom/xmldom": "^0.9.12",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}

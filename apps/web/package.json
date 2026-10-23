@@ -1,0 +1,29 @@
+{
+  "name": "@livebio/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The livebio builder: type a username, pick a template, customise, export.",
+  "author": "illusivehacks",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "dompurify": "^3.4.17",
+    "fflate": "^0.8.3",
+    "marked": "^18.1.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}
