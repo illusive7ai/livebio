@@ -20,6 +20,7 @@ import { neofetch } from './neofetch';
 import { paperTemplates } from './paper';
 import { scrapbookTemplates } from './scrapbook';
 import { captip, cinematic, signature, wow } from './showpieces';
+import { signalTemplates } from './signals';
 import { showcase } from './showcase';
 import { snake } from './snake';
 import { terminal } from './terminal';
@@ -89,9 +90,14 @@ const LIVE: Record<string, LiveSpec> = {
   neon: { preset: 'glow', city: true, companion: 'snake', shift: 15 },
   laptop: { preset: 'aurora', city: true, companion: 'chess', shift: 20 },
   pet: { preset: 'sunrise', city: true, companion: 'snake', shift: 35 },
+  garden: { preset: 'paper', city: true, companion: 'chess', shift: 50 },
+  ridgeline: { preset: 'plain', city: true, companion: 'snake', shift: 55 },
+  pulse: { preset: 'terminal', city: true, companion: 'chess', shift: 60 },
+  drums: { preset: 'night', city: true, companion: 'snake', shift: 65 },
+  weather: { preset: 'aurora', city: true, companion: 'chess', shift: 70 },
 };
 
-const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates, cinematic, wow, signature, captip, frontpage, hub, creative, erased, ...documentTemplates, ...interfaceTemplates, ...dataArtTemplates, ...scrapbookTemplates, ...paperTemplates, ...deviceTemplates];
+const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates, cinematic, wow, signature, captip, frontpage, hub, creative, erased, ...documentTemplates, ...interfaceTemplates, ...dataArtTemplates, ...scrapbookTemplates, ...paperTemplates, ...deviceTemplates, ...signalTemplates];
 
 export const templates: Template[] = bases.map((template) => {
   const spec = LIVE[template.id];
