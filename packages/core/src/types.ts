@@ -19,6 +19,23 @@ export interface LanguageShare {
   percent: number;
 }
 
+/** Decoded picture, one value per pixel, row by row. Both arrays hold 0-255. */
+export interface PixelGrid {
+  width: number;
+  height: number;
+  luma: number[];
+  alpha: number[];
+}
+
+/**
+ * The profile picture, loaded by the host (the browser or the Action). `dataUri` lets a
+ * template embed the picture in an SVG, which cannot load outside images itself.
+ */
+export interface Avatar {
+  dataUri: string;
+  grid: PixelGrid;
+}
+
 /**
  * Public data about a user. Fields GitHub leaves empty are null, never filled in
  * with a guess: templates must leave them out instead of inventing a value.
@@ -39,6 +56,8 @@ export interface Profile {
   createdAt: string;
   languages: LanguageShare[];
   topRepos: RepoSummary[];
+  /** Present only when the host loaded the picture. Templates must cope without it. */
+  avatar?: Avatar;
 }
 
 export interface Config {
@@ -71,5 +90,7 @@ export interface Template {
   name: string;
   description: string;
   tags: string[];
+  /** Tells the host to load the profile picture before rendering. */
+  needsAvatar?: boolean;
   render(profile: Profile, config: Config): Output;
 }

@@ -5,6 +5,7 @@ import {
   REPO_URL,
   defaultConfig,
   fetchProfile,
+  getTemplate,
   isValidUsername,
   renderProfile,
   type Config,
@@ -14,6 +15,7 @@ import { Customizer } from './components/Customizer';
 import { Gallery } from './components/Gallery';
 import { PreviewPane } from './components/PreviewPane';
 import { ProfileStrip } from './components/ProfileStrip';
+import { loadAvatar } from './lib/avatar';
 import { describeError } from './lib/errors';
 
 type Status =
@@ -30,10 +32,30 @@ function initialUsername(): string {
   }
 }
 
+/** A shared link can open a specific design with ?template=<id>. */
+function initialTemplate(): string {
+  try {
+    const id = new URLSearchParams(window.location.search).get('template');
+    return id && getTemplate(id) ? id : 'terminal';
+  } catch {
+    return 'terminal';
+  }
+}
+
+function updateUrl(key: string, value: string): void {
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set(key, value);
+    window.history.replaceState(null, '', url);
+  } catch {
+    // The address bar is only a convenience, so ignore failures.
+  }
+}
+
 export function App() {
   const [input, setInput] = useState(initialUsername);
   const [status, setStatus] = useState<Status>({ state: 'idle' });
-  const [config, setConfig] = useState<Config>(() => defaultConfig(initialUsername() || 'octocat'));
+  const [config, setConfig] = useState<Config>(() => defaultConfig(initialUsername() || 'octocat', initialTemplate()));
 
   const load = useCallback(async (name: string) => {
     const username = name.trim().replace(/^@/, '');
@@ -43,12 +65,12 @@ export function App() {
     }
     setStatus({ state: 'loading' });
     try {
-      const profile = await fetchProfile(username);
+      const loaded = await fetchProfile(username);
+      const avatar = await loadAvatar(loaded.avatarUrl);
+      const profile: Profile = avatar ? { ...loaded, avatar } : loaded;
       setConfig((prev) => ({ ...prev, username: profile.login }));
       setStatus({ state: 'ready', profile });
-      const url = new URL(window.location.href);
-      url.searchParams.set('user', profile.login);
-      window.history.replaceState(null, '', url);
+      updateUrl('user', profile.login);
     } catch (error) {
       setStatus({ state: 'error', message: describeError(error, username) });
     }
@@ -116,7 +138,14 @@ export function App() {
             <ProfileStrip profile={profile} />
             <div className="workspace">
               <aside className="controls">
-                <Gallery profile={profile} config={config} onPick={(template) => setConfig({ ...config, template })} />
+                <Gallery
+                  profile={profile}
+                  config={config}
+                  onPick={(template) => {
+                    setConfig({ ...config, template });
+                    updateUrl('template', template);
+                  }}
+                />
                 <Customizer config={config} onChange={setConfig} />
               </aside>
               <PreviewPane output={output} config={config} profile={profile} />

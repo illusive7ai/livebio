@@ -4,10 +4,12 @@ import {
   applyToReadme,
   defaultConfig,
   fetchProfile,
+  getTemplate,
   parseConfigYaml,
   renderProfile,
   type Config,
 } from '@livebio/core';
+import { loadAvatar } from './avatar';
 
 /** Reads an Action input. The runner exposes `with:` values as INPUT_* variables. */
 function input(name: string, fallback = ''): string {
@@ -39,6 +41,17 @@ async function main(): Promise<void> {
   const readmePath = input('readme', 'README.md');
 
   const profile = await fetchProfile(config.username, { token: input('token') || undefined });
+
+  if (getTemplate(config.template)?.needsAvatar) {
+    try {
+      const avatar = await loadAvatar(profile.avatarUrl);
+      if (avatar) profile.avatar = avatar;
+      else console.log('The profile picture is in a format livebio cannot read, so it is left out.');
+    } catch (error) {
+      console.log(`Could not load the profile picture, so it is left out: ${(error as Error).message}`);
+    }
+  }
+
   const output = renderProfile(profile, config);
 
   for (const asset of output.assets) {

@@ -1,9 +1,9 @@
 import type { Config, Output, Profile, Template } from '../types';
 import { palettes, variantsFor, type Palette, type Variant } from '../themes';
-import { assetPath, pictureTag, wrapReadme } from '../readme';
+import { assetPath } from '../readme';
 import { formatNumber, safeUrl, truncate, xmlEscape } from '../util';
+import { FONT, describeProfile, imageReadme, motionCss, stagger } from './shared';
 
-const FONT = "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace";
 const WIDTH = 800;
 const PAD = 24;
 const TITLE_BAR = 40;
@@ -114,20 +114,12 @@ function renderSvg(profile: Profile, config: Config, variant: Variant): string {
   const height = TITLE_BAR + PAD * 2 + lines.length * LINE_HEIGHT;
   const label = `${profile.name ?? profile.login} (@${profile.login}) on GitHub`;
 
-  const css = config.motion
-    ? `.ln{animation:in .01s steps(1) both}
-@keyframes in{from{opacity:0}to{opacity:1}}
-.cursor{animation:blink 1.1s steps(1) infinite}
-@keyframes blink{50%{opacity:0}}
-@media (prefers-reduced-motion:reduce){.ln,.cursor{animation:none}}`
-    : '';
+  const css = motionCss(config.motion);
 
   const body = lines
     .map((line, index) => {
       const y = TITLE_BAR + PAD + (index + 1) * LINE_HEIGHT - 7;
-      const markup = renderLine(line, y, p, profile.login);
-      if (!markup || !config.motion) return markup;
-      return `<g class="ln" style="animation-delay:${(index * STEP_SECONDS).toFixed(2)}s">${markup}</g>`;
+      return stagger(renderLine(line, y, p, profile.login), config.motion, index * STEP_SECONDS);
     })
     .filter(Boolean)
     .join('\n');
@@ -149,21 +141,6 @@ ${body}
 `;
 }
 
-/** Alt text for the image. It only mentions what the image actually shows. */
-function describe(profile: Profile, config: Config): string {
-  const parts = [`${profile.name ?? profile.login} on GitHub`];
-  if (config.blocks.includes('stats')) {
-    parts.push(
-      `${formatNumber(profile.publicRepos)} repositories`,
-      `${formatNumber(profile.totalStars)} stars`,
-      `${formatNumber(profile.followers)} followers`,
-    );
-  }
-  const languages = profile.languages.slice(0, 3).map((l) => l.name);
-  if (config.blocks.includes('languages') && languages.length > 0) parts.push(`mostly ${languages.join(', ')}`);
-  return parts.join(', ');
-}
-
 export const terminal: Template = {
   id: 'terminal',
   name: 'Terminal',
@@ -175,12 +152,7 @@ export const terminal: Template = {
       content: renderSvg(profile, config, variant),
     }));
 
-    const body = [`<div align="center">\n${pictureTag('terminal', config.theme, describe(profile, config), WIDTH)}\n</div>`];
-    const website = safeUrl(profile.website);
-    const links = [`[GitHub](<${profile.url}>)`];
-    if (website) links.push(`[Website](<${website}>)`);
-    body.push(`<div align="center">\n\n${links.join(' · ')}\n\n</div>`);
-
-    return { readme: wrapReadme(body.join('\n\n'), config), assets };
+    const alt = describeProfile(profile, config);
+    return { readme: imageReadme(profile, config, 'terminal', WIDTH, alt), assets };
   },
 };

@@ -96,7 +96,8 @@ After changing `packages/core` or `packages/action`, run `npm run build -w @live
 
 ## Roadmap
 
-- [ ] More templates: Neofetch-style ASCII portrait, recruiter brief, open-source maintainer, isometric contribution city, animated repo galaxy, snake trail and more
+- [x] Neofetch: your profile picture as ASCII art beside a system-info summary
+- [ ] More templates: recruiter brief, open-source maintainer, isometric contribution city, animated repo galaxy, snake trail and more, each with its own look, and some built around images
 - [ ] Contribution counts and streaks (authenticated data, available in the Action)
 - [ ] Optional small edge function so the browser preview can show contribution data too
 - [ ] Import and improve an existing README

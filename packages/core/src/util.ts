@@ -23,6 +23,27 @@ export function truncate(text: string, max: number): string {
   return `${clean.slice(0, Math.max(0, max - 1)).trimEnd()}…`;
 }
 
+/** Breaks text into lines of at most `width` characters, ending the last line with an ellipsis if cut. */
+export function wrap(text: string, width: number, maxLines: number): string[] {
+  const words = text.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
+  const lines: string[] = [];
+  let current = '';
+  for (const raw of words) {
+    const word = raw.length > width ? `${raw.slice(0, width - 1)}…` : raw;
+    if (current && current.length + 1 + word.length > width) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = current ? `${current} ${word}` : word;
+    }
+  }
+  if (current) lines.push(current);
+  if (lines.length <= maxLines) return lines;
+  const kept = lines.slice(0, maxLines);
+  kept[maxLines - 1] = truncate(`${kept[maxLines - 1]} …`, width);
+  return kept;
+}
+
 export function formatNumber(n: number): string {
   return n.toLocaleString('en-US');
 }

@@ -15,3 +15,4 @@ export {
   creditFooter,
 } from './readme';
 export { isValidUsername } from './util';
+export { asciiPortrait, gridFromRgba } from './avatar';
