@@ -2,6 +2,7 @@ import type { Template } from '../types';
 import { withLive, type LiveSpec } from '../live/compose';
 import { arcadeTemplates } from './arcade';
 import { creative, erased } from './artwork';
+import { documentTemplates } from './documents';
 import { brief } from './brief';
 import { buildlog } from './buildlog';
 import { city } from './city';
@@ -58,9 +59,13 @@ const LIVE: Record<string, LiveSpec> = {
   hub: { preset: 'plain', city: true, companion: 'snake', shift: 336 },
   creative: { preset: 'aurora', city: true, companion: 'chess', shift: 352 },
   erased: { preset: 'terminal', city: true, companion: 'chess', shift: 24 },
+  passport: { preset: 'paper', city: true, companion: 'chess', shift: 8 },
+  receipt: { preset: 'plain', city: true, companion: 'snake', shift: 40 },
+  sheet: { preset: 'chalk', city: true, companion: 'chess', shift: 28 },
+  calendar: { preset: 'sunrise', city: true, companion: 'snake', shift: 352 },
 };
 
-const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates, cinematic, wow, signature, captip, frontpage, hub, creative, erased];
+const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates, cinematic, wow, signature, captip, frontpage, hub, creative, erased, ...documentTemplates];
 
 export const templates: Template[] = bases.map((template) => {
   const spec = LIVE[template.id];

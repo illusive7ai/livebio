@@ -996,14 +996,14 @@ var require_foldFlowLines = __commonJS({
     var FOLD_FLOW = "flow";
     var FOLD_BLOCK = "block";
     var FOLD_QUOTED = "quoted";
-    function foldFlowLines(text, indent, mode = "flow", { indentAtStart, lineWidth = 80, minContentWidth = 20, onFold, onOverflow } = {}) {
+    function foldFlowLines(text2, indent, mode = "flow", { indentAtStart, lineWidth = 80, minContentWidth = 20, onFold, onOverflow } = {}) {
       if (!lineWidth || lineWidth < 0)
-        return text;
+        return text2;
       if (lineWidth < minContentWidth)
         minContentWidth = 0;
       const endStep = Math.max(1 + minContentWidth, 1 + lineWidth - indent.length);
-      if (text.length <= endStep)
-        return text;
+      if (text2.length <= endStep)
+        return text2;
       const folds = [];
       const escapedFolds = {};
       let end = lineWidth - indent.length;
@@ -1020,14 +1020,14 @@ var require_foldFlowLines = __commonJS({
       let escStart = -1;
       let escEnd = -1;
       if (mode === FOLD_BLOCK) {
-        i = consumeMoreIndentedLines(text, i, indent.length);
+        i = consumeMoreIndentedLines(text2, i, indent.length);
         if (i !== -1)
           end = i + endStep;
       }
-      for (let ch; ch = text[i += 1]; ) {
+      for (let ch; ch = text2[i += 1]; ) {
         if (mode === FOLD_QUOTED && ch === "\\") {
           escStart = i;
-          switch (text[i + 1]) {
+          switch (text2[i + 1]) {
             case "x":
               i += 3;
               break;
@@ -1044,12 +1044,12 @@ var require_foldFlowLines = __commonJS({
         }
         if (ch === "\n") {
           if (mode === FOLD_BLOCK)
-            i = consumeMoreIndentedLines(text, i, indent.length);
+            i = consumeMoreIndentedLines(text2, i, indent.length);
           end = i + indent.length + endStep;
           split = void 0;
         } else {
           if (ch === " " && prev && prev !== " " && prev !== "\n" && prev !== "	") {
-            const next = text[i + 1];
+            const next = text2[i + 1];
             if (next && next !== " " && next !== "\n" && next !== "	")
               split = i;
           }
@@ -1061,12 +1061,12 @@ var require_foldFlowLines = __commonJS({
             } else if (mode === FOLD_QUOTED) {
               while (prev === " " || prev === "	") {
                 prev = ch;
-                ch = text[i += 1];
+                ch = text2[i += 1];
                 overflow = true;
               }
               const j = i > escEnd + 1 ? i - 2 : escStart - 1;
               if (escapedFolds[j])
-                return text;
+                return text2;
               folds.push(j);
               escapedFolds[j] = true;
               end = j + endStep;
@@ -1081,39 +1081,39 @@ var require_foldFlowLines = __commonJS({
       if (overflow && onOverflow)
         onOverflow();
       if (folds.length === 0)
-        return text;
+        return text2;
       if (onFold)
         onFold();
-      let res = text.slice(0, folds[0]);
+      let res = text2.slice(0, folds[0]);
       for (let i2 = 0; i2 < folds.length; ++i2) {
         const fold = folds[i2];
-        const end2 = folds[i2 + 1] || text.length;
+        const end2 = folds[i2 + 1] || text2.length;
         if (fold === 0)
           res = `
-${indent}${text.slice(0, end2)}`;
+${indent}${text2.slice(0, end2)}`;
         else {
           if (mode === FOLD_QUOTED && escapedFolds[fold])
-            res += `${text[fold]}\\`;
+            res += `${text2[fold]}\\`;
           res += `
-${indent}${text.slice(fold + 1, end2)}`;
+${indent}${text2.slice(fold + 1, end2)}`;
         }
       }
       return res;
     }
-    function consumeMoreIndentedLines(text, i, indent) {
+    function consumeMoreIndentedLines(text2, i, indent) {
       let end = i;
       let start = i + 1;
-      let ch = text[start];
+      let ch = text2[start];
       while (ch === " " || ch === "	") {
         if (i < start + indent) {
-          ch = text[++i];
+          ch = text2[++i];
         } else {
           do {
-            ch = text[++i];
+            ch = text2[++i];
           } while (ch && ch !== "\n");
           end = i;
           start = i + 1;
-          ch = text[start];
+          ch = text2[start];
         }
       }
       return end;
@@ -7651,8 +7651,8 @@ var require_chess = __commonJS({
         }
         peg$startRuleFunction = peg$startRuleFunctions[options.startRule];
       }
-      function peg$literalExpectation(text, ignoreCase) {
-        return { type: "literal", text, ignoreCase };
+      function peg$literalExpectation(text2, ignoreCase) {
+        return { type: "literal", text: text2, ignoreCase };
       }
       function peg$classExpectation(parts, inverted, ignoreCase) {
         return { type: "class", parts, inverted, ignoreCase };
@@ -15157,19 +15157,19 @@ var XML_ENTITIES = {
   '"': "&quot;",
   "'": "&#39;"
 };
-function xmlEscape(text) {
-  return text.replace(/[&<>"']/g, (c2) => XML_ENTITIES[c2] ?? c2);
+function xmlEscape(text2) {
+  return text2.replace(/[&<>"']/g, (c2) => XML_ENTITIES[c2] ?? c2);
 }
-function escapeMarkdown(text) {
-  return text.replace(/[\\`*_{}[\]()#+\-.!|<>&~]/g, "\\$&");
+function escapeMarkdown(text2) {
+  return text2.replace(/[\\`*_{}[\]()#+\-.!|<>&~]/g, "\\$&");
 }
-function truncate(text, max) {
-  const clean = text.replace(/\s+/g, " ").trim();
+function truncate(text2, max) {
+  const clean = text2.replace(/\s+/g, " ").trim();
   if (clean.length <= max) return clean;
   return `${clean.slice(0, Math.max(0, max - 1)).trimEnd()}\u2026`;
 }
-function wrap(text, width, maxLines) {
-  const words = text.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+function wrap(text2, width, maxLines) {
+  const words = text2.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
   const lines = [];
   let current = "";
   for (const raw of words) {
@@ -15772,11 +15772,11 @@ function parseConfig(input2) {
   if (typeof textRaw !== "object" || textRaw === null || Array.isArray(textRaw)) {
     throw new ConfigError('"text" must be a set of key: value settings.');
   }
-  const text = {};
+  const text2 = {};
   const headline = optionalText(textRaw.headline, "text.headline");
   const bio = optionalText(textRaw.bio, "text.bio");
-  if (headline) text.headline = headline;
-  if (bio) text.bio = bio;
+  if (headline) text2.headline = headline;
+  if (bio) text2.bio = bio;
   const custom = parseCustom(raw.custom);
   return {
     username,
@@ -15785,7 +15785,7 @@ function parseConfig(input2) {
     motion: expectBoolean(raw.motion, "motion", true),
     credit: expectBoolean(raw.credit, "credit", true),
     blocks,
-    text,
+    text: text2,
     ...custom ? { custom } : {}
   };
 }
@@ -15971,9 +15971,9 @@ function stagger(markup, motion, delay) {
   if (!markup || !motion) return markup;
   return `<g class="ln" style="animation-delay:${delay.toFixed(2)}s">${markup}</g>`;
 }
-function seeded2(text) {
+function seeded2(text2) {
   let state = 2166136261;
-  for (const char of text) state = Math.imul(state ^ char.charCodeAt(0), 16777619) >>> 0;
+  for (const char of text2) state = Math.imul(state ^ char.charCodeAt(0), 16777619) >>> 0;
   return () => {
     state = Math.imul(state ^ state >>> 15, 2246822507) >>> 0;
     state = Math.imul(state ^ state >>> 13, 3266489909) >>> 0;
@@ -16056,8 +16056,8 @@ function liveBadge(style, x, y, motion) {
   return dot + `<text class="mono" x="${x + 10}" y="${y}" font-size="11" font-weight="700" letter-spacing="2" fill="${style.accent}">LIVE</text>`;
 }
 var LIVE_BADGE_CSS = `.lv-live{animation:lv-pulse 1.6s ease-in-out infinite}@keyframes lv-pulse{50%{opacity:.3}}`;
-function label(style, text, x, y, anchor = "start") {
-  return `<text class="mono" x="${x}" y="${y}" text-anchor="${anchor}" font-size="11.500" font-weight="700" letter-spacing="2.400" fill="${style.accent}">${xmlEscape(text)}</text>`;
+function label(style, text2, x, y, anchor = "start") {
+  return `<text class="mono" x="${x}" y="${y}" text-anchor="${anchor}" font-size="11.500" font-weight="700" letter-spacing="2.400" fill="${style.accent}">${xmlEscape(text2)}</text>`;
 }
 function svgDocument(style, height, title, defs, css, body) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_WIDTH}" height="${height}" viewBox="0 0 ${CARD_WIDTH} ${height}" role="img" aria-labelledby="t">
@@ -16180,7 +16180,7 @@ function squareIndex(square) {
 }
 
 // ../core/src/live/games.ts
-var moves = (text) => text.split(" ");
+var moves = (text2) => text2.split(" ");
 var GAMES = [
   {
     id: "opera",
@@ -16403,26 +16403,26 @@ function renderChess(opts) {
   board2 += `<g${loopFade}>${pieces}</g>`;
   const css = (motion ? LIVE_BADGE_CSS : "") + (animate ? `@keyframes chs-loop{0%{opacity:0}4%,93%{opacity:1}100%{opacity:0}}${keyframes}@media (prefers-reduced-motion:reduce){.lv-live,.chs-pieces,.chs-a{animation:none!important}}` : "");
   const lines = recentMoveLines(game.moves, state.ply, 6);
-  let text = liveBadge(style, PAD, 52, motion) + label(style, state.finished ? "CHESS, FINAL POSITION" : "CHESS, A GAME IN PROGRESS", PAD, 92);
-  text += `<text x="${PAD}" y="134" font-size="28" font-weight="800" fill="${style.fg}">${xmlEscape(truncate(game.title, 26))}</text>`;
+  let text2 = liveBadge(style, PAD, 52, motion) + label(style, state.finished ? "CHESS, FINAL POSITION" : "CHESS, A GAME IN PROGRESS", PAD, 92);
+  text2 += `<text x="${PAD}" y="134" font-size="28" font-weight="800" fill="${style.fg}">${xmlEscape(truncate(game.title, 26))}</text>`;
   const players = [`White: ${game.white}`, `Black: ${game.black}`].flatMap((line) => wrap(line, 40, 2));
   players.forEach((line, i) => {
-    text += `<text x="${PAD}" y="${164 + i * 20}" font-size="14" fill="${style.muted}">${xmlEscape(line)}</text>`;
+    text2 += `<text x="${PAD}" y="${164 + i * 20}" font-size="14" fill="${style.muted}">${xmlEscape(line)}</text>`;
   });
   const afterPlayers = 164 + players.length * 20;
-  text += `<text class="mono" x="${PAD}" y="${afterPlayers + 6}" font-size="12.500" fill="${style.muted}">${xmlEscape(`${game.place}, ${game.year}`)}</text>`;
-  text += `<text x="${PAD}" y="${afterPlayers + 42}" font-size="16.500" font-weight="700" fill="${style.fg}">${xmlEscape(statusText(state, replay))}</text>`;
+  text2 += `<text class="mono" x="${PAD}" y="${afterPlayers + 6}" font-size="12.500" fill="${style.muted}">${xmlEscape(`${game.place}, ${game.year}`)}</text>`;
+  text2 += `<text x="${PAD}" y="${afterPlayers + 42}" font-size="16.500" font-weight="700" fill="${style.fg}">${xmlEscape(statusText(state, replay))}</text>`;
   const movesY = afterPlayers + 84;
   if (lines.length > 0) {
-    text += label(style, "LATEST MOVES", PAD, movesY);
+    text2 += label(style, "LATEST MOVES", PAD, movesY);
     lines.slice(-3).forEach((line, i) => {
-      text += `<text class="mono" x="${PAD}" y="${movesY + 24 + i * 22}" font-size="14" fill="${style.fg}">${xmlEscape(line)}</text>`;
+      text2 += `<text class="mono" x="${PAD}" y="${movesY + 24 + i * 22}" font-size="14" fill="${style.fg}">${xmlEscape(line)}</text>`;
     });
   }
-  text += `<text class="mono" x="${PAD}" y="${HEIGHT2 - 30}" font-size="11.500" fill="${style.muted}">two moves a day, played automatically</text>`;
+  text2 += `<text class="mono" x="${PAD}" y="${HEIGHT2 - 30}" font-size="11.500" fill="${style.muted}">two moves a day, played automatically</text>`;
   const glow = chess.pieces === "glow" ? `<filter id="chs-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.800" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` : "";
   const title = `A live chess game: ${game.title}, ${game.white} against ${game.black}, ${game.place} ${game.year}. ${statusText(state, replay)}.`;
-  return svgDocument(style, HEIGHT2, title, bg.defs + glow, css, bg.markup + text + board2);
+  return svgDocument(style, HEIGHT2, title, bg.defs + glow, css, bg.markup + text2 + board2);
 }
 
 // ../core/src/templates/city.ts
@@ -16715,9 +16715,9 @@ function renderCityCard(opts) {
     flag = `<path d="M${num(px)} ${num(py - 3)}L${num(px)} ${num(py - 22)}" stroke="${style.fg}" stroke-opacity="0.6"/><text class="mono" x="${num(labelX)}" y="${num(py - 28)}" text-anchor="middle" font-size="11.500" font-weight="700" fill="${style.fg}">${xmlEscape(shortDate2(peak.date))}: ${xmlEscape(formatNumber(peak.count))}</text>`;
   }
   const month = busiestMonth(contributions.days);
-  let text = liveBadge(style, PAD3, 52, motion) + label(style, "CONTRIBUTION CITY", PAD3, 90);
-  text += `<text x="${PAD3}" y="146" font-size="52" font-weight="800" fill="${style.accent}">${xmlEscape(formatNumber(contributions.total))}</text>`;
-  text += `<text x="${PAD3}" y="172" font-size="14.500" font-weight="600" fill="${style.fg}">contributions in the last year</text>`;
+  let text2 = liveBadge(style, PAD3, 52, motion) + label(style, "CONTRIBUTION CITY", PAD3, 90);
+  text2 += `<text x="${PAD3}" y="146" font-size="52" font-weight="800" fill="${style.accent}">${xmlEscape(formatNumber(contributions.total))}</text>`;
+  text2 += `<text x="${PAD3}" y="172" font-size="14.500" font-weight="600" fill="${style.fg}">contributions in the last year</text>`;
   const facts = [
     plural(contributions.activeDays, "active day"),
     peak ? `Busiest day: ${formatNumber(peak.count)}` : null,
@@ -16726,13 +16726,13 @@ function renderCityCard(opts) {
     month ? `Busiest month: ${month.name}` : null
   ].filter((v) => Boolean(v));
   facts.forEach((fact2, i) => {
-    text += `<text x="${PAD3}" y="${204 + i * 24}" font-size="13.500" font-weight="600" fill="${style.muted}">${xmlEscape(fact2)}</text>`;
+    text2 += `<text x="${PAD3}" y="${204 + i * 24}" font-size="13.500" font-weight="600" fill="${style.muted}">${xmlEscape(fact2)}</text>`;
   });
-  text += `<text class="mono" x="${PAD3}" y="${height - 36}" font-size="12" font-weight="700" fill="${style.fg}">@${xmlEscape(opts.login)}</text>`;
-  text += `<text class="mono" x="${PAD3}" y="${height - 18}" font-size="10.500" fill="${style.muted}">one building for every active day</text>`;
+  text2 += `<text class="mono" x="${PAD3}" y="${height - 36}" font-size="12" font-weight="700" fill="${style.fg}">@${xmlEscape(opts.login)}</text>`;
+  text2 += `<text class="mono" x="${PAD3}" y="${height - 18}" font-size="10.500" fill="${style.muted}">one building for every active day</text>`;
   const css = (motion ? LIVE_BADGE_CSS : "") + (motion ? `.cty-b{transform-box:fill-box;transform-origin:50% 100%;animation:cty-grow .8s cubic-bezier(.2,.8,.2,1) both}@keyframes cty-grow{from{transform:scaleY(0)}}@media (prefers-reduced-motion:reduce){.cty-b,.lv-live{animation:none}}` : "");
   const scene = `<path d="${slabTop}" fill="${city2.slab}"/><path d="${leftSide}" fill="${city2.slabSide}"/><path d="${rightSide}" fill="${city2.slabSide}" fill-opacity="0.75"/><path d="${streets.join("")}" fill="none" stroke="${city2.line}" stroke-opacity="0.35" stroke-width="0.6"/>` + towers + flag;
-  return svgDocument(style, height, title, bg.defs, css, bg.markup + scene + text);
+  return svgDocument(style, height, title, bg.defs, css, bg.markup + scene + text2);
 }
 
 // ../core/src/templates/snake.ts
@@ -16877,10 +16877,10 @@ function renderSvg2(profile, config, variant) {
     cursor = top + 120;
   }
   if (blocks.has("languages") && profile.languages.length > 0) {
-    const text = profile.languages.slice(0, 4).map((l) => `${truncate(l.name, 14)} ${l.percent}%`).join("   ");
+    const text2 = profile.languages.slice(0, 4).map((l) => `${truncate(l.name, 14)} ${l.percent}%`).join("   ");
     parts.push(
       rise(
-        `<text class="mono" x="${PAD4}" y="${num3(cursor)}" font-size="12.5" fill="${look.muted}">written in  <tspan fill="${look.fg}">${xmlEscape(text)}</tspan></text>`,
+        `<text class="mono" x="${PAD4}" y="${num3(cursor)}" font-size="12.5" fill="${look.muted}">written in  <tspan fill="${look.fg}">${xmlEscape(text2)}</tspan></text>`,
         motion,
         next()
       )
@@ -17006,13 +17006,13 @@ function renderSnakeCard(opts) {
     css += `.snk-s{animation:snk-slither ${num(period)}s linear infinite}@keyframes snk-slither{${slither}}.snk-c{animation-duration:${num(period)}s;animation-iteration-count:infinite;animation-timing-function:linear}` + eaten + `@media (prefers-reduced-motion:reduce){.snk-s,.snk-c,.lv-live{animation:none!important}}`;
   }
   const defs = bg.defs + (sn.glow ? `<filter id="snk-glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.600" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` : "");
-  let text = label(style, "SNAKE TRAIL", PAD5, 46);
-  text += `<text x="${PAD5}" y="76" font-size="22" font-weight="800" fill="${style.fg}">${xmlEscape(formatNumber(contributions.total))} contributions, one continuous run</text>`;
-  text += liveBadge(style, CARD_WIDTH - PAD5 - 42, 46, motion);
+  let text2 = label(style, "SNAKE TRAIL", PAD5, 46);
+  text2 += `<text x="${PAD5}" y="76" font-size="22" font-weight="800" fill="${style.fg}">${xmlEscape(formatNumber(contributions.total))} contributions, one continuous run</text>`;
+  text2 += liveBadge(style, CARD_WIDTH - PAD5 - 42, 46, motion);
   const capY = y0 + ROWS3 * step + 30;
-  text += `<text class="mono" x="${PAD5}" y="${capY}" font-size="12" fill="${style.muted}">${xmlEscape(`${plural(contributions.activeDays, "active day")}  \xB7  current streak ${plural(contributions.currentStreak, "day")}  \xB7  longest ${plural(contributions.longestStreak, "day")}`)}</text>`;
-  text += `<text class="mono" x="${CARD_WIDTH - PAD5}" y="${capY}" text-anchor="end" font-size="11" fill="${style.muted}">@${xmlEscape(opts.login)}</text>`;
-  return svgDocument(style, height, title, defs, css, bg.markup + text + cells + snake2);
+  text2 += `<text class="mono" x="${PAD5}" y="${capY}" font-size="12" fill="${style.muted}">${xmlEscape(`${plural(contributions.activeDays, "active day")}  \xB7  current streak ${plural(contributions.currentStreak, "day")}  \xB7  longest ${plural(contributions.longestStreak, "day")}`)}</text>`;
+  text2 += `<text class="mono" x="${CARD_WIDTH - PAD5}" y="${capY}" text-anchor="end" font-size="11" fill="${style.muted}">@${xmlEscape(opts.login)}</text>`;
+  return svgDocument(style, height, title, defs, css, bg.markup + text2 + cells + snake2);
 }
 
 // ../core/src/live/compose.ts
@@ -17123,9 +17123,9 @@ function lookOf(hue, variant, profile) {
     accent2: hslToHex(second, 0.7, 0.4)
   };
 }
-var mono = (text, x, y, fill, extra = "") => `<text class="mono" x="${x}" y="${y}" fill="${fill}" ${extra}>${xmlEscape(text)}</text>`;
-var sans = (text, x, y, fill, extra = "") => `<text x="${x}" y="${y}" fill="${fill}" ${extra}>${xmlEscape(text)}</text>`;
-var label2 = (look, text, x, y) => mono(text, x, y, look.accent, 'font-size="11.5" font-weight="700" letter-spacing="2"');
+var mono = (text2, x, y, fill, extra = "") => `<text class="mono" x="${x}" y="${y}" fill="${fill}" ${extra}>${xmlEscape(text2)}</text>`;
+var sans = (text2, x, y, fill, extra = "") => `<text x="${x}" y="${y}" fill="${fill}" ${extra}>${xmlEscape(text2)}</text>`;
+var label2 = (look, text2, x, y) => mono(text2, x, y, look.accent, 'font-size="11.5" font-weight="700" letter-spacing="2"');
 var num4 = (n) => String(Math.round(n * 100) / 100);
 function shell(o) {
   const { look, variant } = o;
@@ -17581,8 +17581,8 @@ function asciiPortrait(grid, cols, tone) {
 }
 
 // ../core/src/templates/showpieces.ts
-function fitSize(text, width, max, min = 18, factor = 0.6) {
-  return Math.max(min, Math.min(max, Math.floor(width / (Math.max(text.length, 1) * factor))));
+function fitSize(text2, width, max, min = 18, factor = 0.6) {
+  return Math.max(min, Math.min(max, Math.floor(width / (Math.max(text2.length, 1) * factor))));
 }
 var subline = (profile, config, look) => {
   const parts = [`<tspan fill="${look.muted}">@${xmlEscape(profile.login)}</tspan>`];
@@ -17785,14 +17785,14 @@ function capTipSvg(profile, config, variant) {
     if (profile.followers > 0) thanks.push(`${formatNumber(profile.followers)} ${profile.followers === 1 ? "follower" : "followers"}`);
   }
   const line = thanks.length > 0 ? `Thank you for ${thanks.join(" and ")}` : "Thanks for stopping by";
-  let text = `<text x="${cx}" y="${cy + r + 52}" text-anchor="middle" font-size="30" font-weight="800" fill="${look.fg}">${xmlEscape(name)}</text><text x="${cx}" y="${cy + r + 76}" text-anchor="middle" font-size="14" fill="${look.muted}">@${xmlEscape(profile.login)}</text><text x="${cx}" y="${cy + r + 112}" text-anchor="middle" font-size="19" font-weight="700" fill="${look.accent}">${xmlEscape(line)}</text>`;
+  let text2 = `<text x="${cx}" y="${cy + r + 52}" text-anchor="middle" font-size="30" font-weight="800" fill="${look.fg}">${xmlEscape(name)}</text><text x="${cx}" y="${cy + r + 76}" text-anchor="middle" font-size="14" fill="${look.muted}">@${xmlEscape(profile.login)}</text><text x="${cx}" y="${cy + r + 112}" text-anchor="middle" font-size="19" font-weight="700" fill="${look.accent}">${xmlEscape(line)}</text>`;
   let height = cy + r + 150;
   if (blocks.has("languages") && profile.languages.length > 0) {
     const chips3 = profile.languages.slice(0, 5).map((l) => `${truncate(l.name, 14)}`);
     const widths = chips3.map((c2) => 26 + c2.length * 7.4);
     const total = widths.reduce((s, w) => s + w, 0) + (chips3.length - 1) * 8;
     let x = cx - total / 2;
-    text += chips3.map((c2, i) => {
+    text2 += chips3.map((c2, i) => {
       const w = widths[i];
       const out = `<rect x="${num4(x)}" y="${height - 14}" width="${num4(w)}" height="28" rx="14" fill="${look.panel}" stroke="${look.border}"/>` + sans(c2, x + w / 2, height + 5, look.fg, 'font-size="12.5" text-anchor="middle"');
       x += w + 8;
@@ -17802,7 +17802,7 @@ function capTipSvg(profile, config, variant) {
   }
   height += PAD6 - 6;
   const css = motion ? `.cap{animation:tip 3.6s ease-in-out infinite}@keyframes tip{0%,55%,100%{transform:rotate(0) translateY(0)}20%{transform:rotate(-16deg) translateY(-6px)}35%{transform:rotate(-16deg) translateY(-6px)}}.conf{animation:fall 8s linear infinite}@keyframes fall{from{transform:translateY(-14px)}to{transform:translateY(14px)}}@media (prefers-reduced-motion:reduce){.cap,.conf{animation:none}}` : "";
-  return shell({ height, look, variant, title: `${profile.name ?? profile.login} (@${profile.login}) on GitHub`, css, body: confetti + portrait(profile, look, cx, cy, r) + hat + text, glow: [0.5, 0.3] });
+  return shell({ height, look, variant, title: `${profile.name ?? profile.login} (@${profile.login}) on GitHub`, css, body: confetti + portrait(profile, look, cx, cy, r) + hat + text2, glow: [0.5, 0.3] });
 }
 var cinematic = build("cinematic", "Cinematic", "Animated widgets and full motion: a letterboxed title card with rings that fill, a line that draws itself and drifting light.", ["animated", "dark", "widescreen"], cinematicSvg);
 var wow = build("wow", "Wow Profile", "Your name as a deep, floating wordmark beside an ASCII portrait made from your own profile picture.", ["dark", "ascii", "wordmark"], wowSvg);
@@ -17948,6 +17948,423 @@ function erasedSvg(profile, config, variant) {
 var creative = build2("creative", "Creative Portfolio", "Colourful work with a point of view: generative art drawn from your own picture\u2019s colours, with your projects framed beneath it.", ["art", "colourful", "portfolio"], creativeSvg, true);
 var erased = build2("erased", "Erased", "Expressive contribution activity: a field of dots, one for each day, wiped away by an eraser to reveal your name.", ["animated", "dots", "expressive"], erasedSvg, false);
 
+// ../core/src/templates/make.ts
+function imageTemplate(id, name, description, tags, svg, options = {}) {
+  return {
+    id,
+    name,
+    description,
+    tags,
+    needsAvatar: options.needsAvatar ?? true,
+    render(profile, config) {
+      const assets = variantsFor(config.theme).map((variant) => ({ path: assetPath(id, variant), content: svg(profile, config, variant) }));
+      const alt = describeProfile(profile, config, options.extra?.(profile, config), { activity: options.activity ?? false });
+      return { readme: imageReadme(profile, config, id, W, alt), assets };
+    }
+  };
+}
+function svgDoc(d) {
+  const r = d.radius ?? 14;
+  const height = Math.ceil(d.height);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${height}" viewBox="0 0 ${W} ${height}" role="img" aria-labelledby="t">
+<title id="t">${xmlEscape(d.title)}</title>
+<defs>
+${d.defs ?? ""}
+</defs>
+<style>
+text{font-family:${FONT_SANS}}
+.mono{font-family:${FONT2}}
+.serif{font-family:${FONT_SERIF}}
+${d.css ?? ""}
+</style>
+<rect width="${W}" height="${height}" rx="${r}" fill="${d.bg}"/>
+${d.body}
+${d.stroke ? `<rect x="0.5" y="0.5" width="${W - 1}" height="${height - 1}" rx="${r}" fill="none" stroke="${d.stroke}"/>` : ""}
+</svg>
+`;
+}
+function hashOf(text2) {
+  let h = 2166136261;
+  for (const ch of text2) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0;
+  return h;
+}
+function langColor(name, variant) {
+  return hslToHex(hashOf(name.toLowerCase()) % 360, 0.62, variant === "dark" ? 0.6 : 0.42);
+}
+function isoDate(iso) {
+  if (!iso || !/^\d{4}-\d{2}-\d{2}/.test(iso)) return null;
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
+}
+var initialOf = (profile) => [...profile.name ?? profile.login][0]?.toUpperCase() ?? "?";
+function pictureBox(profile, fill, ink, x, y, w, h, rx, id) {
+  const uri = profile.avatar?.dataUri;
+  if (uri && SAFE_DATA_URI.test(uri)) {
+    return `<clipPath id="${id}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}"/></clipPath><image href="${uri}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id})"/>`;
+  }
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${fill}"/><text x="${x + w / 2}" y="${y + h / 2 + Math.min(w, h) * 0.17}" text-anchor="middle" font-size="${Math.round(Math.min(w, h) * 0.5)}" font-weight="800" fill="${ink}">${xmlEscape(initialOf(profile))}</text>`;
+}
+function yearsBetween(from, to) {
+  if (!from || !to) return null;
+  const a = Date.parse(from);
+  const b = Date.parse(to);
+  if (Number.isNaN(a) || Number.isNaN(b) || b < a) return null;
+  return Math.floor((b - a) / (365.25 * 864e5));
+}
+
+// ../core/src/templates/documents.ts
+var hueFor = (profile, fallback) => hueOf(profile.avatar?.grid.tint) ?? fallback;
+var text = (value, x, y, size, fill, extra = "") => `<text x="${num4(x)}" y="${num4(y)}" font-size="${size}" fill="${fill}" ${extra}>${xmlEscape(value)}</text>`;
+function mrzLine(value, length = 44) {
+  const clean = value.toUpperCase().replace(/[^A-Z0-9]+/g, "<");
+  return clean.slice(0, length).padEnd(length, "<");
+}
+function passportSvg(profile, config, variant) {
+  const dark = variant === "dark";
+  const hue = hueFor(profile, 215);
+  const blocks = new Set(config.blocks);
+  const motion = config.motion;
+  const desk = dark ? hslToHex(hue, 0.25, 0.08) : hslToHex(hue, 0.2, 0.86);
+  const page = dark ? hslToHex(40, 0.16, 0.15) : "#f6efdc";
+  const ink = dark ? "#ece2c8" : "#2a2418";
+  const muted = dark ? "#a39a82" : "#7a6f55";
+  const rule = dark ? "#3b3526" : "#d8ccab";
+  const seal = hslToHex(hue, 0.55, dark ? 0.62 : 0.34);
+  const name = profile.name ?? profile.login;
+  const issued = isoDate(profile.createdAt);
+  let body = `<rect x="22" y="22" width="856" height="396" rx="12" fill="${page}" stroke="${rule}"/>`;
+  body += `<path d="M450 22V418" stroke="${rule}" stroke-width="2"/><path d="M446 22V418" stroke="${ink}" stroke-opacity="0.07" stroke-width="8"/>`;
+  body += text("GITHUB PASSPORT", 56, 62, 11, seal, 'letter-spacing="3" font-weight="800"');
+  body += text("PASSEPORT \xB7 PASAPORTE \xB7 PASS", 56, 78, 8.5, muted, 'letter-spacing="1.6"');
+  body += pictureBox(profile, seal, page, 56, 102, 150, 184, 6, "pp");
+  body += `<rect x="56.5" y="102.5" width="149" height="183" rx="6" fill="none" stroke="${ink}" stroke-opacity="0.35"/>`;
+  const fields = [["NAME", truncate(name, 22)], ["LOGIN", `@${truncate(profile.login, 20)}`]];
+  if (issued) fields.push(["ISSUED (MEMBER SINCE)", issued]);
+  if (profile.location) fields.push(["PLACE OF RESIDENCE", truncate(profile.location, 24)]);
+  if (blocks.has("stats")) fields.push(["FOLLOWERS", formatNumber(profile.followers)]);
+  fields.slice(0, 5).forEach(([caption, value], i) => {
+    const y = 112 + i * 37;
+    body += text(caption, 228, y, 8.5, muted, 'letter-spacing="1.4" font-weight="700"');
+    body += text(value, 228, y + 18, 15, ink, 'font-weight="700"');
+    body += `<path d="M228 ${y + 24}H430" stroke="${rule}"/>`;
+  });
+  const mrz1 = mrzLine(`P<GHB${name.replace(/\s+/g, "<<")}`);
+  const mrz2 = mrzLine(`${profile.login}<${(issued ?? "").replace(/-/g, "")}`);
+  body += `<rect x="40" y="326" width="396" height="68" rx="4" fill="${ink}" fill-opacity="0.05"/>`;
+  body += text(mrz1, 54, 354, 11.5, ink, 'class="mono" letter-spacing="0.5"');
+  body += text(mrz2, 54, 378, 11.5, ink, 'class="mono" letter-spacing="0.5"');
+  body += text("ENTRIES \xB7 LANGUAGES", 482, 62, 11, seal, 'letter-spacing="3" font-weight="800"');
+  const langs = blocks.has("languages") ? profile.languages.slice(0, 6) : [];
+  if (langs.length === 0) {
+    body += text(blocks.has("languages") ? "No stamps yet." : "The languages section is switched off.", 482, 130, 13, muted, 'font-style="italic"');
+  }
+  langs.forEach((lang, i) => {
+    const col = i % 3;
+    const row = Math.floor(i / 3);
+    const cx = 540 + col * 118;
+    const cy = 150 + row * 128;
+    const tilt = (hashOf(`${profile.login}:${lang.name}`) % 25 - 12) * 0.9;
+    const color = langColor(lang.name, variant);
+    const stamp = `<g transform="rotate(${num4(tilt)} ${cx} ${cy})" class="stamp" style="animation-delay:${(0.2 + i * 0.18).toFixed(2)}s"><circle cx="${cx}" cy="${cy}" r="50" fill="none" stroke="${color}" stroke-width="3" stroke-opacity="0.85"/><circle cx="${cx}" cy="${cy}" r="43" fill="none" stroke="${color}" stroke-width="1" stroke-opacity="0.85"/>` + text(truncate(lang.name, 11).toUpperCase(), cx, cy - 6, 11.5, color, 'text-anchor="middle" font-weight="800" letter-spacing="0.8"') + text(`${Math.round(lang.percent)}%`, cx, cy + 17, 18, color, 'text-anchor="middle" font-weight="800"') + `</g>`;
+    body += stamp;
+  });
+  if (blocks.has("stats")) {
+    const line = `${formatNumber(profile.publicRepos)} repositories  \xB7  ${formatNumber(profile.totalStars)} stars`;
+    body += `<path d="M482 372H842" stroke="${rule}"/>`;
+    body += text(line, 482, 396, 12.5, muted, 'class="mono"');
+  }
+  const css = riseCss(motion) + (motion ? `.stamp{transform-box:fill-box;transform-origin:center;animation:slam .5s cubic-bezier(.2,.9,.3,1.4) both}@keyframes slam{from{opacity:0;transform:scale(1.9)}}@media (prefers-reduced-motion:reduce){.stamp{animation:none}}` : "");
+  return svgDoc({ height: 440, title: `${name} on GitHub, as a passport`, bg: desk, radius: 14, css, body: rise(body, motion, 0) });
+}
+var passport = imageTemplate(
+  "passport",
+  "Passport",
+  "An open passport with your photo and a stamp for every language you use.",
+  ["creative", "document", "fun"],
+  passportSvg,
+  { extra: () => "shown as an open passport with a stamp for each language" }
+);
+function receiptSvg(profile, config, variant) {
+  const dark = variant === "dark";
+  const motion = config.motion;
+  const blocks = new Set(config.blocks);
+  const desk = dark ? "#15171c" : "#d9dde3";
+  const paper = dark ? "#ecebe6" : "#fbfaf6";
+  const ink = "#26282d";
+  const faint = "#7d8088";
+  const left = 300;
+  const right = 600;
+  const lh = 19;
+  const repos = blocks.has("projects") ? profile.topRepos.slice(0, 5) : [];
+  const date = isoDate(profile.fetchedAt);
+  const name = profile.name ?? profile.login;
+  const lines = [];
+  let y = 74;
+  const centre = (value, size = 13, weight = 600, fill = ink) => {
+    lines.push(text(value, 450, y, size, fill, `class="mono" text-anchor="middle" font-weight="${weight}"`));
+    y += lh;
+  };
+  const dashes = () => {
+    lines.push(`<path d="M${left} ${y - 5}H${right}" stroke="${faint}" stroke-dasharray="4 3"/>`);
+    y += 12;
+  };
+  const row = (a, b, size = 12.5, weight = 500) => {
+    lines.push(text(a, left, y, size, ink, `class="mono" font-weight="${weight}"`));
+    lines.push(text(b, right, y, size, ink, `class="mono" text-anchor="end" font-weight="${weight}"`));
+    y += lh;
+  };
+  centre("GITHUB  GENERAL  STORE", 14, 800);
+  centre(`@${truncate(profile.login, 28)}`, 12.5, 500, faint);
+  if (profile.location) centre(truncate(profile.location, 36), 12, 500, faint);
+  y += 4;
+  dashes();
+  if (date) row("DATE", date);
+  row("CUSTOMER", truncate(name, 24).toUpperCase());
+  dashes();
+  if (repos.length > 0) {
+    row("ITEM", "STARS", 11, 800);
+    for (const repo of repos) {
+      row(truncate(repo.name, 26), formatNumber(repo.stars));
+      if (repo.description) {
+        lines.push(text(truncate(repo.description, 40), left + 10, y - 2, 10.5, faint, 'class="mono"'));
+        y += 15;
+      }
+    }
+    dashes();
+    row(`SUBTOTAL (${plural(repos.length, "item")})`, formatNumber(repos.reduce((sum, r) => sum + r.stars, 0)));
+  }
+  if (blocks.has("stats")) {
+    row("TOTAL STARS", formatNumber(profile.totalStars), 14, 800);
+    row("REPOSITORIES", formatNumber(profile.publicRepos));
+    row("FOLLOWERS", formatNumber(profile.followers));
+  }
+  if (blocks.has("languages") && profile.languages.length > 0) {
+    dashes();
+    const tags = profile.languages.slice(0, 4).map((l) => `${l.name} ${Math.round(l.percent)}%`).join("  ");
+    for (const part of wrap(`MADE WITH: ${tags}`, 38, 2)) {
+      lines.push(text(part, left, y, 11.5, ink, 'class="mono"'));
+      y += 16;
+    }
+  }
+  dashes();
+  centre("THANK YOU FOR VISITING", 12.5, 700);
+  y += 6;
+  let bars = "";
+  let bx = 340;
+  const seed = hashOf(profile.login);
+  for (let i = 0; bx < 560; i++) {
+    const w = 1 + (seed >>> i % 24 ^ i * 7) % 4;
+    if (i % 2 === 0) bars += `<rect x="${bx}" y="${y}" width="${w}" height="38" fill="${ink}"/>`;
+    bx += w + 1;
+  }
+  lines.push(bars);
+  y += 52;
+  lines.push(text(profile.login.toUpperCase(), 450, y, 10.5, faint, 'class="mono" text-anchor="middle" letter-spacing="3"'));
+  y += 30;
+  const height = y + 36;
+  const across = (sign, dir) => {
+    let d = "";
+    for (let x = left - 20; x < right + 20; x += 10) d += `l${5 * sign} ${5 * dir}l${5 * sign} ${-5 * dir}`;
+    return d;
+  };
+  const shape = `M${left - 20} 52${across(1, -1)}V${height - 40}${across(-1, 1)}Z`;
+  const slot = `<rect x="260" y="26" width="380" height="24" rx="12" fill="${dark ? "#05060a" : "#8b909a"}"/>`;
+  const paperShape = `<path d="${shape}" fill="${paper}"/><path d="${shape}" fill="none" stroke="#000" stroke-opacity="0.12"/>`;
+  const printed = motion ? `<g class="print">${lines.join("")}</g>` : lines.join("");
+  const css = motion ? `.print{animation:printout 2.4s steps(30) both}@keyframes printout{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}@media (prefers-reduced-motion:reduce){.print{animation:none}}` : "";
+  return svgDoc({
+    height,
+    title: `${name} on GitHub, as a till receipt`,
+    bg: desk,
+    css,
+    body: `${paperShape}${slot}${printed}`
+  });
+}
+var receipt = imageTemplate(
+  "receipt",
+  "Receipt",
+  "A thermal till receipt that prints your best repositories as items, with a total.",
+  ["creative", "document", "fun"],
+  receiptSvg,
+  { extra: () => "shown as a till receipt listing repositories as items" }
+);
+function sheetSvg(profile, config, variant) {
+  const dark = variant === "dark";
+  const hue = hueFor(profile, 28);
+  const motion = config.motion;
+  const blocks = new Set(config.blocks);
+  const bg = dark ? "#1d1710" : "#efe2c3";
+  const sheet2 = dark ? "#261d12" : "#f7edd3";
+  const ink = dark ? "#ead9b4" : "#3a2a14";
+  const muted = dark ? "#a8946b" : "#7b6540";
+  const line = dark ? "#4b3a22" : "#cdb78a";
+  const accent2 = hslToHex(hue, 0.6, dark ? 0.62 : 0.36);
+  const name = profile.name ?? profile.login;
+  const since = isoDate(profile.createdAt)?.slice(0, 4);
+  const years = yearsBetween(profile.createdAt, profile.fetchedAt);
+  const bio = config.text.bio ?? profile.bio;
+  const height = 470;
+  let body = `<rect x="18" y="18" width="864" height="${height - 36}" rx="10" fill="${sheet2}" stroke="${line}" stroke-width="2"/>`;
+  body += `<rect x="28" y="28" width="844" height="${height - 56}" rx="6" fill="none" stroke="${line}"/>`;
+  body += pictureBox(profile, accent2, sheet2, 52, 54, 112, 112, 8, "cp");
+  body += `<rect x="52" y="54" width="112" height="112" rx="8" fill="none" stroke="${accent2}" stroke-width="2.5"/>`;
+  body += text(truncate(name, 16), 182, 84, name.length > 12 ? 20 : 24, ink, 'class="serif" font-weight="700"');
+  body += text(`@${truncate(profile.login, 22)}`, 182, 106, 13, muted, 'class="mono"');
+  if (since) body += text(`Adventuring since ${since}`, 182, 130, 13, ink, 'class="serif" font-style="italic"');
+  if (profile.location) body += text(`Hails from ${truncate(profile.location, 22)}`, 182, 150, 13, ink, 'class="serif" font-style="italic"');
+  const tiles = [];
+  if (blocks.has("stats")) {
+    tiles.push(["ALLIES", formatNumber(profile.followers)], ["RENOWN", formatNumber(profile.totalStars)], ["REALMS", formatNumber(profile.publicRepos)]);
+    if (years !== null) tiles.push(["YEARS", formatNumber(years)]);
+    else if (profile.totalForks !== void 0) tiles.push(["SPOILS", formatNumber(profile.totalForks)]);
+  }
+  tiles.forEach(([caption, value], i) => {
+    const x = 52 + i % 2 * 132;
+    const y = 190 + Math.floor(i / 2) * 82;
+    body += `<rect x="${x}" y="${y}" width="120" height="70" rx="6" fill="${accent2}" fill-opacity="0.1" stroke="${accent2}" stroke-opacity="0.6"/>`;
+    body += text(value, x + 60, y + 38, 26, ink, 'class="serif" text-anchor="middle" font-weight="700"');
+    body += text(caption, x + 60, y + 58, 9.5, muted, 'text-anchor="middle" letter-spacing="2.4" font-weight="700"');
+  });
+  body += text("SKILLS", 376, 70, 12, accent2, 'letter-spacing="4" font-weight="800"');
+  body += `<path d="M376 80H600" stroke="${line}"/>`;
+  const skills = blocks.has("languages") ? profile.languages.slice(0, 6) : [];
+  if (skills.length === 0) body += text(blocks.has("languages") ? "No skills listed." : "Skills are switched off.", 376, 108, 13, muted, 'class="serif" font-style="italic"');
+  skills.forEach((lang, i) => {
+    const y = 106 + i * 40;
+    body += text(truncate(lang.name, 16), 376, y, 13.5, ink, 'class="serif" font-weight="600"');
+    body += text(`${Math.round(lang.percent)}%`, 600, y, 12.5, muted, 'class="mono" text-anchor="end"');
+    body += `<rect x="376" y="${y + 8}" width="224" height="8" rx="4" fill="${ink}" fill-opacity="0.1"/>`;
+    body += `<rect x="376" y="${y + 8}" width="${num4(Math.max(6, 224 * lang.percent / 100))}" height="8" rx="4" fill="${langColor(lang.name, variant)}"/>`;
+  });
+  body += text("QUESTS", 636, 70, 12, accent2, 'letter-spacing="4" font-weight="800"');
+  body += `<path d="M636 80H846" stroke="${line}"/>`;
+  const quests = blocks.has("projects") ? profile.topRepos.slice(0, 4) : [];
+  if (quests.length === 0) body += text(blocks.has("projects") ? "No quests yet." : "Quests are switched off.", 636, 108, 13, muted, 'class="serif" font-style="italic"');
+  let qy = 104;
+  for (const repo of quests) {
+    body += text(truncate(repo.name, 18), 636, qy, 14, ink, 'class="serif" font-weight="700"');
+    body += text(`\u2605 ${formatNumber(repo.stars)}`, 846, qy, 12, accent2, 'class="mono" text-anchor="end" font-weight="700"');
+    const described = repo.description ? wrap(repo.description, 32, 2) : [];
+    described.forEach((part, j) => {
+      body += text(part, 636, qy + 17 + j * 15, 11.5, muted, 'class="serif" font-style="italic"');
+    });
+    qy += 30 + described.length * 15;
+  }
+  body += `<path d="M52 374H846" stroke="${line}"/>`;
+  body += text("LEGEND", 52, 398, 10.5, accent2, 'letter-spacing="3.6" font-weight="800"');
+  const legend = bio ? wrap(bio, 92, 2) : ["Nothing has been written here yet."];
+  legend.forEach((part, i) => {
+    body += text(part, 52, 418 + i * 15, 12.5, ink, 'class="serif" font-style="italic"');
+  });
+  return svgDoc({ height, title: `${name} on GitHub, as a character sheet`, bg, radius: 14, css: riseCss(motion), body: rise(body, motion, 0.05) });
+}
+var sheet = imageTemplate(
+  "sheet",
+  "Character sheet",
+  "A fantasy character sheet: allies, renown, skills, quests and a legend.",
+  ["creative", "document", "fun"],
+  sheetSvg,
+  { extra: () => "shown as a fantasy character sheet with skills and quests" }
+);
+var MONTHS3 = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+var WEEKDAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+function calendarMonth(profile) {
+  const date = isoDate(profile.contributions?.to) ?? isoDate(profile.fetchedAt);
+  if (!date) return null;
+  return { year: Number(date.slice(0, 4)), month: Number(date.slice(5, 7)) - 1, today: date };
+}
+function calendarSvg(profile, config, variant) {
+  const dark = variant === "dark";
+  const hue = hueFor(profile, 8);
+  const motion = config.motion;
+  const blocks = new Set(config.blocks);
+  const bg = dark ? "#16161a" : "#e6e3dc";
+  const page = dark ? "#202026" : "#fffdf8";
+  const ink = dark ? "#ecebf0" : "#25232b";
+  const muted = dark ? "#8d8c98" : "#8a8693";
+  const line = dark ? "#34343d" : "#e3dfd6";
+  const accent2 = hslToHex(hue, 0.7, dark ? 0.62 : 0.46);
+  const name = profile.name ?? profile.login;
+  const when = calendarMonth(profile);
+  const activity = blocks.has("activity") ? profile.contributions : void 0;
+  const counts = new Map((activity?.days ?? []).map((d) => [d.date, d]));
+  const levels = [0.14, 0.34, 0.5, 0.64].map((l, i) => hslToHex(hue, 0.55 + i * 0.1, dark ? l : 1 - l * 0.85));
+  const first = when ? new Date(Date.UTC(when.year, when.month, 1)) : null;
+  const lead = first ? (first.getUTCDay() + 6) % 7 : 0;
+  const length = when ? new Date(Date.UTC(when.year, when.month + 1, 0)).getUTCDate() : 0;
+  const gx = 58;
+  const gy = 196;
+  const cw = 112;
+  const ch = 60;
+  const bottom = gy + Math.ceil((lead + length) / 7) * ch;
+  const height = when ? bottom + 100 : 280;
+  let body = `<rect x="28" y="40" width="844" height="${height - 60}" rx="10" fill="${page}" stroke="${line}"/>`;
+  body += `<rect x="28" y="40" width="844" height="96" rx="10" fill="${accent2}"/><rect x="28" y="110" width="844" height="26" fill="${accent2}"/>`;
+  for (let i = 0; i < 14; i++) {
+    const x = 70 + i * 60;
+    body += `<rect x="${x - 4}" y="24" width="8" height="30" rx="4" fill="${dark ? "#0b0b0e" : "#4a4750"}"/><circle cx="${x}" cy="46" r="5" fill="${bg}"/>`;
+  }
+  body += pictureBox(profile, page, accent2, 52, 62, 62, 62, 31, "wc");
+  body += `<circle cx="83" cy="93" r="30" fill="none" stroke="#fff" stroke-opacity="0.8" stroke-width="2"/>`;
+  body += text(truncate(name, 24), 130, 90, 20, "#ffffff", 'font-weight="700"');
+  body += text(`@${truncate(profile.login, 24)}`, 130, 110, 12.5, "#ffffff", 'class="mono" fill-opacity="0.85"');
+  if (!when) {
+    body += text("The calendar appears after the first automatic update.", 60, 200, 15, muted, 'font-style="italic"');
+    return svgDoc({ height, title: `${name} on GitHub, as a wall calendar`, bg, radius: 14, css: riseCss(motion), body });
+  }
+  body += text(MONTHS3[when.month].toUpperCase(), 848, 92, 34, "#ffffff", 'text-anchor="end" font-weight="800" letter-spacing="3"');
+  body += text(String(when.year), 848, 114, 14, "#ffffff", 'text-anchor="end" letter-spacing="4" fill-opacity="0.85"');
+  WEEKDAYS.forEach((day, i) => {
+    body += text(day, gx + i * cw + cw / 2 - 4, 168, 10.5, i > 4 ? accent2 : muted, 'text-anchor="middle" letter-spacing="2" font-weight="700"');
+  });
+  for (let d = 1; d <= length; d++) {
+    const slot = lead + d - 1;
+    const x = gx + slot % 7 * cw;
+    const y = gy + Math.floor(slot / 7) * ch;
+    const iso = `${when.year}-${String(when.month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const day = counts.get(iso);
+    const future = iso > when.today;
+    let fill = "none";
+    let numberFill = future ? muted : ink;
+    if (day && day.count > 0) {
+      fill = levels[Math.min(3, Math.max(0, day.level - 1))];
+      numberFill = dark ? "#ffffff" : day.level >= 3 ? "#ffffff" : ink;
+    }
+    body += `<rect x="${x + 2}" y="${y + 2}" width="${cw - 4}" height="${ch - 4}" rx="6" fill="${fill}" stroke="${iso === when.today ? accent2 : line}" stroke-width="${iso === when.today ? 2.5 : 1}"${activity && !day && !future ? ' stroke-dasharray="3 3"' : ""}/>`;
+    body += text(String(d), x + 12, y + 22, 14, numberFill, 'font-weight="700"');
+    if (day && day.count > 0) body += text(String(day.count), x + cw - 12, y + ch - 12, 12, numberFill, 'class="mono" text-anchor="end" font-weight="700"');
+  }
+  let month = 0;
+  let active = 0;
+  for (const day of activity?.days ?? []) {
+    if (day.date.startsWith(`${when.year}-${String(when.month + 1).padStart(2, "0")}`)) {
+      month += day.count;
+      if (day.count > 0) active += 1;
+    }
+  }
+  const notes = [];
+  if (activity) {
+    notes.push(`${formatNumber(month)} contributions this month`, `${plural(active, "active day")} this month`, `${plural(activity.currentStreak, "day")} current streak`, `${plural(activity.longestStreak, "day")} longest streak this year`);
+  } else if (blocks.has("activity")) {
+    notes.push("Contribution colours appear after the first automatic update.");
+  }
+  const noteY = bottom + 34;
+  body += `<path d="M56 ${bottom + 12}H844" stroke="${line}"/>`;
+  notes.forEach((note, i) => {
+    body += text(note, 56 + i % 2 * 400, noteY + Math.floor(i / 2) * 22, 13, i === 0 ? ink : muted, `class="mono" font-weight="${i === 0 ? 700 : 500}"`);
+  });
+  return svgDoc({ height, title: `${name} on GitHub, as a wall calendar`, bg, radius: 14, css: riseCss(motion), body: rise(body, motion, 0.05) });
+}
+var calendar = imageTemplate(
+  "calendar",
+  "Wall calendar",
+  "A wall calendar page with every day coloured by your real contributions.",
+  ["creative", "document", "activity"],
+  calendarSvg,
+  { activity: true, extra: () => "shown as a wall calendar page" }
+);
+var documentTemplates = [passport, receipt, sheet, calendar];
+
 // ../core/src/templates/brief.ts
 var WIDTH3 = 900;
 var PAD7 = 44;
@@ -17959,8 +18376,8 @@ var PAPER = {
   light: { bg: "#fbfaf6", fg: "#1c1b19", muted: "#68655d", rule: "#dedad0", track: "#ebe7dc" },
   dark: { bg: "#14161a", fg: "#ecebe6", muted: "#9a978f", rule: "#2c2f35", track: "#23262c" }
 };
-function label3(text, x, y, color) {
-  return `<text x="${x}" y="${y}" font-size="12" font-weight="700" letter-spacing="1.8" fill="${color}">${xmlEscape(text)}</text>`;
+function label3(text2, x, y, color) {
+  return `<text x="${x}" y="${y}" font-size="12" font-weight="700" letter-spacing="1.8" fill="${color}">${xmlEscape(text2)}</text>`;
 }
 function renderSvg4(profile, config, variant) {
   const t = PAPER[variant];
@@ -18120,19 +18537,19 @@ var AXIS_X = 168;
 var CONTENT_X = 196;
 var SPARK_WEEKS = 26;
 var MAX_ENTRIES = 6;
-var MONTHS3 = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+var MONTHS4 = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 function shortDay(pushedAt) {
   const time = Date.parse(pushedAt);
   if (!Number.isFinite(time)) return null;
   const d = new Date(time);
-  return `${MONTHS3[d.getUTCMonth()].slice(0, 3)} ${d.getUTCDate()}`;
+  return `${MONTHS4[d.getUTCMonth()].slice(0, 3)} ${d.getUTCDate()}`;
 }
 function groupByMonth(repos, limit = MAX_ENTRIES) {
   const dated = repos.map((repo) => ({ repo, time: Date.parse(repo.pushedAt ?? "") })).filter((entry) => Number.isFinite(entry.time)).sort((a, b) => b.time - a.time || a.repo.name.localeCompare(b.repo.name)).slice(0, limit);
   const groups = [];
   for (const { repo, time } of dated) {
     const d = new Date(time);
-    const label4 = `${MONTHS3[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+    const label4 = `${MONTHS4[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
     const last = groups[groups.length - 1];
     if (last && last.label === label4) last.items.push(repo);
     else groups.push({ label: label4, items: [repo] });
@@ -18243,10 +18660,10 @@ function renderSvg5(profile, config, variant) {
     }
   }
   if (blocks.has("languages") && profile.languages.length > 0) {
-    const text = profile.languages.slice(0, 4).map((l) => `${truncate(l.name, 14)} ${l.percent}%`).join("   ");
+    const text2 = profile.languages.slice(0, 4).map((l) => `${truncate(l.name, 14)} ${l.percent}%`).join("   ");
     parts.push(
       rise(
-        `<text class="mono" x="${PAD8}" y="${num5(cursor)}" font-size="12.5" fill="${look.muted}">built with  <tspan fill="${look.fg}">${xmlEscape(text)}</tspan></text>`,
+        `<text class="mono" x="${PAD8}" y="${num5(cursor)}" font-size="12.5" fill="${look.muted}">built with  <tspan fill="${look.fg}">${xmlEscape(text2)}</tspan></text>`,
         motion,
         next()
       )
@@ -18291,12 +18708,12 @@ var buildlog = {
 
 // ../core/src/templates/editorial.ts
 var DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-var MONTHS4 = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+var MONTHS5 = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 function longDate(iso) {
   if (!iso) return null;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return null;
-  return `${DAYS[date.getUTCDay()]}, ${date.getUTCDate()} ${MONTHS4[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+  return `${DAYS[date.getUTCDay()]}, ${date.getUTCDate()} ${MONTHS5[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
 }
 function breakName(name, width, maxLines) {
   const parts = name.match(/[^-_]+[-_]?|[-_]/g) ?? [name];
@@ -18321,7 +18738,7 @@ function frontPageSvg(profile, config, variant) {
   const look = paperLook(variant);
   const motion = config.motion;
   const blocks = new Set(config.blocks);
-  const serif = (text, x, y2, size2, extra = "", fill = look.fg) => `<text x="${x}" y="${y2}" font-family="${FONT_SERIF}" font-size="${size2}" fill="${fill}" ${extra}>${xmlEscape(text)}</text>`;
+  const serif = (text2, x, y2, size2, extra = "", fill = look.fg) => `<text x="${x}" y="${y2}" font-family="${FONT_SERIF}" font-size="${size2}" fill="${fill}" ${extra}>${xmlEscape(text2)}</text>`;
   let step = 0;
   const next = () => step++ * 0.1;
   const title = `THE ${truncate(profile.login.toUpperCase(), 18)} GAZETTE`;
@@ -18349,8 +18766,8 @@ function frontPageSvg(profile, config, variant) {
     let by = colTop + 38 + headline.length * 32 + 4;
     body += serif(`By ${truncate(byline, 30)}`, PAD6, by + 4, 12, 'font-style="italic"', look.muted);
     by += 28;
-    const text = lead.description ?? `A project by ${byline}.`;
-    wrap(text, 52, 5).forEach((line) => {
+    const text2 = lead.description ?? `A project by ${byline}.`;
+    wrap(text2, 52, 5).forEach((line) => {
       body += serif(line, PAD6, by, 14.5);
       by += 21;
     });
@@ -18425,7 +18842,7 @@ function hubSvg(profile, config, variant) {
   const css = motion ? `.nudge{animation:nudge 1.6s ease-in-out infinite}@keyframes nudge{50%{transform:translateY(4px)}}@media (prefers-reduced-motion:reduce){.nudge{animation:none}}` : "";
   return shell({ height: r * 2 + PAD6 * 2 - 4, look, variant, title: `${profile.name ?? profile.login} (@${profile.login}) on GitHub`, css, body, glow: [0.9, 0.2] });
 }
-var cell = (text) => escapeMarkdown(text).replace(/\r?\n/g, " ");
+var cell = (text2) => escapeMarkdown(text2).replace(/\r?\n/g, " ");
 function section(title, body, open) {
   return `<details${open ? " open" : ""}>
 <summary><b>${title}</b></summary>
@@ -18622,10 +19039,10 @@ function renderSvg6(profile, config, variant) {
   }
   cursor = bottom + 28;
   if (blocks.has("languages") && profile.languages.length > 0) {
-    const text = profile.languages.slice(0, 4).map((l) => `${truncate(l.name, 14)} ${l.percent}%`).join("   ");
+    const text2 = profile.languages.slice(0, 4).map((l) => `${truncate(l.name, 14)} ${l.percent}%`).join("   ");
     parts.push(
       rise(
-        `<text class="mono" x="${PAD9}" y="${num6(cursor)}" font-size="12.5" fill="${look.muted}">written in  <tspan fill="${look.fg}">${xmlEscape(text)}</tspan></text>`,
+        `<text class="mono" x="${PAD9}" y="${num6(cursor)}" font-size="12.5" fill="${look.muted}">written in  <tspan fill="${look.fg}">${xmlEscape(text2)}</tspan></text>`,
         motion,
         next()
       )
@@ -18798,10 +19215,10 @@ function renderSvg7(profile, config, variant) {
     cursor += 56 + 34;
   }
   if (blocks.has("languages") && profile.languages.length > 0) {
-    const text = profile.languages.slice(0, 4).map((l) => `${truncate(l.name, 14)} ${l.percent}%`).join("   ");
+    const text2 = profile.languages.slice(0, 4).map((l) => `${truncate(l.name, 14)} ${l.percent}%`).join("   ");
     parts.push(
       rise(
-        `<text class="mono" x="${PAD10}" y="${num7(cursor)}" font-size="12.5" fill="${look.muted}">built with  <tspan fill="${look.fg}">${xmlEscape(text)}</tspan></text>`,
+        `<text class="mono" x="${PAD10}" y="${num7(cursor)}" font-size="12.5" fill="${look.muted}">built with  <tspan fill="${look.fg}">${xmlEscape(text2)}</tspan></text>`,
         motion,
         next()
       )
@@ -18852,7 +19269,7 @@ var PAD11 = 48;
 var HABIT_WEEKS = 12;
 var DOT = 7;
 var DOT_STEP = 22;
-var MONTHS5 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+var MONTHS6 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function habitGrid(days, weeks) {
   if (days.length === 0 || weeks <= 0) return [];
   const first = (/* @__PURE__ */ new Date(`${days[0]?.date}T00:00:00Z`)).getUTCDay();
@@ -18872,7 +19289,7 @@ function formatDate(iso) {
   const time = iso ? Date.parse(iso) : NaN;
   if (!Number.isFinite(time)) return null;
   const date = new Date(time);
-  return `${MONTHS5[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
+  return `${MONTHS6[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
 }
 var num8 = (value) => String(Math.round(value * 10) / 10 || 0);
 function lookFor6(variant, hue) {
@@ -18898,9 +19315,9 @@ function renderSvg8(profile, config, variant) {
   let step = 0;
   const next = () => step++ * 0.1;
   const left = PAD11 + 36;
-  const heading = (text, x, y) => {
-    const width = text.length * 9.2 + 16;
-    return `<rect x="${x - 6}" y="${y - 14}" width="${num8(width)}" height="19" rx="3" fill="${look.highlight}" fill-opacity="${look.highlightOpacity}"/><text class="mono" x="${x}" y="${y}" font-size="13" font-weight="700" letter-spacing="1.8" fill="${look.ink}">${xmlEscape(text)}</text>`;
+  const heading = (text2, x, y) => {
+    const width = text2.length * 9.2 + 16;
+    return `<rect x="${x - 6}" y="${y - 14}" width="${num8(width)}" height="19" rx="3" fill="${look.highlight}" fill-opacity="${look.highlightOpacity}"/><text class="mono" x="${x}" y="${y}" font-size="13" font-weight="700" letter-spacing="1.8" fill="${look.ink}">${xmlEscape(text2)}</text>`;
   };
   const updated = formatDate(profile.fetchedAt);
   let title = `<text class="serif" x="${left}" y="${PAD11 + 38}" font-size="40" font-weight="700" font-style="italic" fill="${look.ink}">${xmlEscape(truncate(profile.name ?? profile.login, 28))}</text>`;
@@ -19490,9 +19907,9 @@ var PALETTE = {
   dark: { bg: "#0b1220", panel: "#111a2e", border: "#22304d", fg: "#e7ecf6", muted: "#93a0ba", track: "#1a2540", grid: "#7c93c4" },
   light: { bg: "#f4f7fc", panel: "#ffffff", border: "#d6dfee", fg: "#0f1b33", muted: "#5a6987", track: "#e6ecf6", grid: "#3b5bb0" }
 };
-var mono2 = (text, x, y, fill, extra = "") => `<text class="mono" x="${x}" y="${y}" fill="${fill}" ${extra}>${xmlEscape(text)}</text>`;
-function sectionLabel(text, y, color) {
-  return mono2(text, PAD12, y, color, 'font-size="12" font-weight="700" letter-spacing="2"');
+var mono2 = (text2, x, y, fill, extra = "") => `<text class="mono" x="${x}" y="${y}" fill="${fill}" ${extra}>${xmlEscape(text2)}</text>`;
+function sectionLabel(text2, y, color) {
+  return mono2(text2, PAD12, y, color, 'font-size="12" font-weight="700" letter-spacing="2"');
 }
 function repoTile(repo, x, y, width, profile, t, accent2) {
   const parts = [
@@ -19726,7 +20143,7 @@ var VALUE_MAX = 44;
 var CHAR_WIDTH = 7.9;
 var ART_STEP = 0.025;
 var INFO_STEP = 0.11;
-var MONTHS6 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+var MONTHS7 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 var SWATCHES = {
   dark: ["#f85149", "#e3b341", "#3fb950", "#58a6ff", "#bc8cff", "#39c5cf", "#e6edf3", "#9198a1"],
   light: ["#cf222e", "#9a6700", "#1a7f37", "#0969da", "#8250df", "#1b7c83", "#1f2328", "#59636e"]
@@ -19734,7 +20151,7 @@ var SWATCHES = {
 function joined(createdAt) {
   const date = new Date(createdAt);
   if (Number.isNaN(date.getTime())) return null;
-  return `${MONTHS6[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+  return `${MONTHS7[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
 }
 function infoLines(profile, config) {
   const lines = [{ kind: "title" }, { kind: "blank" }];
@@ -19875,15 +20292,15 @@ var TILE_GAP2 = 14;
 var HEAT_CELL = 12;
 var HEAT_STEP = 15;
 var HEAT_OPACITY = [0, 0.3, 0.55, 0.78, 1];
-var MONTHS7 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+var MONTHS8 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function joined2(createdAt) {
   const date = new Date(createdAt);
   if (Number.isNaN(date.getTime())) return null;
-  return `Joined ${MONTHS7[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+  return `Joined ${MONTHS8[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
 }
 function chips2(profile) {
   const website = safeUrl(profile.website)?.replace(/^https?:\/\//, "").replace(/\/$/, "");
-  return [profile.company, profile.location, website, joined2(profile.createdAt)].filter((text) => Boolean(text)).map((text) => truncate(text, 30));
+  return [profile.company, profile.location, website, joined2(profile.createdAt)].filter((text2) => Boolean(text2)).map((text2) => truncate(text2, 30));
 }
 var accent = (c2, index) => c2.accents[index % c2.accents.length] ?? c2.p.accent;
 function avatarMarkup(profile, c2, cx, cy) {
@@ -19906,17 +20323,17 @@ function renderSvg12(profile, config, variant) {
   const avatarCy = PAD14 + 14 + AVATAR2 / 2;
   body.push(rise(avatarMarkup(profile, c2, PAD14 + 8 + AVATAR2 / 2, avatarCy), motion, 0));
   let y = PAD14 + 46;
-  const text = [];
-  text.push(
+  const text2 = [];
+  text2.push(
     `<text x="${TEXT_X}" y="${y}" font-size="40" font-weight="800" fill="${p.fg}">${xmlEscape(truncate(profile.name ?? profile.login, 26))}</text>`
   );
   if (profile.name) {
     y += 30;
-    text.push(`<text x="${TEXT_X}" y="${y}" font-size="17" fill="${p.muted}">@${xmlEscape(profile.login)}</text>`);
+    text2.push(`<text x="${TEXT_X}" y="${y}" font-size="17" fill="${p.muted}">@${xmlEscape(profile.login)}</text>`);
   }
   if (config.text.headline) {
     y += 36;
-    text.push(
+    text2.push(
       `<text x="${TEXT_X}" y="${y}" font-size="20" font-weight="600" fill="${accent(c2, 0)}">${xmlEscape(truncate(config.text.headline, 56))}</text>`
     );
   }
@@ -19924,10 +20341,10 @@ function renderSvg12(profile, config, variant) {
   if (bio) {
     wrap(bio, 62, 2).forEach((line, index) => {
       y += index === 0 ? 32 : 24;
-      text.push(`<text x="${TEXT_X}" y="${y}" font-size="16" fill="${p.fg}" fill-opacity="0.82">${xmlEscape(line)}</text>`);
+      text2.push(`<text x="${TEXT_X}" y="${y}" font-size="16" fill="${p.fg}" fill-opacity="0.82">${xmlEscape(line)}</text>`);
     });
   }
-  body.push(rise(text.join(""), motion, next()));
+  body.push(rise(text2.join(""), motion, next()));
   let chipX = TEXT_X;
   let chipY = y + 22;
   const chipMarkup = [];
@@ -19972,7 +20389,7 @@ function renderSvg12(profile, config, variant) {
         return `<rect x="${x}" y="${y2}" width="${HEAT_CELL}" height="${HEAT_CELL}" rx="2.5" ${fill}/>`;
       }).join("");
       const summaryY = top + 7 * HEAT_STEP + 20;
-      const strong = (text2) => `<tspan fill="${p.fg}" font-weight="700">${xmlEscape(text2)}</tspan>`;
+      const strong = (text3) => `<tspan fill="${p.fg}" font-weight="700">${xmlEscape(text3)}</tspan>`;
       const summary = `<text x="${PAD14}" y="${summaryY}" font-size="13" fill="${p.muted}" xml:space="preserve">${strong(formatNumber(activity.total))} contributions in the past year    \xB7    current streak ${strong(plural(activity.currentStreak, "day"))}    \xB7    longest streak ${strong(plural(activity.longestStreak, "day"))}</text>`;
       const markup = `<text x="${PAD14}" y="${cursor + 10}" font-size="12" letter-spacing="1" fill="${p.muted}">ACTIVITY</text>` + cells + summary;
       body.push(rise(markup, motion, next()));
@@ -20228,9 +20645,13 @@ var LIVE = {
   frontpage: { preset: "paper", city: true, companion: "chess", shift: 320 },
   hub: { preset: "plain", city: true, companion: "snake", shift: 336 },
   creative: { preset: "aurora", city: true, companion: "chess", shift: 352 },
-  erased: { preset: "terminal", city: true, companion: "chess", shift: 24 }
+  erased: { preset: "terminal", city: true, companion: "chess", shift: 24 },
+  passport: { preset: "paper", city: true, companion: "chess", shift: 8 },
+  receipt: { preset: "plain", city: true, companion: "snake", shift: 40 },
+  sheet: { preset: "chalk", city: true, companion: "chess", shift: 28 },
+  calendar: { preset: "sunrise", city: true, companion: "snake", shift: 352 }
 };
-var bases = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates, cinematic, wow, signature, captip, frontpage, hub, creative, erased];
+var bases = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates, cinematic, wow, signature, captip, frontpage, hub, creative, erased, ...documentTemplates];
 var templates = bases.map((template) => {
   const spec = LIVE[template.id];
   if (!spec) throw new Error(`Template "${template.id}" has no live preset`);
