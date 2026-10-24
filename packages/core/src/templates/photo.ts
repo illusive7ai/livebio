@@ -58,6 +58,28 @@ export interface PhotoOptions {
   tile?: { fill: string; ink: string };
   blend?: string;
   opacity?: number;
+  /** Draw the picture by reference to this id from `pictureDef`, so a design that shows it many times embeds it once. */
+  ref?: string;
+}
+
+/** The picture's own size in points: its pixel grid, or a square when that is unknown. */
+const naturalSize = (profile: Profile): [number, number] => {
+  const grid = profile.avatar?.grid;
+  return grid && grid.width > 0 && grid.height > 0 ? [grid.width, grid.height] : [1, 1];
+};
+
+/** The picture once, for the `defs` of a design that shows it several times. Empty when there is no safe picture. */
+export function pictureDef(profile: Profile, id: string): string {
+  const uri = profile.avatar?.dataUri;
+  if (!uri || !SAFE_DATA_URI.test(uri)) return '';
+  const [w, h] = naturalSize(profile);
+  return `<image id="${id}" href="${uri}" width="${w}" height="${h}"/>`;
+}
+
+/** Where and how big to draw a picture of `nw` by `nh` so it covers the box (x, y, w, h) with its middle in the middle, as xMidYMid slice does. */
+export function coverTransform(nw: number, nh: number, x: number, y: number, w: number, h: number): { tx: number; ty: number; scale: number } {
+  const scale = Math.max(w / nw, h / nh);
+  return { tx: x + (w - nw * scale) / 2, ty: y + (h - nh * scale) / 2, scale };
 }
 
 /** True when the profile has a picture that is safe to embed. */
@@ -78,6 +100,15 @@ export function photo(profile: Profile, x: number, y: number, w: number, h: numb
     const ix = x - (iw - w) * Math.min(1, Math.max(0, fx));
     const iy = y - (ih - h) * Math.min(1, Math.max(0, fy));
     const style = [o.blend ? `mix-blend-mode:${o.blend}` : '', o.opacity !== undefined ? `opacity:${o.opacity}` : ''].filter(Boolean).join(';');
+    if (o.ref) {
+      const [nw, nh] = naturalSize(profile);
+      const { tx, ty, scale } = coverTransform(nw, nh, ix, iy, iw, ih);
+      // The clip sits on a group with no transform of its own, so it is in the same space as the box.
+      return (
+        `<clipPath id="${id}"><rect x="${round(x)}" y="${round(y)}" width="${round(w)}" height="${round(h)}" rx="${rx}"/></clipPath>` +
+        `<g clip-path="url(#${id})"${o.filter ? ` filter="url(#${o.filter})"` : ''}${style ? ` style="${style}"` : ''}><use href="#${o.ref}" transform="translate(${round(tx)} ${round(ty)}) scale(${round(scale)})"/></g>`
+      );
+    }
     return (
       `<clipPath id="${id}"><rect x="${round(x)}" y="${round(y)}" width="${round(w)}" height="${round(h)}" rx="${rx}"/></clipPath>` +
       `<image href="${uri}" x="${round(ix)}" y="${round(iy)}" width="${round(iw)}" height="${round(ih)}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id})"${o.filter ? ` filter="url(#${o.filter})"` : ''}${style ? ` style="${style}"` : ''}/>`

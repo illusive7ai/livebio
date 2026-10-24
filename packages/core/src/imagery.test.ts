@@ -278,3 +278,90 @@ describe('every image design', () => {
     for (const variant of ['dark', 'light'] as const) expect(wellFormed(svgOf(id, withPicture, undefined, variant))).toEqual([]);
   });
 });
+
+import { coverTransform, pictureDef, photo } from './templates/photo';
+import { renderProfile } from './render';
+import { defaultConfig } from './config';
+
+describe('a picture shown many times is embedded once', () => {
+  const embeds = (svg: string) => [...svg.matchAll(/data:image\/png/g)].length;
+  const uses = (svg: string) => [...svg.matchAll(/<use href="#av"/g)].length;
+  const days = Array.from({ length: 365 }, (_v, i) => ({ date: new Date(Date.UTC(2025, 5, 11 + i)).toISOString().slice(0, 10), count: i % 5, level: (i % 5 === 0 ? 0 : 2) as 0 | 2 }));
+  const full: Profile = { ...withPicture, contributions: buildContributions(days) };
+
+  it.each([
+    ['moodboard', 4],
+    ['riso', 2],
+    ['glitch', 9],
+    ['contact', 12],
+    ['booth', 4],
+  ])('%s draws it %i times from a single copy', (id, times) => {
+    const svg = svgOf(id, full);
+    expect(embeds(svg)).toBe(1);
+    expect(uses(svg)).toBe(times);
+    expect(svg).toContain('<image id="av"');
+  });
+
+  it('keeps those designs small even with a real-sized picture', () => {
+    const big = 'data:image/png;base64,' + 'A'.repeat(30_000);
+    const p = { ...full, avatar: { dataUri: big, grid: full.avatar!.grid } };
+    for (const id of ['moodboard', 'riso', 'glitch', 'contact', 'booth']) expect(svgOf(id, p).length, id).toBeLessThan(80_000);
+  });
+
+  it('draws a stand-in tile and embeds nothing when there is no picture', () => {
+    for (const id of ['moodboard', 'riso', 'glitch', 'contact', 'booth']) {
+      const svg = svgOf(id, { ...full, avatar: undefined });
+      expect(embeds(svg), id).toBe(0);
+      expect(svg, id).not.toContain('<use href="#av"');
+      expect(wellFormed(svg), id).toEqual([]);
+    }
+  });
+
+  it('does not use a picture that is not a safe PNG or JPEG', () => {
+    const evil = { ...full, avatar: { dataUri: 'data:image/svg+xml;base64,PHN2Zz48c2NyaXB0Pg==', grid: full.avatar!.grid } };
+    for (const id of ['moodboard', 'riso', 'glitch', 'contact', 'booth']) expect(svgOf(id, evil), id).not.toContain('data:image/svg');
+    expect(pictureDef(evil, 'av')).toBe('');
+  });
+
+  it('with motion on, still embeds it once', () => {
+    const svg = renderProfile(full, { ...defaultConfig('octo', 'glitch'), theme: 'dark', motion: true }).assets.find((a) => a.path.endsWith('glitch-dark.svg'))!.content;
+    expect(embeds(svg)).toBe(1);
+  });
+});
+
+describe('covering a box with a picture', () => {
+  it('scales it to fill the box and centres it, cropping what overflows', () => {
+    // A wide picture in a square box: the height fills it and the sides are cropped equally.
+    expect(coverTransform(128, 64, 10, 20, 100, 100)).toEqual({ tx: -40, ty: 20, scale: 1.5625 });
+    // A tall picture: the width fills it and the top and bottom are cropped equally.
+    expect(coverTransform(64, 128, 0, 0, 100, 100)).toEqual({ tx: 0, ty: -50, scale: 1.5625 });
+    // A square picture in a square box needs no cropping.
+    expect(coverTransform(128, 128, 5, 5, 64, 64)).toEqual({ tx: 5, ty: 5, scale: 0.5 });
+  });
+  it('uses the picture’s own proportions, and clips the group it draws it in', () => {
+    const wide: Profile = { ...withPicture, avatar: { dataUri: PNG, grid: { width: 128, height: 64, luma: [], alpha: [] } } };
+    expect(pictureDef(wide, 'av')).toContain('width="128" height="64"');
+    const shared = photo(wide, 10, 20, 100, 100, 'p', { ref: 'av' });
+    expect(shared).toContain('transform="translate(-40 20) scale(1.563)"');
+    expect(shared).toContain('<g clip-path="url(#p)"');
+    expect(pictureDef(withPicture, 'av')).toContain('width="4" height="2"');
+  });
+  it('always covers the whole box', () => {
+    for (const [nw, nh, w, h] of [[128, 64, 100, 100], [50, 200, 300, 120], [128, 128, 33, 77], [1, 1, 10, 10]] as const) {
+      const { tx, ty, scale } = coverTransform(nw, nh, 0, 0, w, h);
+      expect(tx).toBeLessThanOrEqual(1e-9);
+      expect(ty).toBeLessThanOrEqual(1e-9);
+      expect(tx + nw * scale).toBeGreaterThanOrEqual(w - 1e-9);
+      expect(ty + nh * scale).toBeGreaterThanOrEqual(h - 1e-9);
+    }
+  });
+  it('uses the same crop as drawing the picture directly, apart from the reference', () => {
+    const direct = photo(withPicture, 10, 20, 100, 100, 'p', { zoom: 2, focus: [0.25, 0.75] });
+    const shared = photo(withPicture, 10, 20, 100, 100, 'p', { zoom: 2, focus: [0.25, 0.75], ref: 'av' });
+    // The picture is twice the box, and its focus 25% across and 75% down puts it 25% and 75% of the extra 100 out of place.
+    expect(direct).toContain('x="-15" y="-55" width="200" height="200"');
+    expect(shared).toContain('<use href="#av"');
+    expect(shared).not.toContain('data:image');
+    expect(shared).toContain('<clipPath id="p"><rect x="10" y="20" width="100" height="100" rx="0"/></clipPath>');
+  });
+});

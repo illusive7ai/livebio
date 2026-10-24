@@ -11,7 +11,7 @@ A GitHub profile README that keeps itself up to date. Open source, no sign-in, n
 
 Type your GitHub username, pick a design, make it yours, and export. A small GitHub Action in your own profile repository then refreshes your stats every day, so your profile never goes stale and never depends on someone else's server.
 
-> **Status: early.** The builder, a Templates gallery, a Studio for restyling designs (colour, fonts, text size, a time-lapse city, a side-by-side compare view), GitHub Wrapped, a README linter and the Action all work, with 75 templates. Every one carries a live contribution city and an automated snake or chess game (the two designs that already are a city or a snake carry the other half). See the [roadmap](#roadmap).
+> **Status: early.** The builder, a Templates gallery, a Studio for restyling designs (colour, fonts, text size, a time-lapse city, a side-by-side compare view), GitHub Wrapped, a README linter and the Action all work, with 100 templates. Every one carries a live contribution city and an automated snake or chess game (the two designs that already are a city or a snake carry the other half). See the [roadmap](#roadmap).
 
 ## What it looks like
 
@@ -19,7 +19,7 @@ Type your GitHub username, pick a design, make it yours, and export. A small Git
   <img src="assets/screenshot-builder.png" width="900" alt="The livebio builder with a GitHub profile loaded: a grouped picker of designs on the left and a live preview of the README on the right">
 </p>
 
-Type a username, pick one of 75 designs, and see your own profile in it. Every design comes with a live contribution city and a chess game or snake that moves on its own (the Contribution city and Snake trail designs already are those, so they carry the other half). The pictures below are real output for the author's own profile, saved on 24 October 2026. They are animated SVGs, so they move here too.
+Type a username, pick one of 100 designs, and see your own profile in it. Every design comes with a live contribution city and a chess game or snake that moves on its own (the Contribution city and Snake trail designs already are those, so they carry the other half). The pictures below are real output for the author's own profile, saved on 24 October 2026. They are animated SVGs, so they move here too.
 
 <table>
 <tr>
@@ -50,7 +50,21 @@ Type a username, pick one of 75 designs, and see your own profile in it. Every d
 <td align="center" width="50%"><img src="assets/gallery/sunburst.svg" width="440" alt="The Sunburst design: a ring chart of languages with a ring of repositories around it"><br><sub><b>Sunburst</b></sub></td>
 <td align="center" width="50%"><img src="assets/gallery/wrapped.svg" width="440" alt="A GitHub Wrapped card: total contributions, active days, longest streak, busiest day, bars by month and weekday, and labels the numbers earned"><br><sub><b>GitHub Wrapped</b>, a card to download and share</sub></td>
 </tr>
+<tr>
+<td align="center" width="50%"><img src="assets/gallery/moodboard.svg" width="440" alt="The Moodboard design: a pinboard with four crops of the profile picture, a palette of languages, sticky notes for projects and the star and follower counts"><br><sub><b>Moodboard</b>, a pinboard of your picture and your work</sub></td>
+<td align="center" width="50%"><img src="assets/gallery/riso-print.svg" width="440" alt="The Riso print design: the profile picture printed in two inks, slightly off-register, with the star, follower and repository counts as stamps"><br><sub><b>Riso print</b>, two inks, a little off-register</sub></td>
+</tr>
+<tr>
+<td align="center" width="50%"><img src="assets/gallery/topographic-map.svg" width="440" alt="The Topographic map design: a year of activity as contour lines on a survey map, with the busiest day marked as the summit"><br><sub><b>Topographic map</b> of a year of activity</sub></td>
+<td align="center" width="50%"><img src="assets/gallery/lava-lamp.svg" width="440" alt="The Lava lamp design: a glowing lamp with a blob of wax for each language, sized by its share"><br><sub><b>Lava lamp</b>, a blob of wax for each language</sub></td>
+</tr>
+<tr>
+<td align="center" width="50%"><img src="assets/gallery/tarot-spread.svg" width="440" alt="The Tarot spread design: three cards, The Star, The Sun and The Hermit, each earned by a real fact about a top project"><br><sub><b>Tarot spread</b>, each card earned by a real fact</sub></td>
+<td align="center" width="50%"><img src="assets/gallery/lock-screen.svg" width="440" alt="The Lock screen design: a phone with a blurred wallpaper made from the profile picture and the latest pushes as notifications"><br><sub><b>Lock screen</b>, your latest pushes as notifications</sub></td>
+</tr>
 </table>
+
+Twenty-five of the hundred are the newest and strangest: a moodboard, a riso print, a glitch portrait, a thermal camera, a halftone year, a zine cover, a film contact sheet, a museum wall, a mission patch, a lock screen, a topographic map, a birth chart, a cross-stitch sampler, a punch card, Plinko, a lava lamp, a snow globe, a tarot spread, a stamp sheet, a puzzle cube, a potion shelf, a vending machine, a pinball table, a sushi belt and a photo booth. Each one draws only real data, says so when it has none, and has tests for the numbers it shows.
 
 ### Publish with one paste
 

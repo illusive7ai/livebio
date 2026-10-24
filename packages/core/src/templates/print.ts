@@ -4,7 +4,7 @@ import type { Config, ContributionDay, Profile, RepoSummary, Template } from '..
 import { formatNumber, timeAgo, truncate, wrap, xmlEscape } from '../util';
 import { num, riseCss } from './kit';
 import { hashOf, imageTemplate, isoDate, langColor, svgDoc } from './make';
-import { hasPicture, photo } from './photo';
+import { photo, pictureDef } from './photo';
 import { rise, seeded } from './shared';
 
 /** Five designs made of print and screens: a zine cover, a film contact sheet, a museum wall, a mission patch and a lock screen. */
@@ -167,7 +167,7 @@ function contactSvg(profile: Profile, config: Config, variant: Variant): string 
     const y = 70 + row * 200;
     let cell = `<rect x="${num(x - 8)}" y="${y - 10}" width="${fw + 16}" height="${fw + 60}" fill="${film}"/>`;
     for (let h = 0; h < 6; h++) cell += `<rect x="${num(x - 5)}" y="${num(y - 6 + h * 23)}" width="4" height="9" rx="1" fill="${edge}"/><rect x="${num(x + fw + 1)}" y="${num(y - 6 + h * 23)}" width="4" height="9" rx="1" fill="${edge}"/>`;
-    cell += photo(profile, x, y, fw, fw, `cs${i + 1}`, { tile: { fill: '#555', ink: edge } });
+    cell += photo(profile, x, y, fw, fw, `cs${i + 1}`, { ref: 'av', tile: { fill: '#555', ink: edge } });
     cell += `<rect x="${num(x)}" y="${y}" width="${fw}" height="${fw}" fill="#000" fill-opacity="${num(darkness(frame.exposure))}"/>`;
     cell += text(`${i + 1}  ${frame.label}`, x, y + fw + 22, 12, edge, 'class="mono" font-weight="700"');
     cell += text(`${formatNumber(frame.total)} ${frame.total === 1 ? 'contribution' : 'contributions'}`, x, y + fw + 40, 10.5, edge, 'class="mono" fill-opacity="0.75"');
@@ -175,7 +175,7 @@ function contactSvg(profile: Profile, config: Config, variant: Variant): string 
     body += rise(cell, motion, 0.05 * i);
   });
   body += text('Each frame is one month. The darker the frame, the fewer contributions that month. The circled one was the busiest.', 450, height - 22, 11, ink, 'class="mono" text-anchor="middle"');
-  return svgDoc({ height, title: `${name} on GitHub, as a contact sheet of twelve months`, bg, radius: 14, css: riseCss(motion), body });
+  return svgDoc({ height, title: `${name} on GitHub, as a contact sheet of twelve months`, bg, radius: 14, defs: pictureDef(profile, 'av'), css: riseCss(motion), body });
 }
 
 export const contact: Template = imageTemplate('contact', 'Contact sheet', 'A film contact sheet of your year: twelve frames of your picture, each one exposed as much as that month was busy.', ['creative', 'image', 'activity'], contactSvg, {

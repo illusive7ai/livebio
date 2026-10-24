@@ -28,6 +28,7 @@ import { imageryTemplates } from './imagery';
 import { printTemplates } from './print';
 import { plotTemplates } from './plots';
 import { objectTemplates } from './objects';
+import { shopTemplates } from './shop';
 import { snake } from './snake';
 import { terminal } from './terminal';
 
@@ -131,9 +132,14 @@ const LIVE: Record<string, LiveSpec> = {
   tarot: { preset: 'night', city: true, companion: 'chess', shift: 54 },
   stamps: { preset: 'paper', city: true, companion: 'snake', shift: 57 },
   cube: { preset: 'arcade', city: true, companion: 'chess', shift: 60 },
+  potions: { preset: 'editor', city: true, companion: 'chess', shift: 63 },
+  vending: { preset: 'sunrise', city: true, companion: 'snake', shift: 66 },
+  pinball: { preset: 'glow', city: true, companion: 'chess', shift: 69 },
+  sushi: { preset: 'paper', city: true, companion: 'snake', shift: 72 },
+  booth: { preset: 'aurora', city: true, companion: 'chess', shift: 75 },
 };
 
-const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates, cinematic, wow, signature, captip, frontpage, hub, creative, erased, ...documentTemplates, ...interfaceTemplates, ...dataArtTemplates, ...scrapbookTemplates, ...paperTemplates, ...deviceTemplates, ...signalTemplates, ...worldTemplates, ...chartTemplates, ...imageryTemplates, ...printTemplates, ...plotTemplates, ...objectTemplates];
+const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates, cinematic, wow, signature, captip, frontpage, hub, creative, erased, ...documentTemplates, ...interfaceTemplates, ...dataArtTemplates, ...scrapbookTemplates, ...paperTemplates, ...deviceTemplates, ...signalTemplates, ...worldTemplates, ...chartTemplates, ...imageryTemplates, ...printTemplates, ...plotTemplates, ...objectTemplates, ...shopTemplates];
 
 export const templates: Template[] = bases.map((template) => {
   const spec = LIVE[template.id];

@@ -4,7 +4,14 @@ All notable changes to livebio. The version numbers are the tags of the GitHub A
 
 ## Unreleased
 
-Nothing yet.
+### Added
+
+- **Twenty-five more designs, 100 in all**, in five more groups of look. All of them draw only real data, leave out whatever is missing or switched off, and say what they are waiting for:
+  - Made from your picture: **Moodboard**, **Riso print**, **Glitch portrait**, **Thermal cam** and **Halftone year** (one dot for every day of the year, sized by the picture and coloured by activity).
+  - Print and screens: **Zine cover**, **Contact sheet** (twelve frames of your picture, each exposed as much as that month was busy), **Museum wall**, **Mission patch** and **Lock screen** (your latest pushes as notifications).
+  - Data as objects: **Topographic map** (contour lines of your year), **Birth chart** (each project placed by the month it was last pushed to), **Cross-stitch sampler**, **Punch card** (each week punched in binary) and **Plinko** (each project drops into the bin of its language).
+  - Objects: **Lava lamp**, **Snow globe** (a snowflake for every active day), **Tarot spread** (each card earned by a real fact), **Stamp sheet** and **Cube** (27 stickers shared out by language).
+  - From the shop floor: **Potion shelf**, **Vending machine** (priced in stars), **Pinball**, **Sushi belt** and **Photo booth**.
 
 ## v0.1.2 - 2026-10-24
 

@@ -4,7 +4,7 @@ import type { Config, ContributionDay, Profile, Template } from '../types';
 import { formatNumber, truncate, wrap, xmlEscape } from '../util';
 import { num, riseCss } from './kit';
 import { hashOf, imageTemplate, langColor, svgDoc } from './make';
-import { channelFilter, gradientMap, hasPicture, inkFilter, lumaAt, lumaRange, photo, stretchLuma } from './photo';
+import { channelFilter, gradientMap, hasPicture, inkFilter, lumaAt, lumaRange, photo, pictureDef, stretchLuma } from './photo';
 import { rise, seeded } from './shared';
 
 /** Five designs that treat the profile picture as a photograph: a moodboard, a two-ink print, a glitch, a heat map and a halftone. */
@@ -65,7 +65,7 @@ function moodboardSvg(profile: Profile, config: Config, variant: Variant): strin
 
   const photoPin = (zoom: number, focus: [number, number], ratio: number, id: string): Pin => ({
     h: Math.round(colW * ratio),
-    draw: (x, y, w) => photo(profile, x + 8, y + 8, w - 16, Math.round(colW * ratio) - 16, id, { zoom, focus, rx: 4, tile: { fill: accent, ink: board } }),
+    draw: (x, y, w) => photo(profile, x + 8, y + 8, w - 16, Math.round(colW * ratio) - 16, id, { zoom, focus, rx: 4, ref: 'av', tile: { fill: accent, ink: board } }),
   });
   const languages = blocks.has('languages') ? profile.languages.slice(0, 5) : [];
   const repos = blocks.has('projects') ? profile.topRepos.slice(0, 3) : [];
@@ -120,7 +120,7 @@ function moodboardSvg(profile: Profile, config: Config, variant: Variant): strin
   const layout = masonry(pins.map((p) => p.h), 3, colW, gap, left, top);
   const height = Math.max(layout.height + 40, 220);
   let body = `<rect width="900" height="${height}" fill="${board}"/>`;
-  for (let gx = 12; gx < 900; gx += 24) for (let gy = 12; gy < height; gy += 24) body += `<circle cx="${gx}" cy="${gy}" r="1" fill="${muted}" fill-opacity="0.25"/>`;
+  body += `<pattern id="mb-dots" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="12" cy="12" r="1" fill="${muted}" fill-opacity="0.25"/></pattern><rect width="900" height="${height}" fill="url(#mb-dots)"/>`;
   body += text(`${truncate(name, 26)}’s moodboard`, left, 54, 26, ink, 'class="serif" font-weight="800"');
   body += text(`@${profile.login}`, left, 76, 13, muted, 'class="mono"');
   pins.forEach((pin, i) => {
@@ -134,7 +134,7 @@ function moodboardSvg(profile: Profile, config: Config, variant: Variant): strin
     card += `<circle cx="${x + colW / 2}" cy="${y + 6}" r="6" fill="${accent}"/><circle cx="${x + colW / 2 - 1.5}" cy="${y + 4.5}" r="2" fill="#fff" fill-opacity="0.6"/>`;
     body += rise(`<g transform="rotate(${num(tilt)} ${num(cx)} ${num(cy)})">${card}</g>`, motion, 0.04 * i);
   });
-  return svgDoc({ height, title: `${name} on GitHub, as a pinned moodboard`, bg: board, radius: 14, css: riseCss(motion), body });
+  return svgDoc({ height, title: `${name} on GitHub, as a pinned moodboard`, bg: board, radius: 14, defs: pictureDef(profile, 'av'), css: riseCss(motion), body });
 }
 
 export const moodboard: Template = imageTemplate('moodboard', 'Moodboard', 'A pinboard of your profile picture in different crops, a palette of your languages, sticky notes for your projects and your numbers.', ['creative', 'image', 'collage'], moodboardSvg, {
@@ -163,8 +163,8 @@ function risoSvg(profile: Profile, config: Config, variant: Variant): string {
   let body = `<rect width="900" height="${height}" fill="${paper}"/>`;
   const px = 56;
   const py = 56;
-  body += photo(profile, px, py, 360, 448, 'riso-a', { filter: 'ink-a', blend, tile: { fill: pink, ink: paper } });
-  body += photo(profile, px + 7, py + 5, 360, 448, 'riso-b', { filter: 'ink-b', blend, tile: { fill: blue, ink: paper } });
+  body += photo(profile, px, py, 360, 448, 'riso-a', { filter: 'ink-a', blend, ref: 'av', tile: { fill: pink, ink: paper } });
+  body += photo(profile, px + 7, py + 5, 360, 448, 'riso-b', { filter: 'ink-b', blend, ref: 'av', tile: { fill: blue, ink: paper } });
   // Both inks print slightly off from each other, as a real two-colour print does.
   const size = Math.round(Math.min(70, Math.max(30, 400 / (Math.min(name.length, 16) * 0.84))));
   const title = truncate(name, 16).toUpperCase();
@@ -184,7 +184,7 @@ function risoSvg(profile: Profile, config: Config, variant: Variant): string {
   const languages = blocks.has('languages') ? profile.languages.slice(0, 4).map((l) => l.name.toLowerCase()) : [];
   if (languages.length > 0) body += text(truncate(languages.join(' / '), 42), 460, 408, 20, ink, 'class="serif" font-style="italic"');
   body += text('two inks, printed a little off-register on purpose', 460, 500, 11.5, ink, 'class="mono" fill-opacity="0.7"');
-  return svgDoc({ height, title: `${name} on GitHub, as a two-colour print`, bg: paper, radius: 14, defs, css: riseCss(motion), body: rise(body, motion, 0.05) });
+  return svgDoc({ height, title: `${name} on GitHub, as a two-colour print`, bg: paper, radius: 14, defs: defs + pictureDef(profile, 'av'), css: riseCss(motion), body: rise(body, motion, 0.05) });
 }
 
 export const riso: Template = imageTemplate('riso', 'Riso print', 'A two-ink risograph poster: your picture printed in pink and blue, a little off-register, with your numbers as stamps.', ['creative', 'image', 'print'], risoSvg, {
@@ -225,12 +225,12 @@ function glitchSvg(profile: Profile, config: Config, variant: Variant): string {
 
   let body = `<rect width="900" height="${height}" fill="${page}"/>`;
   body += `<rect x="${px}" y="${py}" width="${pw}" height="${ph}" fill="#05050a"/>`;
-  body += photo(profile, px - 5, py, pw, ph, 'gl-r', { filter: 'g-red', blend: 'screen', tile: { fill: '#3a1030', ink: magenta } });
-  body += photo(profile, px + 5, py, pw, ph, 'gl-c', { filter: 'g-cyan', blend: 'screen', tile: { fill: '#082a33', ink: cyan } });
+  body += photo(profile, px - 5, py, pw, ph, 'gl-r', { filter: 'g-red', blend: 'screen', ref: 'av', tile: { fill: '#3a1030', ink: magenta } });
+  body += photo(profile, px + 5, py, pw, ph, 'gl-c', { filter: 'g-cyan', blend: 'screen', ref: 'av', tile: { fill: '#082a33', ink: cyan } });
   tears(profile.login, 7, ph).forEach((t, i) => {
     const id = `gl-t${i}`;
     const clip = `<clipPath id="${id}-c"><rect x="${px}" y="${py + t.y}" width="${pw}" height="${t.h}"/></clipPath>`;
-    const inner = `<g clip-path="url(#${id}-c)">${photo(profile, px + t.dx, py, pw, ph, id, { tile: { fill: '#2a1030', ink: cyan } })}</g>`;
+    const inner = `<g clip-path="url(#${id}-c)">${photo(profile, px + t.dx, py, pw, ph, id, { ref: 'av', tile: { fill: '#2a1030', ink: cyan } })}</g>`;
     body += `<g class="${motion ? 'tear' : ''}" style="animation-delay:${(i * 0.37).toFixed(2)}s">${clip}${inner}</g>`;
   });
   for (let y = py; y < py + ph; y += 4) body += `<rect x="${px}" y="${y}" width="${pw}" height="1" fill="#000" fill-opacity="0.28"/>`;
@@ -249,7 +249,7 @@ function glitchSvg(profile: Profile, config: Config, variant: Variant): string {
   });
   body += text('signal corrupted on purpose', rx, 456, 11.5, muted, 'class="mono"');
   const css = riseCss(motion) + (motion ? `.tear{animation:tear 3.2s steps(1) infinite}@keyframes tear{0%,86%{opacity:1}88%{opacity:0}92%{opacity:1}95%{opacity:0.2}}@media (prefers-reduced-motion:reduce){.tear{animation:none}}` : '');
-  return svgDoc({ height, title: `${name} on GitHub, as a glitched portrait`, bg: page, radius: 14, defs, css, body: rise(body, motion, 0.05) });
+  return svgDoc({ height, title: `${name} on GitHub, as a glitched portrait`, bg: page, radius: 14, defs: defs + pictureDef(profile, 'av'), css, body: rise(body, motion, 0.05) });
 }
 
 export const glitch: Template = imageTemplate('glitch', 'Glitch portrait', 'Your profile picture split into red and cyan, torn sideways in slices, with your numbers printed as a corrupted terminal.', ['creative', 'image', 'cyber'], glitchSvg, {
