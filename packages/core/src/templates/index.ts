@@ -27,6 +27,7 @@ import { showcase } from './showcase';
 import { imageryTemplates } from './imagery';
 import { printTemplates } from './print';
 import { plotTemplates } from './plots';
+import { objectTemplates } from './objects';
 import { snake } from './snake';
 import { terminal } from './terminal';
 
@@ -125,9 +126,14 @@ const LIVE: Record<string, LiveSpec> = {
   stitch: { preset: 'paper', city: true, companion: 'chess', shift: 39 },
   punch: { preset: 'editor', city: true, companion: 'snake', shift: 42 },
   plinko: { preset: 'night', city: true, companion: 'chess', shift: 45 },
+  lava: { preset: 'glow', city: true, companion: 'chess', shift: 48 },
+  globe: { preset: 'aurora', city: true, companion: 'snake', shift: 51 },
+  tarot: { preset: 'night', city: true, companion: 'chess', shift: 54 },
+  stamps: { preset: 'paper', city: true, companion: 'snake', shift: 57 },
+  cube: { preset: 'arcade', city: true, companion: 'chess', shift: 60 },
 };
 
-const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates, cinematic, wow, signature, captip, frontpage, hub, creative, erased, ...documentTemplates, ...interfaceTemplates, ...dataArtTemplates, ...scrapbookTemplates, ...paperTemplates, ...deviceTemplates, ...signalTemplates, ...worldTemplates, ...chartTemplates, ...imageryTemplates, ...printTemplates, ...plotTemplates];
+const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates, cinematic, wow, signature, captip, frontpage, hub, creative, erased, ...documentTemplates, ...interfaceTemplates, ...dataArtTemplates, ...scrapbookTemplates, ...paperTemplates, ...deviceTemplates, ...signalTemplates, ...worldTemplates, ...chartTemplates, ...imageryTemplates, ...printTemplates, ...plotTemplates, ...objectTemplates];
 
 export const templates: Template[] = bases.map((template) => {
   const spec = LIVE[template.id];
