@@ -11,7 +11,7 @@ A GitHub profile README that keeps itself up to date. Open source, no sign-in, n
 
 Type your GitHub username, pick a design, make it yours, and export. A small GitHub Action in your own profile repository then refreshes your stats every day, so your profile never goes stale and never depends on someone else's server.
 
-> **Status: early.** The builder, a Templates gallery, a Studio for restyling designs and the Action all work, with 75 templates. Every one carries a live contribution city and an automated snake or chess game (the two designs that already are a city or a snake carry the other half). See the [roadmap](#roadmap).
+> **Status: early.** The builder, a Templates gallery, a Studio for restyling designs (colour, fonts, text size, a time-lapse city, a side-by-side compare view), GitHub Wrapped, a README linter and the Action all work, with 75 templates. Every one carries a live contribution city and an automated snake or chess game (the two designs that already are a city or a snake carry the other half). See the [roadmap](#roadmap).
 
 ## What it looks like
 
@@ -19,7 +19,7 @@ Type your GitHub username, pick a design, make it yours, and export. A small Git
   <img src="assets/screenshot-builder.png" width="900" alt="The livebio builder with a GitHub profile loaded: a grouped picker of designs on the left and a live preview of the README on the right">
 </p>
 
-Type a username, pick one of 75 designs, and see your own profile in it. Every design comes with a live contribution city and a chess game or snake that moves on its own (the Contribution city and Snake trail designs already are those, so they carry the other half). The pictures below are real output for the author's own profile, saved on 23 October 2026. They are animated SVGs, so they move here too.
+Type a username, pick one of 75 designs, and see your own profile in it. Every design comes with a live contribution city and a chess game or snake that moves on its own (the Contribution city and Snake trail designs already are those, so they carry the other half). The pictures below are real output for the author's own profile, saved on 24 October 2026. They are animated SVGs, so they move here too.
 
 <table>
 <tr>
@@ -37,6 +37,18 @@ Type a username, pick one of 75 designs, and see your own profile in it. Every d
 <tr>
 <td align="center" width="50%"><img src="assets/gallery/cinematic.svg" width="440" alt="The Cinematic design: a letterboxed title card with rings that fill and a line that draws itself"><br><sub><b>Cinematic</b></sub></td>
 <td align="center" width="50%"><img src="assets/gallery/terminal.svg" width="440" alt="The Terminal design: a terminal window that types out the profile line by line"><br><sub><b>Terminal</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="50%"><img src="assets/gallery/time-lapse-city.svg" width="440" alt="A time-lapse of the contribution city: buildings rise week by week through the year while a running total counts up"><br><sub><b>Time-lapse city</b>, a Studio switch for any design</sub></td>
+<td align="center" width="50%"><img src="assets/gallery/wanted-poster.svg" width="440" alt="The Wanted poster design: a paper poster with the profile picture, a reward set in stars and the main languages"><br><sub><b>Wanted poster</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="50%"><img src="assets/gallery/departures-board.svg" width="440" alt="The Departures board design: a split-flap board listing the top repositories with their language, stars and whether each is active"><br><sub><b>Departures board</b></sub></td>
+<td align="center" width="50%"><img src="assets/gallery/island-map.svg" width="440" alt="The Island map design: each repository is an island sized by stars and coloured by language, with a compass"><br><sub><b>Island map</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="50%"><img src="assets/gallery/sunburst.svg" width="440" alt="The Sunburst design: a ring chart of languages with a ring of repositories around it"><br><sub><b>Sunburst</b></sub></td>
+<td align="center" width="50%"><img src="assets/gallery/wrapped.svg" width="440" alt="A GitHub Wrapped card: total contributions, active days, longest streak, busiest day, bars by month and weekday, and labels the numbers earned"><br><sub><b>GitHub Wrapped</b>, a card to download and share</sub></td>
 </tr>
 </table>
 
@@ -58,7 +70,15 @@ Type a username, pick one of 75 designs, and see your own profile in it. Every d
 <table>
 <tr>
 <td width="50%"><img src="assets/screenshot-templates.png" width="440" alt="The Templates page: every design in a grid, grouped as Professional, Creative, Developer and Minimal"><br><sub>Every design in one grid</sub></td>
-<td width="50%"><img src="assets/screenshot-studio.png" width="440" alt="The Studio: start from any design and change its accent colour, the look of its panels and its game"><br><sub>The Studio: recolour any design, swap its game</sub></td>
+<td width="50%"><img src="assets/screenshot-studio.png" width="440" alt="The Studio: start from any design and change its accent colour, city, game, font, text colour and text size"><br><sub>The Studio: colour, fonts, text size, a time-lapse city, a game of your choice</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="assets/screenshot-compare.png" width="440" alt="The Studio comparing two designs side by side with the same profile in both, each with a Keep button"><br><sub>Compare two designs side by side, then keep one</sub></td>
+<td width="50%"><img src="assets/screenshot-wrapped.png" width="440" alt="GitHub Wrapped: a slide showing the share of days with a contribution as a ring"><br><sub>GitHub Wrapped: your last twelve months, slide by slide</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="assets/screenshot-linter.png" width="440" alt="The README linter: a README with mistakes on the left, the list of issues and a corrected version on the right"><br><sub>README linter: every problem explained, and a corrected copy</sub></td>
+<td width="50%"></td>
 </tr>
 </table>
 
@@ -105,6 +125,10 @@ custom:              # optional: make any design your own
   hue: 200           # accent colour, 0-359 (default: taken from your profile picture)
   look: blueprint    # look of the city and game panels: aurora, sunrise, night, space, arcade, chalk, editor, blueprint, paper, terminal, glow or plain
   companion: chess   # which game plays under the card: snake, chess or none
+  font: serif        # one typeface for all text: sans, serif, mono, rounded, humanist, classic, typewriter, handwriting or impact
+  textColor: "#7ee787"  # one colour for all text, written as #rrggbb
+  textSize: 110      # text size as a percentage of the design's own, 80 to 130
+  timelapse: true    # draw the contribution city as a time-lapse that grows week by week
 ```
 
 and `.github/workflows/livebio.yml`:
@@ -147,7 +171,21 @@ Streaks are worked out from the calendar itself. A streak is current if it inclu
 
 ## Templates and the Studio
 
-The site has a **Templates** page with every design in one grid, and a **Studio** where you start from any design and change its accent colour, the look of its city and game panels, and which game plays. Designs you save stay in your browser only. **Export livebio.yml** from the Studio to use one on GitHub; the `custom` settings above are what it writes. The Studio changes and combines the existing designs. It does not edit their layouts.
+The site has a **Templates** page with every design in one grid, and a **Studio** where you start from any design and change:
+
+- its **accent colour**, the **look** of its city and game panels, and which **game** plays;
+- its **city**, as the finished year or a **time-lapse** that grows week by week with a running total of real counts;
+- its **text**: nine typefaces, one colour for all words (with a readability check against GitHub's dark and light pages) and a size from 80% to 130%. GitHub cannot load web fonts, so each typeface is a stack of fonts that already ship with the reader's device and looks a little different from one device to the next.
+
+The Studio can also set **two designs side by side** with your own profile in them, then keep the one you like. Press the **heart** on a design to keep it among your favourites; the designs you used last are listed too. Favourites, recent designs and saved designs stay in your browser only, with no sign-in. **Export livebio.yml** from the Studio to use a design on GitHub; the `custom` settings above are what it writes. The Studio changes and combines the existing designs. It does not edit their layouts.
+
+## GitHub Wrapped
+
+The **Wrapped** tab tells your last twelve months from your real contribution calendar and public profile: total contributions, active days, streaks and your longest quiet stretch, your busiest day, month and weekday, how much landed on weekends, your best week, languages and stars. A label such as "Weekend warrior" appears only when your numbers earn it, and it shows which numbers did. It never invents a time of day or a comparison with an earlier year, because GitHub's calendar has neither. It ends with a card you can download as PNG or SVG. Everything is worked out in your browser.
+
+## README linter
+
+The **README linter** tab checks a README you paste, open as a file, or load from a profile by username, and writes a corrected copy. It covers headings, tables, lists and code blocks that do not render; broken, insecure or local-only links; images without alt text; HTML that GitHub removes or leaves open; markdown that sits inside HTML and shows as plain text; leaked tokens and keys; leftover template text; pictures that depend on someone else's free server; spelling and product names. Each issue says whether the corrected version already fixes it or whether only you can, and the **Changes** tab shows exactly what was altered. Nothing you paste leaves your browser.
 
 ## Reviews on the website
 
@@ -193,7 +231,9 @@ After changing `packages/core` or `packages/action`, run `npm run build -w @live
 - [x] Contribution graph and streaks, from the Action and from an optional edge function for the preview
 - [ ] Activity in more templates, and a template built around the isometric contribution city
 - [ ] Import and improve an existing README
-- [ ] Profile lint: broken images, dead links, missing alt text
+- [x] README linter: broken images and links, missing alt text, HTML GitHub removes, leaked secrets and more, with a corrected copy
+- [x] GitHub Wrapped: your last twelve months from the real calendar, with a shareable card
+- [x] Studio: fonts, text colour and size, a time-lapse city, a compare view, favourites
 - [ ] Template gallery site
 
 ## Contributing
