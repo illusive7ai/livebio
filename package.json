@@ -14,7 +14,7 @@
   },
   "scripts": {
     "dev": "npm run dev -w @livebio/web",
-    "build": "npm run build -w @livebio/action && npm run build -w @livebio/web",
+    "build": "npm run build -w @livebio/action && npm run build -w @livebio/web && npm run build -w @livebio/extension",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
   }

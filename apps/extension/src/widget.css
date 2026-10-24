@@ -1,0 +1,86 @@
+/* The pill and panel on GitHub's pages, inside a shadow root. */
+
+.root {
+  --bg: #ffffff;
+  --surface: #f6f8fa;
+  --text: #1f2328;
+  --muted: #59636e;
+  --border: #d1d9e0;
+  --accent: #1a7f37;
+  --accent-text: #ffffff;
+  --danger: #cf222e;
+  --warn: #9a6700;
+  font: 14px/1.45 -apple-system, 'Segoe UI', system-ui, sans-serif;
+  color: var(--text);
+}
+
+.root[data-theme='dark'] {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --text: #e6edf3;
+  --muted: #9198a1;
+  --border: #30363d;
+  --accent: #3fb950;
+  --accent-text: #04120a;
+  --danger: #ff7b72;
+  --warn: #e3b341;
+}
+
+.fab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding: 9px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  font-size: 14px;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.panel {
+  width: min(380px, calc(100vw - 32px));
+  max-height: min(70vh, 640px);
+  margin-bottom: 10px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.35);
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.panel-head {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.close {
+  padding: 0 9px;
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.panel-body {
+  padding: 4px 14px;
+}
+
+.panel-foot {
+  padding: 8px 14px 12px;
+  color: var(--muted);
+  font-size: 12px;
+}

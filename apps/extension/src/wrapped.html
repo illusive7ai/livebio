@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GitHub Wrapped · livebio</title>
+    <link rel="stylesheet" href="components.css" />
+    <link rel="stylesheet" href="pages.css" />
+  </head>
+  <body class="page">
+    <main>
+      <h1>live<span>bio</span> · GitHub Wrapped</h1>
+      <p class="tag">The last twelve months of a GitHub profile, worked out from its public data.</p>
+      <form id="form">
+        <label for="user">GitHub username</label>
+        <div class="field">
+          <span aria-hidden="true">@</span>
+          <input id="user" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="octocat" />
+          <button id="go" class="primary" type="submit">Show Wrapped</button>
+        </div>
+      </form>
+      <div id="out" aria-live="polite"></div>
+      <footer class="links">
+        <a id="link-site" target="_blank" rel="noreferrer">Open livebio</a>
+      </footer>
+    </main>
+    <script src="wrapped.js"></script>
+  </body>
+</html>

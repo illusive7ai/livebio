@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
-export type Route = 'home' | 'templates' | 'studio' | 'wrapped' | 'linter';
+export type Route = 'home' | 'templates' | 'studio' | 'wrapped' | 'linter' | 'extension';
 
-const ROUTES: Route[] = ['home', 'templates', 'studio', 'wrapped', 'linter'];
+const ROUTES: Route[] = ['home', 'templates', 'studio', 'wrapped', 'linter', 'extension'];
 
 function read(): Route {
   const name = window.location.hash.replace(/^#\/?/, '');

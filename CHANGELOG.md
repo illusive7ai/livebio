@@ -4,7 +4,9 @@ All notable changes to livebio. The version numbers are the tags of the GitHub A
 
 ## Unreleased
 
-Nothing yet.
+### Added
+
+- **livebio for GitHub, a Chrome extension** (`apps/extension`; also works in Edge, Brave and other Chromium browsers). A toolbar popup that shows GitHub Wrapped for any username, with a card to download; a pill on github.com profiles that offers that person's Wrapped when pressed; a README checker on README pages and in GitHub's editor, with the corrected text to copy, download or put into the editor; and a right-click item on links to profiles and on selected usernames. It asks for two permissions (`contextMenus` and `activeTab`) plus access to github.com, raw files on GitHub and the livebio server, has no accounts, analytics or remote code, and never sends README text anywhere. The website has a new **Extension** tab with the download, four install steps and a plain account of each permission. The zip is built by the site's deploy workflow. A test builds the extension and fails if it asks for more than it should.
 
 ## v0.1.3 - 2026-10-24
 

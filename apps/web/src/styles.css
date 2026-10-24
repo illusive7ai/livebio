@@ -2553,3 +2553,92 @@ label {
   margin-inline: 0;
   padding-inline: 0;
 }
+
+/* Extension page */
+.ext-download {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ext-download h2 {
+  margin-bottom: 6px;
+}
+
+.ext-title {
+  margin-top: 30px;
+}
+
+.ext-download .button {
+  padding: 12px 22px;
+  font-size: 1rem;
+}
+
+.ext-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+}
+
+.ext-grid h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.ext-grid p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.ext-steps {
+  max-width: 760px;
+}
+
+.ext-perms {
+  display: grid;
+  gap: 10px;
+  max-width: 760px;
+  margin: 12px 0 24px;
+}
+
+.ext-perms div {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.ext-perms dt {
+  font-weight: 700;
+}
+
+.ext-perms dd {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.ext-never {
+  display: grid;
+  gap: 6px;
+  max-width: 760px;
+  margin: 12px 0 24px;
+  padding-left: 1.2em;
+}
+
+@media (max-width: 760px) {
+  .ext-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ext-download .button {
+    width: 100%;
+    text-align: center;
+  }
+}

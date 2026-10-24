@@ -26,6 +26,7 @@ import { loadProfile } from './lib/profile';
 import { loadPrefs, storePrefs } from './lib/prefs';
 import { go, routeHref, useRoute, type Route } from './lib/route';
 import { designFields, loadDesigns, newId, storeDesigns, type SavedDesign } from './lib/saved';
+import { ExtensionPage } from './pages/ExtensionPage';
 import { LinterPage } from './pages/LinterPage';
 import { StudioPage } from './pages/StudioPage';
 import { TemplatesPage } from './pages/TemplatesPage';
@@ -71,6 +72,7 @@ const NAV: Array<[Route, string]> = [
   ['studio', 'Studio'],
   ['wrapped', 'Wrapped'],
   ['linter', 'README linter'],
+  ['extension', 'Extension'],
 ];
 
 export function App() {
@@ -203,6 +205,8 @@ export function App() {
         )}
 
         {route === 'linter' && <LinterPage profile={profile} />}
+
+        {route === 'extension' && <ExtensionPage />}
 
         {route === 'home' && (
           <>

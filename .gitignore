@@ -7,6 +7,11 @@ coverage/
 # build output (the Action bundle in packages/action/dist is committed on purpose)
 apps/web/dist/
 
+# the browser extension: its build, and the zip and note that the site offers for download (made by npm run package)
+apps/extension/dist/
+apps/web/public/livebio-extension.zip
+apps/web/public/extension.json
+
 # Cloudflare Worker local files: .dev.vars holds a secret token
 .dev.vars
 .dev.vars.*

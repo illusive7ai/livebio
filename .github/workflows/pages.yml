@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - apps/web/**
+      - apps/extension/**
       - packages/core/**
       - package.json
       - package-lock.json
@@ -31,6 +32,10 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      # The extension's zip goes into the site's public folder first, so the site can offer it for download.
+      - run: npm run package -w @livebio/extension
+        env:
+          LIVEBIO_SERVICE_URL: ${{ vars.CONTRIBUTIONS_URL }}
       - run: npm run build -w @livebio/web
         env:
           # Address of the deployed contribution service. Set it as a repository variable; see workers/contributions/README.md.

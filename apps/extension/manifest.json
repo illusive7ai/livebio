@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "livebio for GitHub",
+  "short_name": "livebio",
+  "version": "0.0.0",
+  "description": "GitHub Wrapped for any profile, a helper on profile pages and a README checker, all from public data. By illusivehacks.",
+  "author": "illusivehacks",
+  "homepage_url": "https://example.invalid/",
+  "minimum_chrome_version": "110",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "livebio: GitHub Wrapped",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["contextMenus", "activeTab"],
+  "host_permissions": ["https://github.com/*", "https://raw.githubusercontent.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

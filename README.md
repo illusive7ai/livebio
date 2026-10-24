@@ -19,6 +19,7 @@ Type your GitHub username, pick a design, make it yours, and export. A small Git
 - **A Studio** to make any design yours: its colour, nine typefaces, text colour and size, a time-lapse city and which game plays. Set two designs side by side to choose between them, and keep favourites.
 - **GitHub Wrapped**: your last twelve months told from your real numbers, as slides and a card to share.
 - **A README linter** that finds what is wrong with any README and writes a corrected copy.
+- **A Chrome extension** that brings Wrapped and the README checker into GitHub itself.
 - **Two ways to publish**: copy and paste, with pictures drawn live and nothing to upload, or host the files yourself with a daily GitHub Action.
 - **No sign-in, no paywall, nothing stored.** Free and open source under the MIT license.
 
@@ -218,6 +219,17 @@ The **Wrapped** tab tells your last twelve months from your real contribution ca
 
 The **README linter** tab checks a README you paste, open as a file, or load from a profile by username, and writes a corrected copy. It covers headings, tables, lists and code blocks that do not render; broken, insecure or local-only links; images without alt text; HTML that GitHub removes or leaves open; markdown that sits inside HTML and shows as plain text; leaked tokens and keys; leftover template text; pictures that depend on someone else's free server; spelling and product names. Each issue says whether the corrected version already fixes it or whether only you can, and the **Changes** tab shows exactly what was altered. Nothing you paste leaves your browser.
 
+## Chrome extension
+
+**livebio for GitHub** brings Wrapped and the README checker into GitHub itself. It works in Chrome, Edge, Brave and other Chromium browsers.
+
+- **Popup:** click the icon, type any username, and get their Wrapped card and numbers.
+- **Profile helper:** on a github.com profile, a small pill offers that person's Wrapped, only when you press it.
+- **README checker:** on a README, and in GitHub's editor, the pill checks the text and offers a corrected copy to copy, download or put straight into the editor. It runs in your browser.
+- **Right-click:** on a link to a profile or repository, or a selected username, open their Wrapped card.
+
+Download it from the **Extension** tab of the website, which also explains every permission it asks for and the four install steps (it is loaded unpacked for now, not from the Chrome Web Store). It asks for two permissions and no more, has no accounts or tracking, and never sends the text of a README anywhere. To build it yourself, see [apps/extension](apps/extension/README.md).
+
 ## Reviews on the website
 
 The home page shows reviews from real users, and says plainly when there are none yet. To add one, someone submits the **Share your experience** form (`.github/ISSUE_TEMPLATE/review.yml`) and ticks the box that agrees to have it shown. The site reads these issues itself, through the contribution service (`/reviews`), and caches them for ten minutes. A review from any GitHub user appears on its own, with no approval step, once the cache refreshes. Only reviews written with the form, with a rating, some text and the box ticked, are shown, and each is shown as plain text next to the GitHub username that opened the issue. Reviews from bots, and reviews that contain a web address (which is how advertising gets onto a page), are left out. To take a review down, a maintainer adds the `hidden` label to its issue, or closes the issue as spam; the label takes effect within ten minutes. The same service also reports the repository's star count (`/stars`), which the home page shows next to its WhatsApp, Telegram and copy-link share buttons. `apps/web/src/data/testimonials.ts` is only a fallback for when the service cannot be reached; never add a review there that was not submitted by the person it names.
@@ -243,6 +255,7 @@ npm run build
 | `packages/core` | The engine: GitHub data, the 100 designs (`templates/`), README and SVG rendering, the Studio's fonts and colours, GitHub Wrapped, and the README linter (`linter/`). Shared by the web app and the Action. |
 | `apps/web` | The builder. |
 | `packages/action` | The GitHub Action. Its bundle in `dist/` is committed, because Actions run it directly. |
+| `apps/extension` | The Chrome extension: Wrapped, a profile helper and the README checker inside GitHub. See its [README](apps/extension/README.md). |
 | `workers/contributions` | Optional edge function that gives the builder's preview contribution data. |
 
 After changing `packages/core` or `packages/action`, run `npm run build -w @livebio/action` and commit the updated `dist/index.js`.
@@ -277,6 +290,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the rest.
 - [x] GitHub Wrapped: your last twelve months from the real calendar, with a shareable card
 - [x] Studio: fonts, text colour and size, a time-lapse city, a compare view, favourites
 - [x] Template gallery: the Templates page, with 100 designs, filters, favourites and recently used
+- [x] Chrome extension: Wrapped for any profile, a profile helper and the README checker inside GitHub
+- [ ] Put the extension on the Chrome Web Store
 - [ ] Run the README linter from the command line and as a GitHub Action that comments on pull requests
 - [ ] Designs made from an image you upload
 
