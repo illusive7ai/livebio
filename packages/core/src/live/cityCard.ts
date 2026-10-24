@@ -5,6 +5,7 @@ import { plural } from '../templates/shared';
 import { COS, GAP, MAX_CELL, MAX_HEIGHT, ROWS, SIN, SLAB_DEPTH, SLAB_MARGIN, layoutCity } from '../templates/city';
 import { CARD_WIDTH, LIVE_BADGE_CSS, cardBackground, label, liveBadge, num, svgDocument } from './frame';
 import type { LiveStyle } from './style';
+import { planTimelapse, timelapseCss } from './timelapse';
 
 const PAD = 44;
 const TEXT_WIDTH = 230;
@@ -21,6 +22,8 @@ export interface CityCardOptions {
   contributions: Contributions | undefined;
   style: LiveStyle;
   motion: boolean;
+  /** Build the city week by week, then hold it. Needs motion; without it the finished city is drawn. */
+  timelapse?: boolean;
 }
 
 /**
@@ -29,8 +32,9 @@ export interface CityCardOptions {
  */
 export function renderCityCard(opts: CityCardOptions): string {
   const { style, motion, contributions } = opts;
+  const replay = Boolean(opts.timelapse && motion && contributions && contributions.days.length > 0);
   const title = contributions
-    ? `Contribution city for @${opts.login}: ${contributions.total} contributions in the past year, one building for each active day`
+    ? `${replay ? 'Time-lapse of the contribution city' : 'Contribution city'} for @${opts.login}: ${contributions.total} contributions in the past year, one building for each active day`
     : `Contribution city for @${opts.login}, shown once contribution data is available`;
 
   if (!contributions || contributions.days.length === 0) {
@@ -45,6 +49,8 @@ export function renderCityCard(opts: CityCardOptions): string {
   }
 
   const { cols, buildings } = layoutCity(contributions.days);
+  const colOfDate = new Map(buildings.map((b) => [b.date, b.col] as const));
+  const plan = replay ? planTimelapse(contributions.days, (date) => colOfDate.get(date)) : undefined;
   const regionX = PAD + TEXT_WIDTH + 24;
   const regionW = CARD_WIDTH - PAD - regionX;
   const m = SLAB_MARGIN;
@@ -84,9 +90,9 @@ export function renderCityCard(opts: CityCardOptions): string {
       const h = b.height * k;
       const isPeak = b === peak;
       const colors = isPeak ? city.peak : city.levels[Math.min(3, Math.max(0, (b.level || 1) - 1))]!;
-      const delay = motion ? ` style="animation-delay:${(0.2 + (b.col + b.row) * 0.011).toFixed(3)}s"` : '';
+      const delay = motion && !plan ? ` style="animation-delay:${(0.2 + (b.col + b.row) * 0.011).toFixed(3)}s"` : '';
       return (
-        `<g class="cty-b"${delay}>` +
+        `<g class="${plan ? `tl${b.col}` : 'cty-b'}"${delay}>` +
         `<path d="${poly([at(u0, v1), at(u1, v1), at(u1, v1, h), at(u0, v1, h)])}" fill="${colors[1]}"/>` +
         `<path d="${poly([at(u1, v0), at(u1, v1), at(u1, v1, h), at(u1, v0, h)])}" fill="${colors[2]}"/>` +
         `<path d="${poly([at(u0, v0, h), at(u1, v0, h), at(u1, v1, h), at(u0, v1, h)])}" fill="${colors[0]}"/>` +
@@ -100,14 +106,28 @@ export function renderCityCard(opts: CityCardOptions): string {
     const [px, py] = at(peak.col + 0.5, peak.row + 0.5, peak.height * k);
     const labelX = Math.min(CARD_WIDTH - PAD - 60, Math.max(regionX + 40, px));
     flag =
+      `<g${plan ? ' class="tl-flag"' : ''}>` +
       `<path d="M${num(px)} ${num(py - 3)}L${num(px)} ${num(py - 22)}" stroke="${style.fg}" stroke-opacity="0.6"/>` +
-      `<text class="mono" x="${num(labelX)}" y="${num(py - 28)}" text-anchor="middle" font-size="11.500" font-weight="700" fill="${style.fg}">${xmlEscape(shortDate(peak.date))}: ${xmlEscape(formatNumber(peak.count))}</text>`;
+      `<text class="mono" x="${num(labelX)}" y="${num(py - 28)}" text-anchor="middle" font-size="11.500" font-weight="700" fill="${style.fg}">${xmlEscape(shortDate(peak.date))}: ${xmlEscape(formatNumber(peak.count))}</text>` +
+      `</g>`;
   }
 
   const month = busiestMonth(contributions.days);
   let text = liveBadge(style, PAD, 52, motion) + label(style, 'CONTRIBUTION CITY', PAD, 90);
-  text += `<text x="${PAD}" y="146" font-size="52" font-weight="800" fill="${style.accent}">${xmlEscape(formatNumber(contributions.total))}</text>`;
-  text += `<text x="${PAD}" y="172" font-size="14.500" font-weight="600" fill="${style.fg}">contributions in the last year</text>`;
+  if (plan) {
+    // The running total at the end of each month, taken from the real calendar. Each is shown only while its month plays.
+    plan.months.forEach((m, i) => {
+      text +=
+        `<g class="tm${i}">` +
+        `<text x="${PAD}" y="146" font-size="52" font-weight="800" fill="${style.accent}">${xmlEscape(formatNumber(m.total))}</text>` +
+        `<text class="mono" x="${PAD + TEXT_WIDTH}" y="52" text-anchor="end" font-size="12" font-weight="700" letter-spacing="1.500" fill="${style.fg}">${xmlEscape(m.label.toUpperCase())}</text>` +
+        `</g>`;
+    });
+    text += `<text x="${PAD}" y="172" font-size="14.500" font-weight="600" fill="${style.fg}">contributions so far, ending at ${xmlEscape(formatNumber(contributions.total))}</text>`;
+  } else {
+    text += `<text x="${PAD}" y="146" font-size="52" font-weight="800" fill="${style.accent}">${xmlEscape(formatNumber(contributions.total))}</text>`;
+    text += `<text x="${PAD}" y="172" font-size="14.500" font-weight="600" fill="${style.fg}">contributions in the last year</text>`;
+  }
   const facts = [
     plural(contributions.activeDays, 'active day'),
     peak ? `Busiest day: ${formatNumber(peak.count)}` : null,
@@ -123,7 +143,9 @@ export function renderCityCard(opts: CityCardOptions): string {
 
   const css =
     (motion ? LIVE_BADGE_CSS : '') +
-    (motion
+    (plan
+      ? timelapseCss(plan, peak ? colStart(plan, peak.col) : undefined)
+      : motion
       ? `.cty-b{transform-box:fill-box;transform-origin:50% 100%;animation:cty-grow .8s cubic-bezier(.2,.8,.2,1) both}@keyframes cty-grow{from{transform:scaleY(0)}}@media (prefers-reduced-motion:reduce){.cty-b,.lv-live{animation:none}}`
       : '');
 
@@ -132,10 +154,13 @@ export function renderCityCard(opts: CityCardOptions): string {
     `<path d="${leftSide}" fill="${city.slabSide}"/>` +
     `<path d="${rightSide}" fill="${city.slabSide}" fill-opacity="0.75"/>` +
     `<path d="${streets.join('')}" fill="none" stroke="${city.line}" stroke-opacity="0.35" stroke-width="0.6"/>` +
-    towers +
-    flag;
+    (plan ? `<g class="tl-fade">${towers}${flag}</g>` : towers + flag);
 
   return svgDocument(style, height, title, bg.defs, css, bg.markup + scene + text);
+}
+
+function colStart(plan: ReturnType<typeof planTimelapse>, col: number): number | undefined {
+  return plan.columns.get(col);
 }
 
 export const CITY_MAX_HEIGHT = MAX_HEIGHT;

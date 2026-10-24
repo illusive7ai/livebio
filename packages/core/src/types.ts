@@ -6,6 +6,13 @@ export type BlockId = (typeof BLOCK_IDS)[number];
 export const COMPANIONS = ['snake', 'chess', 'none'] as const;
 export type Companion = (typeof COMPANIONS)[number];
 
+export const FONT_CHOICES = ['sans', 'serif', 'mono', 'rounded', 'humanist', 'classic', 'typewriter', 'handwriting', 'impact'] as const;
+export type FontChoice = (typeof FONT_CHOICES)[number];
+
+/** The smallest and largest text size, as a percentage of the design's own sizes. */
+export const TEXT_SIZE_MIN = 80;
+export const TEXT_SIZE_MAX = 130;
+
 export const THEME_MODES = ['auto', 'dark', 'light'] as const;
 export type ThemeMode = (typeof THEME_MODES)[number];
 
@@ -130,6 +137,14 @@ export interface CustomStyle {
   look?: Preset;
   /** Which automated game sits under the card. */
   companion?: Companion;
+  /** One typeface for every piece of text in the design's pictures. Left out, each design keeps its own. */
+  font?: FontChoice;
+  /** One colour, as #rrggbb, for every piece of text. Left out, each design keeps its own. */
+  textColor?: string;
+  /** Text size as a percentage of the design's own, from TEXT_SIZE_MIN to TEXT_SIZE_MAX. */
+  textSize?: number;
+  /** Draw the contribution city as a time-lapse that grows week by week, instead of the finished city. */
+  timelapse?: boolean;
 }
 
 export interface Asset {

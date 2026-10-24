@@ -84,6 +84,27 @@ export function StyleControls({ config, onChange }: Props) {
       </label>
 
       <fieldset className="plain">
+        <legend>Contribution city</legend>
+        <div className="segmented">
+          <label className={custom.timelapse ? '' : 'on'}>
+            <input type="radio" name="city-mode" checked={!custom.timelapse} onChange={() => update({}, ['timelapse'])} />
+            Finished city
+          </label>
+          <label className={custom.timelapse ? 'on' : ''}>
+            <input type="radio" name="city-mode" checked={Boolean(custom.timelapse)} onChange={() => update({ timelapse: true })} />
+            Time-lapse
+          </label>
+        </div>
+        <small className="muted-line">
+          {custom.timelapse
+            ? 'The city grows week by week through your year, with a running total, then holds and starts again. Every building is a real active day.'
+            : 'Your whole year at once, one building for every active day.'}{' '}
+          {config.template === 'city' && 'The Contribution city design draws its own city, so the time-lapse does not apply to it.'}
+          {!config.blocks.includes('city') && 'The city is switched off for this design. Tick Contribution city under Sections to see it.'}
+        </small>
+      </fieldset>
+
+      <fieldset className="plain">
         <legend>Game under the card</legend>
         <div className="segmented">
           {GAMES.map(([value, label, about]) => (

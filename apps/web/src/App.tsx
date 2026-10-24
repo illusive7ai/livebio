@@ -5,9 +5,12 @@ import {
   REPO_URL,
   defaultConfig,
   getTemplate,
+  noteUsed,
+  toggleFavourite,
   isValidUsername,
   renderProfile,
   type Config,
+  type Prefs,
   type Profile,
 } from '@livebio/core';
 import { Customizer } from './components/Customizer';
@@ -20,10 +23,13 @@ import { Testimonials } from './components/Testimonials';
 import { loadAvatar } from './lib/avatar';
 import { describeError } from './lib/errors';
 import { loadProfile } from './lib/profile';
+import { loadPrefs, storePrefs } from './lib/prefs';
 import { go, routeHref, useRoute, type Route } from './lib/route';
 import { designFields, loadDesigns, newId, storeDesigns, type SavedDesign } from './lib/saved';
+import { LinterPage } from './pages/LinterPage';
 import { StudioPage } from './pages/StudioPage';
 import { TemplatesPage } from './pages/TemplatesPage';
+import { WrappedPage } from './pages/WrappedPage';
 
 type Status =
   | { state: 'idle' }
@@ -63,6 +69,8 @@ const NAV: Array<[Route, string]> = [
   ['home', 'Create'],
   ['templates', 'Templates'],
   ['studio', 'Studio'],
+  ['wrapped', 'Wrapped'],
+  ['linter', 'README linter'],
 ];
 
 export function App() {
@@ -71,6 +79,14 @@ export function App() {
   const [status, setStatus] = useState<Status>({ state: 'idle' });
   const [config, setConfig] = useState<Config>(() => defaultConfig(initialUsername() || 'octocat', initialTemplate()));
   const [designs, setDesigns] = useState<SavedDesign[]>(loadDesigns);
+  const [prefs, setPrefs] = useState<Prefs>(loadPrefs);
+
+  const changePrefs = (next: Prefs) => {
+    setPrefs(next);
+    storePrefs(next);
+  };
+  const toggleFav = (id: string) => changePrefs(toggleFavourite(prefs, id));
+  const used = (id: string) => changePrefs(noteUsed(prefs, id));
 
   const load = useCallback(async (name: string) => {
     const username = name.trim().replace(/^@/, '');
@@ -109,6 +125,7 @@ export function App() {
     const { custom: _custom, ...rest } = config;
     setConfig({ ...rest, template });
     updateUrl('template', template);
+    used(template);
   };
 
   const saveDesign = (name: string, from: Config): boolean => {
@@ -148,12 +165,15 @@ export function App() {
             profile={profile}
             config={config}
             designs={designs}
+            prefs={prefs}
+            onToggleFavourite={toggleFav}
             onUse={(template) => {
               pick(template);
               go('home');
             }}
             onUseSaved={(design) => {
               setConfig({ ...config, ...design.config });
+              used(design.config.template);
               go('studio');
             }}
             onDeleteSaved={deleteDesign}
@@ -161,8 +181,28 @@ export function App() {
         )}
 
         {route === 'studio' && (
-          <StudioPage profile={profile} config={config} onChange={setConfig} designs={designs} onSave={saveDesign} />
+          <StudioPage
+            profile={profile}
+            config={config}
+            onChange={setConfig}
+            designs={designs}
+            prefs={prefs}
+            onSave={saveDesign}
+            onToggleFavourite={toggleFav}
+            onUsed={used}
+          />
         )}
+
+        {route === 'wrapped' && (
+          <WrappedPage
+            profile={profile}
+            loading={status.state === 'loading'}
+            error={status.state === 'error' ? status.message : null}
+            onLoad={(name) => void load(name)}
+          />
+        )}
+
+        {route === 'linter' && <LinterPage profile={profile} />}
 
         {route === 'home' && (
           <>
@@ -214,7 +254,7 @@ export function App() {
                 <ProfileStrip profile={profile} />
                 <div className="workspace">
                   <aside className="controls">
-                    <TemplatePicker profile={profile} config={config} onPick={pick} />
+                    <TemplatePicker profile={profile} config={config} prefs={prefs} onPick={pick} onToggleFavourite={toggleFav} />
                     <details className="panel fold">
                       <summary>Make it yours</summary>
                       <Customizer config={config} onChange={setConfig} hasActivity={Boolean(profile.contributions)} bare />

@@ -39,6 +39,10 @@ export function configToParams(config: Config): URLSearchParams {
   if (config.custom?.hue !== undefined) params.set('hue', String(config.custom.hue));
   if (config.custom?.look) params.set('look', config.custom.look);
   if (config.custom?.companion) params.set('game', config.custom.companion);
+  if (config.custom?.font) params.set('font', config.custom.font);
+  if (config.custom?.textColor) params.set('tc', config.custom.textColor.slice(1));
+  if (config.custom?.textSize !== undefined) params.set('ts', String(config.custom.textSize));
+  if (config.custom?.timelapse) params.set('tl', '1');
   return params;
 }
 
@@ -58,6 +62,10 @@ export function configFromParams(login: string, params: URLSearchParams): Config
   if (params.has('hue')) custom.hue = Number(params.get('hue'));
   if (params.has('look')) custom.look = params.get('look');
   if (params.has('game')) custom.companion = params.get('game');
+  if (params.has('font')) custom.font = params.get('font');
+  if (params.has('tc')) custom.textColor = `#${params.get('tc')}`;
+  if (params.has('ts')) custom.textSize = Number(params.get('ts'));
+  if (params.get('tl') === '1') custom.timelapse = true;
   if (Object.keys(custom).length > 0) raw.custom = custom;
   return parseConfig(raw);
 }

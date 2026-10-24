@@ -2,6 +2,7 @@ import { tintForHue } from './color';
 import { ConfigError } from './config';
 import { creditSvg } from './credit';
 import { assetPath } from './readme';
+import { styleAssets } from './typography';
 import { variantsFor } from './themes';
 import { getTemplate, templates } from './templates';
 import type { Config, Output, Profile } from './types';
@@ -13,7 +14,8 @@ export function renderProfile(profile: Profile, config: Config): Output {
     const known = templates.map((t) => t.id).join(', ');
     throw new ConfigError(`Unknown template "${config.template}". Choose from: ${known}.`);
   }
-  const output = template.render(withHue(profile, config), config);
+  const rendered = template.render(withHue(profile, config), config);
+  const output = { ...rendered, assets: styleAssets(rendered.assets, config.custom) };
   if (!config.credit) return output;
   // The credit line is an image, so it travels with the rest of the generated files.
   const credit = variantsFor(config.theme).map((variant) => ({ path: assetPath('credit', variant), content: creditSvg(variant, config.motion) }));

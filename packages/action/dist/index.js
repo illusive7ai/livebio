@@ -15147,6 +15147,9 @@ var import_node_path = require("node:path");
 // ../core/src/types.ts
 var BLOCK_IDS = ["stats", "activity", "languages", "projects", "city", "game"];
 var COMPANIONS = ["snake", "chess", "none"];
+var FONT_CHOICES = ["sans", "serif", "mono", "rounded", "humanist", "classic", "typewriter", "handwriting", "impact"];
+var TEXT_SIZE_MIN = 80;
+var TEXT_SIZE_MAX = 130;
 var THEME_MODES = ["auto", "dark", "light"];
 
 // ../core/src/util.ts
@@ -15742,6 +15745,26 @@ function parseCustom(value) {
     }
     custom.companion = raw.companion;
   }
+  if (raw.font !== void 0) {
+    if (!FONT_CHOICES.includes(raw.font)) throw new ConfigError(`"custom.font" must be one of: ${FONT_CHOICES.join(", ")}.`);
+    custom.font = raw.font;
+  }
+  if (raw.textColor !== void 0) {
+    if (typeof raw.textColor !== "string" || !/^#[0-9a-fA-F]{6}$/.test(raw.textColor)) {
+      throw new ConfigError('"custom.textColor" must be a colour written as #rrggbb.');
+    }
+    custom.textColor = raw.textColor.toLowerCase();
+  }
+  if (raw.textSize !== void 0) {
+    if (typeof raw.textSize !== "number" || !Number.isInteger(raw.textSize) || raw.textSize < TEXT_SIZE_MIN || raw.textSize > TEXT_SIZE_MAX) {
+      throw new ConfigError(`"custom.textSize" must be a whole number from ${TEXT_SIZE_MIN} to ${TEXT_SIZE_MAX} (a percentage).`);
+    }
+    custom.textSize = raw.textSize;
+  }
+  if (raw.timelapse !== void 0) {
+    if (typeof raw.timelapse !== "boolean") throw new ConfigError('"custom.timelapse" must be true or false.');
+    custom.timelapse = raw.timelapse;
+  }
   return Object.keys(custom).length > 0 ? custom : void 0;
 }
 function parseConfig(input2) {
@@ -15889,10 +15912,10 @@ function insertBlocks(readme, blocks, theme = "auto") {
   if (blocks.length === 0) return readme;
   const extra = blocks.join("\n\n");
   const credit = creditFooter(theme);
-  const at = readme.indexOf(credit);
-  if (at !== -1) return `${readme.slice(0, at)}${extra}
+  const at2 = readme.indexOf(credit);
+  if (at2 !== -1) return `${readme.slice(0, at2)}${extra}
 
-${readme.slice(at)}`;
+${readme.slice(at2)}`;
   const end = readme.lastIndexOf(MARKER_END);
   if (end !== -1) return `${readme.slice(0, end)}${extra}
 
@@ -16321,22 +16344,22 @@ function squareXY(square, bx, by) {
 function pieceTimeline(track, bx, by, moveSeconds = MOVE_SECONDS) {
   const eps = 0.02;
   const first = track.start ? squareXY(track.start, bx, by) : squareXY(track.steps[0]?.square ?? "a1", bx, by);
-  let at = { x: first.x, y: first.y };
+  let at2 = { x: first.x, y: first.y };
   let seen = track.start ? 1 : 0;
-  const stops = [{ t: 0, ...at, o: seen }];
+  const stops = [{ t: 0, ...at2, o: seen }];
   for (const step of track.steps) {
     const leave = step.at * moveSeconds + moveSeconds * 0.1;
     const arrive = step.at * moveSeconds + moveSeconds * 0.75;
     if (step.appears && step.square) {
-      at = squareXY(step.square, bx, by);
-      stops.push({ t: arrive - eps, ...at, o: 0 }, { t: arrive, ...at, o: 1 });
+      at2 = squareXY(step.square, bx, by);
+      stops.push({ t: arrive - eps, ...at2, o: 0 }, { t: arrive, ...at2, o: 1 });
       seen = 1;
     } else if (step.square) {
       const next = squareXY(step.square, bx, by);
-      stops.push({ t: leave, ...at, o: seen }, { t: arrive, ...next, o: seen });
-      at = next;
+      stops.push({ t: leave, ...at2, o: seen }, { t: arrive, ...next, o: seen });
+      at2 = next;
     } else {
-      stops.push({ t: arrive, ...at, o: seen }, { t: arrive + eps, ...at, o: 0 });
+      stops.push({ t: arrive, ...at2, o: seen }, { t: arrive + eps, ...at2, o: 0 });
       seen = 0;
     }
   }
@@ -16543,14 +16566,14 @@ function renderSvg(profile, config, variant) {
     for (const b of buildings) reach = Math.min(reach, rawY(b.col + GAP, b.row + GAP, b.height));
     if (peak) reach = Math.min(reach, rawY(peak.col + 0.5, peak.row + 0.5, peak.height) - FLAG_ROOM);
     const oy = cursor + 6 - reach;
-    const at = (u, v, z = 0) => [ox + (u - v) * COS * size, oy + rawY(u, v, z)];
+    const at2 = (u, v, z = 0) => [ox + (u - v) * COS * size, oy + rawY(u, v, z)];
     const poly = (points) => `M${points.map(([x, y]) => `${num2(x)} ${num2(y)}`).join("L")}Z`;
-    const slabTop = poly([at(-m, -m), at(cols + m, -m), at(cols + m, ROWS + m), at(-m, ROWS + m)]);
-    const leftSide = poly([at(-m, ROWS + m), at(cols + m, ROWS + m), at(cols + m, ROWS + m, -SLAB_DEPTH), at(-m, ROWS + m, -SLAB_DEPTH)]);
-    const rightSide = poly([at(cols + m, -m), at(cols + m, ROWS + m), at(cols + m, ROWS + m, -SLAB_DEPTH), at(cols + m, -m, -SLAB_DEPTH)]);
+    const slabTop = poly([at2(-m, -m), at2(cols + m, -m), at2(cols + m, ROWS + m), at2(-m, ROWS + m)]);
+    const leftSide = poly([at2(-m, ROWS + m), at2(cols + m, ROWS + m), at2(cols + m, ROWS + m, -SLAB_DEPTH), at2(-m, ROWS + m, -SLAB_DEPTH)]);
+    const rightSide = poly([at2(cols + m, -m), at2(cols + m, ROWS + m), at2(cols + m, ROWS + m, -SLAB_DEPTH), at2(cols + m, -m, -SLAB_DEPTH)]);
     const streets = [];
-    for (let u = 0; u <= cols; u++) streets.push(`M${num2(at(u, 0)[0])} ${num2(at(u, 0)[1])}L${num2(at(u, ROWS)[0])} ${num2(at(u, ROWS)[1])}`);
-    for (let v = 0; v <= ROWS; v++) streets.push(`M${num2(at(0, v)[0])} ${num2(at(0, v)[1])}L${num2(at(cols, v)[0])} ${num2(at(cols, v)[1])}`);
+    for (let u = 0; u <= cols; u++) streets.push(`M${num2(at2(u, 0)[0])} ${num2(at2(u, 0)[1])}L${num2(at2(u, ROWS)[0])} ${num2(at2(u, ROWS)[1])}`);
+    for (let v = 0; v <= ROWS; v++) streets.push(`M${num2(at2(0, v)[0])} ${num2(at2(0, v)[1])}L${num2(at2(cols, v)[0])} ${num2(at2(cols, v)[1])}`);
     const towers = buildings.map((b) => {
       const u0 = b.col + GAP;
       const u1 = b.col + 1 - GAP;
@@ -16559,17 +16582,17 @@ function renderSvg(profile, config, variant) {
       const h = b.height;
       const cls = b === peak ? "p" : String(Math.min(4, Math.max(1, b.level || 1)));
       const delay = motion ? ` style="animation-delay:${(0.2 + (b.col + b.row) * 0.011).toFixed(3)}s"` : "";
-      return `<g class="b"${delay}><path class="l${cls}" d="${poly([at(u0, v1), at(u1, v1), at(u1, v1, h), at(u0, v1, h)])}"/><path class="r${cls}" d="${poly([at(u1, v0), at(u1, v1), at(u1, v1, h), at(u1, v0, h)])}"/><path class="t${cls}" d="${poly([at(u0, v0, h), at(u1, v0, h), at(u1, v1, h), at(u0, v1, h)])}"/></g>`;
+      return `<g class="b"${delay}><path class="l${cls}" d="${poly([at2(u0, v1), at2(u1, v1), at2(u1, v1, h), at2(u0, v1, h)])}"/><path class="r${cls}" d="${poly([at2(u1, v0), at2(u1, v1), at2(u1, v1, h), at2(u1, v0, h)])}"/><path class="t${cls}" d="${poly([at2(u0, v0, h), at2(u1, v0, h), at2(u1, v1, h), at2(u0, v1, h)])}"/></g>`;
     }).join("");
     let flag = "";
     if (peak) {
-      const [px, py] = at(peak.col + 0.5, peak.row + 0.5, peak.height);
+      const [px, py] = at2(peak.col + 0.5, peak.row + 0.5, peak.height);
       const labelX = Math.min(WIDTH - PAD2 - 70, Math.max(PAD2 + 70, px));
       flag = `<path d="M${num2(px)} ${num2(py - 3)}L${num2(px)} ${num2(py - 24)}" stroke="${look.fg}" stroke-opacity="0.6"/><text class="mono" x="${num2(labelX)}" y="${num2(py - 30)}" text-anchor="middle" font-size="12" font-weight="700" fill="${look.fg}">${xmlEscape(shortDate(peak.date))}: ${xmlEscape(formatNumber(peak.count))}</text>`;
     }
     const cityMarkup = `<path d="${slabTop}" fill="${look.slabTop}"/><path d="${leftSide}" fill="${look.slabSide}"/><path d="${rightSide}" fill="${look.slabSide}" fill-opacity="0.75"/><path d="${streets.join("")}" fill="none" stroke="${look.slabLine}" stroke-opacity="0.35" stroke-width="0.6"/>` + towers + flag;
     parts.push(rise(cityMarkup, motion, next()));
-    cursor = at(cols + m, ROWS + m, -SLAB_DEPTH)[1] + 30;
+    cursor = at2(cols + m, ROWS + m, -SLAB_DEPTH)[1] + 30;
     const month = busiestMonth(activity.days);
     const captions = [
       [`${formatNumber(activity.total)} contributions in the past year`, plural(activity.activeDays, "active day")],
@@ -16653,6 +16676,62 @@ var city = {
   }
 };
 
+// ../core/src/live/timelapse.ts
+var TIMELAPSE_SECONDS = 18;
+var BUILD_START = 3;
+var BUILD_END = 84;
+var HOLD_UNTIL = 94;
+var RISE = 1.6;
+var MONTH_NAMES2 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function at(index, count) {
+  return count <= 1 ? BUILD_START : BUILD_START + (BUILD_END - BUILD_START) * index / (count - 1);
+}
+function planTimelapse(days, columnOf) {
+  const columns = /* @__PURE__ */ new Map();
+  const monthsByKey = /* @__PURE__ */ new Map();
+  let running = 0;
+  days.forEach((day, index) => {
+    const column = columnOf(day.date);
+    if (column !== void 0 && !columns.has(column)) columns.set(column, at(index, days.length));
+    running += day.count;
+    const key = day.date.slice(0, 7);
+    const existing = monthsByKey.get(key);
+    if (existing) existing.total = running;
+    else {
+      const [year, month] = key.split("-");
+      monthsByKey.set(key, { label: `${MONTH_NAMES2[Number(month) - 1] ?? ""} ${year}`, first: index, total: running });
+    }
+  });
+  const list = [...monthsByKey.values()];
+  const months = list.map((m, i) => ({
+    label: m.label,
+    total: m.total,
+    from: i === 0 ? 0 : at(m.first, days.length),
+    to: i === list.length - 1 ? HOLD_UNTIL : at(list[i + 1].first, days.length)
+  }));
+  return { columns, months };
+}
+var pct = (value) => String(Math.round(value * 100) / 100);
+function timelapseCss(plan, peakAt) {
+  const t = `${TIMELAPSE_SECONDS}s`;
+  let css = `.tl-fade{animation:tl-fade ${t} linear infinite both}@keyframes tl-fade{0%,${HOLD_UNTIL}%{opacity:1}99%,100%{opacity:0}}`;
+  for (const [column, start] of plan.columns) {
+    css += `.tl${column}{transform-box:fill-box;transform-origin:50% 100%;animation:tl${column} ${t} linear infinite both}`;
+    css += `@keyframes tl${column}{0%,${pct(start)}%{transform:scaleY(0)}${pct(start + RISE)}%,100%{transform:scaleY(1)}}`;
+  }
+  plan.months.forEach((m, i) => {
+    css += `.tm${i}{opacity:0;animation:tm${i} ${t} linear infinite both}`;
+    const rise3 = m.from === 0 ? `0%,${pct(m.to)}%{opacity:1}` : `0%,${pct(m.from)}%{opacity:0}${pct(m.from + 0.01)}%,${pct(m.to)}%{opacity:1}`;
+    const fall = i === plan.months.length - 1 ? "99%,100%{opacity:0}" : `${pct(m.to + 0.01)}%,100%{opacity:0}`;
+    css += `@keyframes tm${i}{${rise3}${fall}}`;
+  });
+  if (peakAt !== void 0) {
+    css += `.tl-flag{animation:tl-flag ${t} linear infinite both}@keyframes tl-flag{0%,${pct(peakAt + RISE)}%{opacity:0}${pct(peakAt + RISE + 0.5)}%,${HOLD_UNTIL}%{opacity:1}99%,100%{opacity:0}}`;
+  }
+  css += `@media (prefers-reduced-motion:reduce){[class^=tl]{animation:none!important}.tm${plan.months.length - 1}{animation:none;opacity:1}}`;
+  return css;
+}
+
 // ../core/src/live/cityCard.ts
 var PAD3 = 44;
 var TEXT_WIDTH = 230;
@@ -16664,7 +16743,8 @@ function shortDate2(date) {
 }
 function renderCityCard(opts) {
   const { style, motion, contributions } = opts;
-  const title = contributions ? `Contribution city for @${opts.login}: ${contributions.total} contributions in the past year, one building for each active day` : `Contribution city for @${opts.login}, shown once contribution data is available`;
+  const replay = Boolean(opts.timelapse && motion && contributions && contributions.days.length > 0);
+  const title = contributions ? `${replay ? "Time-lapse of the contribution city" : "Contribution city"} for @${opts.login}: ${contributions.total} contributions in the past year, one building for each active day` : `Contribution city for @${opts.login}, shown once contribution data is available`;
   if (!contributions || contributions.days.length === 0) {
     const height2 = 220;
     const bg2 = cardBackground(style, height2, opts.login);
@@ -16672,6 +16752,8 @@ function renderCityCard(opts) {
     return svgDocument(style, height2, title, bg2.defs, "", body);
   }
   const { cols, buildings } = layoutCity(contributions.days);
+  const colOfDate = new Map(buildings.map((b) => [b.date, b.col]));
+  const plan = replay ? planTimelapse(contributions.days, (date) => colOfDate.get(date)) : void 0;
   const regionX = PAD3 + TEXT_WIDTH + 24;
   const regionW = CARD_WIDTH - PAD3 - regionX;
   const m = SLAB_MARGIN;
@@ -16685,18 +16767,18 @@ function renderCityCard(opts) {
   if (peak) reach = Math.min(reach, rawY(peak.col + 0.5, peak.row + 0.5, peak.height * k) - FLAG_ROOM2);
   const top = 40;
   const oy = top - reach;
-  const at = (u, v, z = 0) => [ox + (u - v) * COS * size, oy + rawY(u, v, z)];
+  const at2 = (u, v, z = 0) => [ox + (u - v) * COS * size, oy + rawY(u, v, z)];
   const poly = (points) => `M${points.map(([x, y]) => `${num(x)} ${num(y)}`).join("L")}Z`;
-  const slabBottom = at(cols + m, ROWS + m, -SLAB_DEPTH)[1];
+  const slabBottom = at2(cols + m, ROWS + m, -SLAB_DEPTH)[1];
   const height = Math.max(Math.ceil(slabBottom + 40), 330);
   const bg = cardBackground(style, height, opts.login);
   const city2 = style.city;
-  const slabTop = poly([at(-m, -m), at(cols + m, -m), at(cols + m, ROWS + m), at(-m, ROWS + m)]);
-  const leftSide = poly([at(-m, ROWS + m), at(cols + m, ROWS + m), at(cols + m, ROWS + m, -SLAB_DEPTH), at(-m, ROWS + m, -SLAB_DEPTH)]);
-  const rightSide = poly([at(cols + m, -m), at(cols + m, ROWS + m), at(cols + m, ROWS + m, -SLAB_DEPTH), at(cols + m, -m, -SLAB_DEPTH)]);
+  const slabTop = poly([at2(-m, -m), at2(cols + m, -m), at2(cols + m, ROWS + m), at2(-m, ROWS + m)]);
+  const leftSide = poly([at2(-m, ROWS + m), at2(cols + m, ROWS + m), at2(cols + m, ROWS + m, -SLAB_DEPTH), at2(-m, ROWS + m, -SLAB_DEPTH)]);
+  const rightSide = poly([at2(cols + m, -m), at2(cols + m, ROWS + m), at2(cols + m, ROWS + m, -SLAB_DEPTH), at2(cols + m, -m, -SLAB_DEPTH)]);
   const streets = [];
-  for (let u = 0; u <= cols; u++) streets.push(`M${num(at(u, 0)[0])} ${num(at(u, 0)[1])}L${num(at(u, ROWS)[0])} ${num(at(u, ROWS)[1])}`);
-  for (let v = 0; v <= ROWS; v++) streets.push(`M${num(at(0, v)[0])} ${num(at(0, v)[1])}L${num(at(cols, v)[0])} ${num(at(cols, v)[1])}`);
+  for (let u = 0; u <= cols; u++) streets.push(`M${num(at2(u, 0)[0])} ${num(at2(u, 0)[1])}L${num(at2(u, ROWS)[0])} ${num(at2(u, ROWS)[1])}`);
+  for (let v = 0; v <= ROWS; v++) streets.push(`M${num(at2(0, v)[0])} ${num(at2(0, v)[1])}L${num(at2(cols, v)[0])} ${num(at2(cols, v)[1])}`);
   const towers = buildings.map((b) => {
     const u0 = b.col + GAP;
     const u1 = b.col + 1 - GAP;
@@ -16705,19 +16787,26 @@ function renderCityCard(opts) {
     const h = b.height * k;
     const isPeak = b === peak;
     const colors = isPeak ? city2.peak : city2.levels[Math.min(3, Math.max(0, (b.level || 1) - 1))];
-    const delay = motion ? ` style="animation-delay:${(0.2 + (b.col + b.row) * 0.011).toFixed(3)}s"` : "";
-    return `<g class="cty-b"${delay}><path d="${poly([at(u0, v1), at(u1, v1), at(u1, v1, h), at(u0, v1, h)])}" fill="${colors[1]}"/><path d="${poly([at(u1, v0), at(u1, v1), at(u1, v1, h), at(u1, v0, h)])}" fill="${colors[2]}"/><path d="${poly([at(u0, v0, h), at(u1, v0, h), at(u1, v1, h), at(u0, v1, h)])}" fill="${colors[0]}"/></g>`;
+    const delay = motion && !plan ? ` style="animation-delay:${(0.2 + (b.col + b.row) * 0.011).toFixed(3)}s"` : "";
+    return `<g class="${plan ? `tl${b.col}` : "cty-b"}"${delay}><path d="${poly([at2(u0, v1), at2(u1, v1), at2(u1, v1, h), at2(u0, v1, h)])}" fill="${colors[1]}"/><path d="${poly([at2(u1, v0), at2(u1, v1), at2(u1, v1, h), at2(u1, v0, h)])}" fill="${colors[2]}"/><path d="${poly([at2(u0, v0, h), at2(u1, v0, h), at2(u1, v1, h), at2(u0, v1, h)])}" fill="${colors[0]}"/></g>`;
   }).join("");
   let flag = "";
   if (peak) {
-    const [px, py] = at(peak.col + 0.5, peak.row + 0.5, peak.height * k);
+    const [px, py] = at2(peak.col + 0.5, peak.row + 0.5, peak.height * k);
     const labelX = Math.min(CARD_WIDTH - PAD3 - 60, Math.max(regionX + 40, px));
-    flag = `<path d="M${num(px)} ${num(py - 3)}L${num(px)} ${num(py - 22)}" stroke="${style.fg}" stroke-opacity="0.6"/><text class="mono" x="${num(labelX)}" y="${num(py - 28)}" text-anchor="middle" font-size="11.500" font-weight="700" fill="${style.fg}">${xmlEscape(shortDate2(peak.date))}: ${xmlEscape(formatNumber(peak.count))}</text>`;
+    flag = `<g${plan ? ' class="tl-flag"' : ""}><path d="M${num(px)} ${num(py - 3)}L${num(px)} ${num(py - 22)}" stroke="${style.fg}" stroke-opacity="0.6"/><text class="mono" x="${num(labelX)}" y="${num(py - 28)}" text-anchor="middle" font-size="11.500" font-weight="700" fill="${style.fg}">${xmlEscape(shortDate2(peak.date))}: ${xmlEscape(formatNumber(peak.count))}</text></g>`;
   }
   const month = busiestMonth(contributions.days);
   let text10 = liveBadge(style, PAD3, 52, motion) + label(style, "CONTRIBUTION CITY", PAD3, 90);
-  text10 += `<text x="${PAD3}" y="146" font-size="52" font-weight="800" fill="${style.accent}">${xmlEscape(formatNumber(contributions.total))}</text>`;
-  text10 += `<text x="${PAD3}" y="172" font-size="14.500" font-weight="600" fill="${style.fg}">contributions in the last year</text>`;
+  if (plan) {
+    plan.months.forEach((m2, i) => {
+      text10 += `<g class="tm${i}"><text x="${PAD3}" y="146" font-size="52" font-weight="800" fill="${style.accent}">${xmlEscape(formatNumber(m2.total))}</text><text class="mono" x="${PAD3 + TEXT_WIDTH}" y="52" text-anchor="end" font-size="12" font-weight="700" letter-spacing="1.500" fill="${style.fg}">${xmlEscape(m2.label.toUpperCase())}</text></g>`;
+    });
+    text10 += `<text x="${PAD3}" y="172" font-size="14.500" font-weight="600" fill="${style.fg}">contributions so far, ending at ${xmlEscape(formatNumber(contributions.total))}</text>`;
+  } else {
+    text10 += `<text x="${PAD3}" y="146" font-size="52" font-weight="800" fill="${style.accent}">${xmlEscape(formatNumber(contributions.total))}</text>`;
+    text10 += `<text x="${PAD3}" y="172" font-size="14.500" font-weight="600" fill="${style.fg}">contributions in the last year</text>`;
+  }
   const facts = [
     plural(contributions.activeDays, "active day"),
     peak ? `Busiest day: ${formatNumber(peak.count)}` : null,
@@ -16730,9 +16819,12 @@ function renderCityCard(opts) {
   });
   text10 += `<text class="mono" x="${PAD3}" y="${height - 36}" font-size="12" font-weight="700" fill="${style.fg}">@${xmlEscape(opts.login)}</text>`;
   text10 += `<text class="mono" x="${PAD3}" y="${height - 18}" font-size="10.500" fill="${style.muted}">one building for every active day</text>`;
-  const css = (motion ? LIVE_BADGE_CSS : "") + (motion ? `.cty-b{transform-box:fill-box;transform-origin:50% 100%;animation:cty-grow .8s cubic-bezier(.2,.8,.2,1) both}@keyframes cty-grow{from{transform:scaleY(0)}}@media (prefers-reduced-motion:reduce){.cty-b,.lv-live{animation:none}}` : "");
-  const scene = `<path d="${slabTop}" fill="${city2.slab}"/><path d="${leftSide}" fill="${city2.slabSide}"/><path d="${rightSide}" fill="${city2.slabSide}" fill-opacity="0.75"/><path d="${streets.join("")}" fill="none" stroke="${city2.line}" stroke-opacity="0.35" stroke-width="0.6"/>` + towers + flag;
+  const css = (motion ? LIVE_BADGE_CSS : "") + (plan ? timelapseCss(plan, peak ? colStart(plan, peak.col) : void 0) : motion ? `.cty-b{transform-box:fill-box;transform-origin:50% 100%;animation:cty-grow .8s cubic-bezier(.2,.8,.2,1) both}@keyframes cty-grow{from{transform:scaleY(0)}}@media (prefers-reduced-motion:reduce){.cty-b,.lv-live{animation:none}}` : "");
+  const scene = `<path d="${slabTop}" fill="${city2.slab}"/><path d="${leftSide}" fill="${city2.slabSide}"/><path d="${rightSide}" fill="${city2.slabSide}" fill-opacity="0.75"/><path d="${streets.join("")}" fill="none" stroke="${city2.line}" stroke-opacity="0.35" stroke-width="0.6"/>` + (plan ? `<g class="tl-fade">${towers}${flag}</g>` : towers + flag);
   return svgDocument(style, height, title, bg.defs, css, bg.markup + scene + text10);
+}
+function colStart(plan, col) {
+  return plan.columns.get(col);
 }
 
 // ../core/src/templates/snake.ts
@@ -16812,13 +16904,13 @@ function renderSvg2(profile, config, variant) {
     const gridWidth = plan.cols * STEP - (STEP - CELL2);
     const x0 = Math.round((WIDTH2 - gridWidth) / 2);
     const y0 = cursor + STEP + 6;
-    const at = (col, row) => [x0 + col * STEP, y0 + row * STEP];
+    const at2 = (col, row) => [x0 + col * STEP, y0 + row * STEP];
     const length = plan.path.length;
     const period = length * STEP_SECONDS;
     const levelOpacity = [0, 0.3, 0.5, 0.75, 1];
     const buckets = /* @__PURE__ */ new Set();
     const cells2 = plan.cells.map((cell2) => {
-      const [x, y] = at(cell2.col, cell2.row);
+      const [x, y] = at2(cell2.col, cell2.row);
       const active = cell2.count > 0;
       const fill = active ? `fill="${look.cell}" fill-opacity="${levelOpacity[Math.min(4, Math.max(1, cell2.level || 1))]}"` : `fill="${look.track}"`;
       let cls = "";
@@ -16829,7 +16921,7 @@ function renderSvg2(profile, config, variant) {
       }
       return `<rect${cls} x="${x}" y="${y}" width="${CELL2}" height="${CELL2}" rx="2.5" ${fill}/>`;
     }).join("");
-    const poseAt = (index) => at(...plan.path[(index % length + length) % length] ?? [0, 0]);
+    const poseAt = (index) => at2(...plan.path[(index % length + length) % length] ?? [0, 0]);
     const segments = Array.from({ length: BODY + 1 }, (_v, i) => {
       const size = i === 0 ? CELL2 : CELL2 - Math.min(3, i * 0.5);
       const inset = (CELL2 - size) / 2;
@@ -16962,14 +17054,14 @@ function renderSnakeCard(opts) {
   const y0 = headerH + step + 8;
   const height = y0 + ROWS3 * step + 70;
   const bg = cardBackground(style, height, opts.login);
-  const at = (col, row) => [x0 + col * step, y0 + row * step];
+  const at2 = (col, row) => [x0 + col * step, y0 + row * step];
   const length = plan.path.length;
   const period = length * STEP_SECONDS2;
   const opacities = [0, 0.3, 0.5, 0.75, 1];
   const glow = sn.glow ? ' filter="url(#snk-glow)"' : "";
   const buckets = /* @__PURE__ */ new Set();
   const cells2 = plan.cells.map((c2) => {
-    const [x, y] = at(c2.col, c2.row);
+    const [x, y] = at2(c2.col, c2.row);
     const active = c2.count > 0;
     const attrs = active ? `fill="${sn.cellColor}" fill-opacity="${opacities[Math.min(4, Math.max(1, c2.level || 1))]}"` : `fill="${sn.track}"`;
     let cls = "";
@@ -16980,7 +17072,7 @@ function renderSnakeCard(opts) {
     }
     return cellShape(sn.cell, x, y, cell2, attrs, cls);
   }).join("");
-  const poseAt = (index) => at(...plan.path[(index % length + length) % length] ?? [0, 0]);
+  const poseAt = (index) => at2(...plan.path[(index % length + length) % length] ?? [0, 0]);
   const segments = Array.from({ length: BODY2 + 1 }, (_v, i) => {
     const size = i === 0 ? cell2 : cell2 - Math.min(cell2 * 0.3, i * 0.6);
     const inset = (cell2 - size) / 2;
@@ -17073,7 +17165,7 @@ ${pictureTag(`${base.id}-${kind}`, config.theme, alt, CARD_WIDTH)}
         if (wantCity) {
           assets.push({
             path: assetPath(`${base.id}-city`, variant),
-            content: renderCityCard({ login, contributions: profile.contributions, style, motion: config.motion })
+            content: renderCityCard({ login, contributions: profile.contributions, style, motion: config.motion, timelapse: config.custom?.timelapse === true })
           });
         }
         if (wantGame && companion === "snake") {
@@ -17406,8 +17498,8 @@ function signal(profile, config, look, days, y0, blocks) {
     css += `.pad{animation:ar-pad ${num4(total)}s linear infinite}@keyframes ar-pad{${frames((p) => `${num4((p.x - first.x) * step)}px,0`)}100%{transform:translate(0,0)}}`;
     css += `.k{animation-duration:${num4(total)}s;animation-iteration-count:infinite;animation-timing-function:linear}`;
     for (const bucket of [...buckets].sort((a, b) => a - b)) {
-      const at = ((bucket * 4 + 3) / (steps - 1) * 88).toFixed(2);
-      css += `@keyframes ar-k${bucket}{0%,${at}%{opacity:1}${num4(Number(at) + 0.01)}%,99.9%{opacity:0}100%{opacity:1}}.k${bucket}{animation-name:ar-k${bucket}}`;
+      const at2 = ((bucket * 4 + 3) / (steps - 1) * 88).toFixed(2);
+      css += `@keyframes ar-k${bucket}{0%,${at2}%{opacity:1}${num4(Number(at2) + 0.01)}%,99.9%{opacity:0}100%{opacity:1}}.k${bucket}{animation-name:ar-k${bucket}}`;
     }
     css += `@media (prefers-reduced-motion:reduce){.ball,.pad,.k{animation:none!important}}`;
     ball = `<g class="ball">${ball}</g>`;
@@ -19121,15 +19213,15 @@ function squarify(values, box) {
     const min = Math.min(...areas);
     return Math.max(side * side * max / (sum * sum), sum * sum / (side * side * min));
   };
-  let at = 0;
-  while (at < order.length) {
+  let at2 = 0;
+  while (at2 < order.length) {
     const side = Math.min(w, h);
-    const row = [at];
-    let areas = [Math.max(0, values[order[at]]) * scale];
-    while (at + row.length < order.length) {
-      const next = Math.max(0, values[order[at + row.length]]) * scale;
+    const row = [at2];
+    let areas = [Math.max(0, values[order[at2]]) * scale];
+    while (at2 + row.length < order.length) {
+      const next = Math.max(0, values[order[at2 + row.length]]) * scale;
       if (areas.every((a) => a > 0) && next > 0 && worst([...areas, next], side) > worst(areas, side)) break;
-      row.push(at + row.length);
+      row.push(at2 + row.length);
       areas = [...areas, next];
     }
     const sum = areas.reduce((a, b) => a + b, 0);
@@ -19154,7 +19246,7 @@ function squarify(values, box) {
       y += rowH;
       h -= rowH;
     }
-    at += row.length;
+    at2 += row.length;
   }
   return out;
 }
@@ -20144,20 +20236,20 @@ function timelineSvg(profile, config, variant) {
     body += text6("A timeline needs the date the account was created and the date the data was read.", 36, 150, 15, muted, 'font-style="italic"');
     return svgDoc({ height: 240, title: `${name} on GitHub, as a timeline`, bg, radius: 14, css: riseCss(motion), body });
   }
-  const at = (fraction) => x0 + fraction * (x1 - x0);
+  const at2 = (fraction) => x0 + fraction * (x1 - x0);
   body += `<path d="M${x0} ${lineY}H${x1}" stroke="${muted}" stroke-width="3" stroke-linecap="round"/>`;
-  for (const tick of yearTicks(start, end)) body += `<path d="M${num4(at(tick.at))} ${lineY - 8}v16" stroke="${muted}" stroke-width="1.5"/>` + text6(String(tick.year), at(tick.at), lineY + 28, 11, muted, 'class="mono" text-anchor="middle"');
+  for (const tick of yearTicks(start, end)) body += `<path d="M${num4(at2(tick.at))} ${lineY - 8}v16" stroke="${muted}" stroke-width="1.5"/>` + text6(String(tick.year), at2(tick.at), lineY + 28, 11, muted, 'class="mono" text-anchor="middle"');
   const pos = timelinePositions(start, end, pushes.map((r) => Date.parse(r.pushedAt)));
   const markers = pushes.map((repo, i) => ({ repo, at: pos[i] })).filter((m) => m.at !== null).sort((a, b) => a.at - b.at);
   const labels = markers.map((m) => truncate(m.repo.name, 16));
   const widths = labels.map((l) => l.length * 7.4 + 12);
   const sides = [0, 1].map((side) => markers.map((m, i) => ({ m, i })).filter(({ i }) => i % 2 === side));
   sides.forEach((group, side) => {
-    const dots = group.map(({ m }) => at(m.at));
+    const dots = group.map(({ m }) => at2(m.at));
     const ws = group.map(({ i }) => widths[i]);
     const centres = spreadLabels(dots, ws, 40, 860);
     group.forEach(({ m, i }, k) => {
-      const x = at(m.at);
+      const x = at2(m.at);
       const lx = centres[k];
       const up = side === 0;
       const y = up ? lineY - 70 : lineY + 84;
@@ -20185,11 +20277,11 @@ function splitCircle(shares) {
   const valid = shares.filter((s) => Number.isFinite(s.share) && s.share > 0);
   const total = valid.reduce((sum, s) => sum + s.share, 0);
   if (total <= 0) return [];
-  let at = 0;
+  let at2 = 0;
   return valid.map((s) => {
-    const from = at;
-    at += s.share / total * Math.PI * 2;
-    return { name: s.name, from, to: at };
+    const from = at2;
+    at2 += s.share / total * Math.PI * 2;
+    return { name: s.name, from, to: at2 };
   });
 }
 function sunburstSvg(profile, config, variant) {
@@ -23210,6 +23302,48 @@ function getTemplate(id) {
   return templates.find((template) => template.id === id);
 }
 
+// ../core/src/typography.ts
+var FONT_STACKS = {
+  sans: "'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif",
+  serif: "Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif",
+  mono: "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace",
+  rounded: "ui-rounded, 'SF Pro Rounded', 'Arial Rounded MT Bold', 'Trebuchet MS', Verdana, sans-serif",
+  humanist: "Candara, 'Gill Sans', 'Gill Sans MT', Optima, Calibri, 'Segoe UI', sans-serif",
+  classic: "'Palatino Linotype', Palatino, 'Book Antiqua', 'Iowan Old Style', Georgia, serif",
+  typewriter: "'Courier New', Courier, 'Nimbus Mono PS', 'Liberation Mono', monospace",
+  handwriting: "'Segoe Print', 'Bradley Hand', 'Chalkboard SE', 'Comic Sans MS', 'Comic Neue', cursive",
+  impact: "Impact, Haettenschweiler, 'Franklin Gothic Bold', 'Arial Narrow Bold', 'Arial Black', sans-serif"
+};
+function isDesignPicture(asset) {
+  return asset.path.endsWith(".svg") && !/(^|\/)credit-/.test(asset.path);
+}
+var SIZE_ATTRIBUTE = /font-size="(\d+(?:\.\d+)?)"/g;
+var SIZE_RULE = /font-size:(\d+(?:\.\d+)?)(px)?/g;
+var FAMILY_ATTRIBUTE = /font-family="[^"]*"/g;
+var FAMILY_RULE = /font-family:[^;}"]+/g;
+var scaled = (value, factor) => String(Math.round(Number(value) * factor * 100) / 100);
+function styleText(svg, custom) {
+  let out = svg;
+  if (custom.font) {
+    const stack = FONT_STACKS[custom.font];
+    out = out.replace(FAMILY_ATTRIBUTE, () => `font-family="${stack}"`).replace(FAMILY_RULE, () => `font-family:${stack}`);
+  }
+  if (custom.textSize !== void 0 && custom.textSize !== 100) {
+    const factor = custom.textSize / 100;
+    out = out.replace(SIZE_ATTRIBUTE, (_all, value) => `font-size="${scaled(value, factor)}"`).replace(SIZE_RULE, (_all, value, unit) => `font-size:${scaled(value, factor)}${unit ?? ""}`);
+  }
+  if (custom.textColor) {
+    const rule = `svg text:not(#x),svg tspan:not(#x){fill:${custom.textColor}}`;
+    out = out.includes("</style>") ? out.replace("</style>", () => `${rule}
+</style>`) : out.replace(/(<svg[^>]*>)/, (tag) => `${tag}<style>${rule}</style>`);
+  }
+  return out;
+}
+function styleAssets(assets, custom) {
+  if (!custom || custom.font === void 0 && custom.textColor === void 0 && (custom.textSize === void 0 || custom.textSize === 100)) return assets;
+  return assets.map((asset) => isDesignPicture(asset) ? { ...asset, content: styleText(asset.content, custom) } : asset);
+}
+
 // ../core/src/render.ts
 function renderProfile(profile, config) {
   const template = getTemplate(config.template);
@@ -23217,7 +23351,8 @@ function renderProfile(profile, config) {
     const known = templates.map((t) => t.id).join(", ");
     throw new ConfigError(`Unknown template "${config.template}". Choose from: ${known}.`);
   }
-  const output = template.render(withHue(profile, config), config);
+  const rendered = template.render(withHue(profile, config), config);
+  const output = { ...rendered, assets: styleAssets(rendered.assets, config.custom) };
   if (!config.credit) return output;
   const credit = variantsFor(config.theme).map((variant) => ({ path: assetPath("credit", variant), content: creditSvg(variant, config.motion) }));
   return { ...output, assets: [...output.assets, ...credit] };

@@ -88,7 +88,7 @@ export function withLive(base: Template, spec: LiveSpec): Template {
         if (wantCity) {
           assets.push({
             path: assetPath(`${base.id}-city`, variant),
-            content: renderCityCard({ login, contributions: profile.contributions, style, motion: config.motion }),
+            content: renderCityCard({ login, contributions: profile.contributions, style, motion: config.motion, timelapse: config.custom?.timelapse === true }),
           });
         }
         if (wantGame && companion === 'snake') {

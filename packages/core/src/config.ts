@@ -1,6 +1,6 @@
 import { parse, stringify } from 'yaml';
 import { PRESETS } from './live/style';
-import { BLOCK_IDS, COMPANIONS, THEME_MODES, type BlockId, type Companion, type Config, type CustomStyle, type ThemeMode } from './types';
+import { BLOCK_IDS, COMPANIONS, FONT_CHOICES, TEXT_SIZE_MAX, TEXT_SIZE_MIN, THEME_MODES, type FontChoice, type BlockId, type Companion, type Config, type CustomStyle, type ThemeMode } from './types';
 import { isValidUsername } from './util';
 
 export class ConfigError extends Error {
@@ -58,6 +58,26 @@ function parseCustom(value: unknown): CustomStyle | undefined {
       throw new ConfigError(`"custom.companion" must be one of: ${COMPANIONS.join(', ')}.`);
     }
     custom.companion = raw.companion as Companion;
+  }
+  if (raw.font !== undefined) {
+    if (!FONT_CHOICES.includes(raw.font as FontChoice)) throw new ConfigError(`"custom.font" must be one of: ${FONT_CHOICES.join(', ')}.`);
+    custom.font = raw.font as FontChoice;
+  }
+  if (raw.textColor !== undefined) {
+    if (typeof raw.textColor !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(raw.textColor)) {
+      throw new ConfigError('"custom.textColor" must be a colour written as #rrggbb.');
+    }
+    custom.textColor = raw.textColor.toLowerCase();
+  }
+  if (raw.textSize !== undefined) {
+    if (typeof raw.textSize !== 'number' || !Number.isInteger(raw.textSize) || raw.textSize < TEXT_SIZE_MIN || raw.textSize > TEXT_SIZE_MAX) {
+      throw new ConfigError(`"custom.textSize" must be a whole number from ${TEXT_SIZE_MIN} to ${TEXT_SIZE_MAX} (a percentage).`);
+    }
+    custom.textSize = raw.textSize;
+  }
+  if (raw.timelapse !== undefined) {
+    if (typeof raw.timelapse !== 'boolean') throw new ConfigError('"custom.timelapse" must be true or false.');
+    custom.timelapse = raw.timelapse;
   }
   return Object.keys(custom).length > 0 ? custom : undefined;
 }
