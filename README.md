@@ -13,6 +13,15 @@ Type your GitHub username, pick a design, make it yours, and export. A small Git
 
 > **Status: early.** The builder, a Templates gallery, a Studio for restyling designs (colour, fonts, text size, a time-lapse city, a side-by-side compare view), GitHub Wrapped, a README linter and the Action all work, with 100 templates. Every one carries a live contribution city and an automated snake or chess game (the two designs that already are a city or a snake carry the other half). See the [roadmap](#roadmap).
 
+## What you get
+
+- **100 designs**, from a calm recruiter page to a lava lamp, a punch card and a tarot spread. Every one carries a live contribution city and a chess game or snake that plays itself.
+- **A Studio** to make any design yours: its colour, nine typefaces, text colour and size, a time-lapse city and which game plays. Set two designs side by side to choose between them, and keep favourites.
+- **GitHub Wrapped**: your last twelve months told from your real numbers, as slides and a card to share.
+- **A README linter** that finds what is wrong with any README and writes a corrected copy.
+- **Two ways to publish**: copy and paste, with pictures drawn live and nothing to upload, or host the files yourself with a daily GitHub Action.
+- **No sign-in, no paywall, nothing stored.** Free and open source under the MIT license.
+
 ## What it looks like
 
 <p align="center">
@@ -99,7 +108,7 @@ Twenty-five of the hundred are the newest and strangest: a moodboard, a riso pri
 ## How it works
 
 1. **Preview.** The builder reads your public GitHub data in the browser, with no login.
-2. **Choose and customise.** Pick a template, edit the text, switch sections and colours on or off.
+2. **Choose and customise.** Pick one of the 100 designs, edit the text, switch sections on or off, and make it yours in the Studio: colour, fonts, text size, a time-lapse city, which game plays. Compare two designs side by side if you cannot decide.
 3. **Export.** Download a zip with your `README.md`, a `livebio.yml` config and a workflow file.
 4. **Stay fresh.** Put those files in your `username/username` repository. The workflow runs daily, regenerates your images from live data using GitHub's built-in token, and commits the result.
 
@@ -111,6 +120,14 @@ Everything is generated as plain files in your own repository. Images are SVGs, 
 - **Light and dark.** Designs follow the viewer's GitHub theme, and animations respect "reduce motion".
 - **Accessible.** Images get real alt text that describes only what they show.
 - **Safe.** Profile text is escaped everywhere, and the preview is sanitised.
+- **Tested.** Every design has tests for the numbers it shows, and shared tests run all of them against empty, one-day, very quiet and hostile profiles, so a design never leaves a blank page or breaks out of its picture.
+
+## Privacy
+
+- **What leaves your browser:** only the request for your public GitHub data, and, if you publish by copy and paste, the picture requests your profile makes to the livebio server.
+- **The README linter** and **GitHub Wrapped** work on your own device. The text you paste is never uploaded, and Wrapped is calculated in the browser from the public data it was given.
+- **Favourites, recent designs and saved designs** are kept in your own browser. There are no accounts, no cookies and no tracking.
+- **The picture server** keeps a one-hour copy of public GitHub data and nothing about who looked.
 
 ## Copy and paste, with live pictures
 
@@ -223,12 +240,23 @@ npm run build
 
 | Path | What it is |
 |---|---|
-| `packages/core` | The engine: GitHub data, templates, README and SVG rendering. Shared by the web app and the Action. |
+| `packages/core` | The engine: GitHub data, the 100 designs (`templates/`), README and SVG rendering, the Studio's fonts and colours, GitHub Wrapped, and the README linter (`linter/`). Shared by the web app and the Action. |
 | `apps/web` | The builder. |
 | `packages/action` | The GitHub Action. Its bundle in `dist/` is committed, because Actions run it directly. |
 | `workers/contributions` | Optional edge function that gives the builder's preview contribution data. |
 
 After changing `packages/core` or `packages/action`, run `npm run build -w @livebio/action` and commit the updated `dist/index.js`.
+
+### Adding a design
+
+A design is a small TypeScript function that draws one SVG from a profile. Copy the closest file in `packages/core/src/templates/` (for example `shop.ts` for a drawn object, or `imagery.ts` for one made from the profile picture), then:
+
+1. Build it with `imageTemplate(id, name, description, tags, svg)`, and give it a test file in `packages/core/src/` for the numbers it shows. The rules: draw only real data, leave out whatever is missing or switched off, escape every piece of text, and say what you are waiting for rather than filling the space.
+2. Add it to the list in `templates/index.ts`, with an entry in `LIVE` giving the look of its city and game panels. Each design needs a different look-and-shift pair, and a test checks that.
+3. Give it a group in `apps/web/src/lib/catalog.ts`.
+4. Run `npm test`. The shared tests will try your design on empty, one-day and hostile profiles for you.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the rest.
 
 ## Roadmap
 
@@ -243,12 +271,14 @@ After changing `packages/core` or `packages/action`, run `npm run build -w @live
 - [x] Learning log: a notebook page with a language list, a twelve-week habit tracker and recent work
 - [x] Build log: a release-notes style timeline of what was updated most recently, grouped by month
 - [x] Contribution graph and streaks, from the Action and from an optional edge function for the preview
-- [ ] Activity in more templates, and a template built around the isometric contribution city
-- [ ] Import and improve an existing README
+- [x] Activity in more templates, and a template built around the isometric contribution city
+- [x] Import and improve an existing README: load a profile README by username, check it, and copy the corrected version
 - [x] README linter: broken images and links, missing alt text, HTML GitHub removes, leaked secrets and more, with a corrected copy
 - [x] GitHub Wrapped: your last twelve months from the real calendar, with a shareable card
 - [x] Studio: fonts, text colour and size, a time-lapse city, a compare view, favourites
-- [ ] Template gallery site
+- [x] Template gallery: the Templates page, with 100 designs, filters, favourites and recently used
+- [ ] Run the README linter from the command line and as a GitHub Action that comments on pull requests
+- [ ] Designs made from an image you upload
 
 ## Contributing
 
