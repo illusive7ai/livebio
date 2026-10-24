@@ -234,13 +234,13 @@ export function LinterPage({ profile }: Props) {
             <>
               <div className="panel linter-summary">
                 <div className="counts" role="group" aria-label="Summary">
-                  <span className="count error">
+                  <span className="count sev-error">
                     <b>{result.counts.error}</b> {result.counts.error === 1 ? 'error' : 'errors'}
                   </span>
-                  <span className="count warning">
+                  <span className="count sev-warning">
                     <b>{result.counts.warning}</b> {result.counts.warning === 1 ? 'warning' : 'warnings'}
                   </span>
-                  <span className="count tip">
+                  <span className="count sev-tip">
                     <b>{result.counts.tip}</b> {result.counts.tip === 1 ? 'tip' : 'tips'}
                   </span>
                 </div>
@@ -256,7 +256,7 @@ export function LinterPage({ profile }: Props) {
 
               {result.issues.length > 0 && (
                 <div className="panel">
-                  <div className="filters" role="group" aria-label="Filter issues">
+                  <div className="filters wrap" role="group" aria-label="Filter issues">
                     {LEVELS.map(([value, label]) => (
                       <button key={value} type="button" aria-pressed={level === value} onClick={() => setLevel(value)}>
                         {label}
@@ -271,9 +271,9 @@ export function LinterPage({ profile }: Props) {
                   ) : (
                     <ul className="issues">
                       {issues.map((issue, i) => (
-                        <li key={`${issue.rule}-${issue.line}-${i}`} className={`issue ${issue.severity}`}>
+                        <li key={`${issue.rule}-${issue.line}-${i}`} className={`issue sev-${issue.severity}`}>
                           <div className="issue-head">
-                            <span className={`badge ${issue.severity}`}>{SEVERITY_LABEL[issue.severity]}</span>
+                            <span className={`badge sev-${issue.severity}`}>{SEVERITY_LABEL[issue.severity]}</span>
                             <span className="issue-title">{issue.title}</span>
                             {issue.line > 0 ? (
                               <button type="button" className="link" onClick={() => jumpTo(issue.line)} aria-label={`Show line ${issue.line} in the text`}>

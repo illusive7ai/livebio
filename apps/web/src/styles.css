@@ -2248,33 +2248,43 @@ label {
 }
 
 .counts {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
+/* Three equal pills: same height, same border, number and word on one baseline. */
 .count {
-  padding: 6px 14px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
   border: 1px solid var(--border);
   border-radius: 999px;
   font-size: 0.92rem;
+  line-height: 44px;
+  white-space: nowrap;
 }
 
 .count b {
   font-size: 1.1rem;
+  line-height: inherit;
 }
 
-.count.error {
+.count.sev-error {
   border-color: var(--danger);
   color: var(--danger);
 }
 
-.count.warning {
+.count.sev-warning {
   border-color: #b7791f;
   color: #b7791f;
 }
 
-.count.tip {
+.count.sev-tip {
+  border-color: var(--muted);
   color: var(--muted);
 }
 
@@ -2301,15 +2311,15 @@ label {
   border-radius: 10px;
 }
 
-.issue.error {
+.issue.sev-error {
   border-left-color: var(--danger);
 }
 
-.issue.warning {
+.issue.sev-warning {
   border-left-color: #b7791f;
 }
 
-.issue.tip {
+.issue.sev-tip {
   border-left-color: var(--muted);
 }
 
@@ -2341,26 +2351,26 @@ label {
   border: 1px solid currentColor;
 }
 
-.badge.error {
+.badge.sev-error {
   color: var(--danger);
 }
 
-.badge.warning {
+.badge.sev-warning {
   color: #b7791f;
 }
 
-.badge.tip {
+.badge.sev-tip {
   color: var(--muted);
 }
 
 @media (prefers-color-scheme: dark) {
-  .count.warning,
-  .badge.warning {
+  .count.sev-warning,
+  .badge.sev-warning {
     border-color: #f0b429;
     color: #f0b429;
   }
 
-  .issue.warning {
+  .issue.sev-warning {
     border-left-color: #f0b429;
   }
 }
@@ -2521,4 +2531,25 @@ label {
     width: 16px;
     height: 16px;
   }
+}
+
+@media (max-width: 480px) {
+  .count {
+    padding: 0 8px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 340px) {
+  .counts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Filters inside a panel wrap onto more lines instead of scrolling sideways. */
+.filters.wrap {
+  flex-wrap: wrap;
+  overflow: visible;
+  margin-inline: 0;
+  padding-inline: 0;
 }
