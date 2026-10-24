@@ -2,7 +2,7 @@
  * The Action users run in their profile repository, pinned to a release tag so a change on the main branch
  * can never alter someone's profile unexpectedly. When a new version is released, update this and tag it.
  */
-export const ACTION_REF = 'illusive7ai/livebio@v0.1.1';
+export const ACTION_REF = 'illusive7ai/livebio@v0.1.2';
 
 /** Workflow file that refreshes the profile every day. */
 export function workflowYaml(cron = '17 3 * * *'): string {

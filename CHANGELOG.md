@@ -1,8 +1,14 @@
 # Changelog
 
-All notable changes to livebio. The version numbers are the tags of the GitHub Action (`illusive7ai/livebio@v0.1.1`). The website and the picture server are deployed from the main branch and are not versioned, so their changes are listed under Unreleased until the next tag includes them.
+All notable changes to livebio. The version numbers are the tags of the GitHub Action (`illusive7ai/livebio@v0.1.2`). The website and the picture server are deployed from the main branch and are not versioned, so their changes are listed under Unreleased until the next tag includes them.
 
 ## Unreleased
+
+Nothing yet.
+
+## v0.1.2 - 2026-10-24
+
+This release also fixes the crash that `v0.1.0` and `v0.1.1` hit on an account with no contributions in the past year (the city drawing looked for a tallest building that did not exist).
 
 ### Added
 
