@@ -11,7 +11,7 @@ A GitHub profile README that keeps itself up to date. Open source, no sign-in, n
 
 Type your GitHub username, pick a design, make it yours, and export. A small GitHub Action in your own profile repository then refreshes your stats every day, so your profile never goes stale and never depends on someone else's server.
 
-> **Status: early.** The builder, a Templates gallery, a Studio for restyling designs (colour, fonts, text size, a time-lapse city, a side-by-side compare view), GitHub Wrapped, a README linter and the Action all work, with 100 templates. Every one carries a live contribution city and an automated snake or chess game (the two designs that already are a city or a snake carry the other half). See the [roadmap](#roadmap).
+> **Status: early.** The builder, a Templates gallery, a Studio for restyling designs (colour, fonts, text size, a time-lapse city, a side-by-side compare view), GitHub Wrapped, a README linter, a Chrome extension and the Action all work, with 100 templates. Every one carries a live contribution city and an automated snake or chess game (the two designs that already are a city or a snake carry the other half). See the [roadmap](#roadmap).
 
 ## What you get
 
@@ -129,6 +129,7 @@ Everything is generated as plain files in your own repository. Images are SVGs, 
 - **The README linter** and **GitHub Wrapped** work on your own device. The text you paste is never uploaded, and Wrapped is calculated in the browser from the public data it was given.
 - **Favourites, recent designs and saved designs** are kept in your own browser. There are no accounts, no cookies and no tracking.
 - **The picture server** keeps a one-hour copy of public GitHub data and nothing about who looked.
+- **The Chrome extension** checks a README inside your browser and sends nothing about it. It contacts the livebio server only when you ask for someone's Wrapped, and then only to say which public username you asked about. It never loads a profile on its own.
 
 ## Copy and paste, with live pictures
 
@@ -228,7 +229,20 @@ The **README linter** tab checks a README you paste, open as a file, or load fro
 - **README checker:** on a README, and in GitHub's editor, the pill checks the text and offers a corrected copy to copy, download or put straight into the editor. It runs in your browser.
 - **Right-click:** on a link to a profile or repository, or a selected username, open their Wrapped card.
 
-Download it from the **Extension** tab of the website, which also explains every permission it asks for and the four install steps (it is loaded unpacked for now, not from the Chrome Web Store). It asks for two permissions and no more, has no accounts or tracking, and never sends the text of a README anywhere. To build it yourself, see [apps/extension](apps/extension/README.md).
+<table>
+<tr>
+<td width="50%"><img src="assets/screenshot-extension-profile.png" width="440" alt="A GitHub profile with the livebio panel open: the person's Wrapped numbers, their earned labels and a button to open the full card"><br><sub>On a profile: Wrapped, when you press the button</sub></td>
+<td width="50%"><img src="assets/screenshot-extension-readme.png" width="440" alt="A repository page with the livebio panel open, listing one warning and three tips found in the README"><br><sub>On a README: what is wrong with it, and a corrected copy</sub></td>
+</tr>
+</table>
+
+### Install it
+
+1. **[Download the zip](https://illusive7ai.github.io/livebio/livebio-extension.zip)** (about 70 KB) and unzip it somewhere you will keep it.
+2. Open `chrome://extensions` (`edge://extensions` in Edge, `brave://extensions` in Brave) and switch on **Developer mode**.
+3. Press **Load unpacked** and choose the unzipped folder, the one that holds `manifest.json`.
+
+It is loaded unpacked for now, not from the Chrome Web Store. The [Extension tab](https://illusive7ai.github.io/livebio/#/extension) of the website has the same steps and explains every permission it asks for. It asks for two permissions plus access to github.com, raw files on GitHub and the livebio server, has no accounts or tracking, and never sends the text of a README anywhere. To build it yourself, see [apps/extension](apps/extension/README.md).
 
 ## Reviews on the website
 
@@ -249,6 +263,8 @@ npm test           # engine tests
 npm run typecheck
 npm run build
 ```
+
+To work on the extension, `npm run build -w @livebio/extension` builds it into `apps/extension/dist` for **Load unpacked**, `npm run package -w @livebio/extension` makes the zip the website offers, and `npm test -w @livebio/extension` runs its tests.
 
 | Path | What it is |
 |---|---|
