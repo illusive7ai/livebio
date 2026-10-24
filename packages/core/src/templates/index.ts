@@ -25,6 +25,7 @@ import { captip, cinematic, signature, wow } from './showpieces';
 import { signalTemplates } from './signals';
 import { showcase } from './showcase';
 import { imageryTemplates } from './imagery';
+import { printTemplates } from './print';
 import { snake } from './snake';
 import { terminal } from './terminal';
 
@@ -113,9 +114,14 @@ const LIVE: Record<string, LiveSpec> = {
   glitch: { preset: 'terminal', city: true, companion: 'chess', shift: 9 },
   thermal: { preset: 'glow', city: true, companion: 'snake', shift: 12 },
   halftone: { preset: 'night', city: true, companion: 'chess', shift: 15 },
+  zine: { preset: 'sunrise', city: true, companion: 'snake', shift: 18 },
+  contact: { preset: 'plain', city: true, companion: 'chess', shift: 21 },
+  museum: { preset: 'paper', city: true, companion: 'snake', shift: 24 },
+  patch: { preset: 'blueprint', city: true, companion: 'chess', shift: 27 },
+  lock: { preset: 'aurora', city: true, companion: 'snake', shift: 30 },
 };
 
-const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates, cinematic, wow, signature, captip, frontpage, hub, creative, erased, ...documentTemplates, ...interfaceTemplates, ...dataArtTemplates, ...scrapbookTemplates, ...paperTemplates, ...deviceTemplates, ...signalTemplates, ...worldTemplates, ...chartTemplates, ...imageryTemplates];
+const bases: Template[] = [showcase, launchpad, city, galaxy, snake, learning, buildlog, maintainer, brief, terminal, neofetch, minimal, ...lensTemplates, ...arcadeTemplates, cinematic, wow, signature, captip, frontpage, hub, creative, erased, ...documentTemplates, ...interfaceTemplates, ...dataArtTemplates, ...scrapbookTemplates, ...paperTemplates, ...deviceTemplates, ...signalTemplates, ...worldTemplates, ...chartTemplates, ...imageryTemplates, ...printTemplates];
 
 export const templates: Template[] = bases.map((template) => {
   const spec = LIVE[template.id];
