@@ -1,4 +1,4 @@
-# livebio
+# livebio.
 
 A GitHub profile README that keeps itself up to date. Open source, no sign-in, nothing stored.
 
